@@ -1,0 +1,3 @@
+Make slider full black : SizePanel
+saveConfiguration / LoadConfiguration
+linewidth celsize dynamicly input field
