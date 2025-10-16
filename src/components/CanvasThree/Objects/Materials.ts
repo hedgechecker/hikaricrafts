@@ -77,13 +77,6 @@ export function getWoodTexture(index: number) {
  */
 export function getMaterial(index: number) {
   if (index == undefined) index = 0;
-  if (index == 0) {
-    return new THREE.MeshStandardMaterial({
-      color: "#eae8d5",
-      roughness: 1,
-      metalness: 0.0,
-    });
-  }
   const map = getWoodTexture(index);
   return new THREE.MeshStandardMaterial({
     map: map,
@@ -92,7 +85,30 @@ export function getMaterial(index: number) {
   });
 }
 
-export function getFastMaterial(index: number) {}
+export function getFastMaterial(index: number) {
+  switch (index) {
+    case 0:
+      return new THREE.MeshStandardMaterial({
+        color: "#eae8d5",
+        roughness: 1,
+        metalness: 0.0,
+      });
+    case 1:
+      return new THREE.MeshStandardMaterial({
+        color: "#85390a",
+        roughness: 1,
+        metalness: 0.0,
+      });
+      case 2:
+      return new THREE.MeshStandardMaterial({
+        color: "#e36110",
+        roughness: 1,
+        metalness: 0.0,
+      });
+    default:
+      break;
+  }
+}
 
 /**
  * Returns the Material with 50% Opacity

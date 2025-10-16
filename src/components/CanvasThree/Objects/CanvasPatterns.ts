@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import type { PatternConfig } from "../Utils/InterfaceUtils";
-import { getMaterial, getOpaqueMaterial } from "./Materials";
+import { getFastMaterial, getOpaqueMaterial } from "./Materials";
 /**
  * @param pattern the index of the wanted pattern
  * @param config includes the needed dimensions {spacing, lineWidth, depth}
@@ -112,19 +112,19 @@ function createAsaNoHa(
       part1,
       opaque
         ? getOpaqueMaterial(materialMap ? materialMap[0] : 0)
-        : getMaterial(materialMap ? materialMap[0] : 0)
+        : getFastMaterial(materialMap ? materialMap[0] : 0)
     ),
     new THREE.Mesh(
       part2,
       opaque
         ? getOpaqueMaterial(materialMap ? materialMap[1] : 0)
-        : getMaterial(materialMap ? materialMap[1] : 0)
+        : getFastMaterial(materialMap ? materialMap[1] : 0)
     ),
     new THREE.Mesh(
       part3,
       opaque
         ? getOpaqueMaterial(materialMap ? materialMap[2] : 0)
-        : getMaterial(materialMap ? materialMap[2] : 0)
+        : getFastMaterial(materialMap ? materialMap[2] : 0)
     )
   );
 
@@ -160,7 +160,7 @@ function createGomaGara(
     part1,
     opaque
       ? getOpaqueMaterial(materialMap ? materialMap[0] : 0)
-      : getMaterial(materialMap ? materialMap[0] : 0)
+      : getFastMaterial(materialMap ? materialMap[0] : 0)
   );
 
   const part2 = part1.clone();
@@ -169,7 +169,7 @@ function createGomaGara(
     part2,
     opaque
       ? getOpaqueMaterial(materialMap ? materialMap[1] : 0)
-      : getMaterial(materialMap ? materialMap[1] : 0)
+      : getFastMaterial(materialMap ? materialMap[1] : 0)
   );
   mesh2.position.z = -0.05;
 
@@ -179,7 +179,7 @@ function createGomaGara(
     part3,
     opaque
       ? getOpaqueMaterial(materialMap ? materialMap[2] : 0)
-      : getMaterial(materialMap ? materialMap[2] : 0)
+      : getFastMaterial(materialMap ? materialMap[2] : 0)
   );
   mesh2.position.z = -0.1;
 
