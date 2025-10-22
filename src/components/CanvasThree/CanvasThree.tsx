@@ -3,7 +3,11 @@ import * as THREE from "three";
 import { createPanelFrame } from "./Objects/Frame";
 import { createGrid } from "./Objects/Grid";
 import { addControls, createCamera, addLighting } from "./Utils/SceneUtils";
-import { addClickHandle, addHoverHandle } from "./Utils/EventUtils";
+import {
+  addClickHandle,
+  addHoverHandle,
+  addKeyBoardInput,
+} from "./Utils/EventUtils";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { createPattern } from "./Objects/CanvasPatterns";
 import styles from "./CanvasThree.module.css";
@@ -77,6 +81,8 @@ const CanvasThree = ({ panelSize, patternIndex, materialMap }: CanvasProps) => {
         cameraRef.current.updateProjectionMatrix();
       }
     };
+    change3D();
+    resetView();
   }, []);
 
   // Set up scene contents and render loop
@@ -122,8 +128,7 @@ const CanvasThree = ({ panelSize, patternIndex, materialMap }: CanvasProps) => {
     camera.lookAt(sphere.center);
 
     addLighting(scene, sphere);
-    const controls = addControls(camera, renderer, sphere, panelConfig);
-    controlRef.current = controls;
+    resetView();
 
     let isMounted = true;
     const animate = () => {
@@ -143,41 +148,15 @@ const CanvasThree = ({ panelSize, patternIndex, materialMap }: CanvasProps) => {
     };
     animate();
 
-    //Add movement throug the arrow keys
-    const panSpeed = 10;
-    const handleKeyDown = (event: KeyboardEvent) => {
-      const offset = new THREE.Vector3();
-
-      switch (event.key) {
-        case "ArrowUp":
-          offset.set(0, panSpeed, 0);
-          break;
-        case "ArrowDown":
-          offset.set(0, -panSpeed, 0);
-          break;
-        case "ArrowLeft":
-          offset.set(-panSpeed, 0, 0);
-          break;
-        case "ArrowRight":
-          offset.set(panSpeed, 0, 0);
-          break;
-        default:
-          return;
-      }
-
-      const camera = cameraRef.current;
-      const controls = controlRef.current;
-      if (!camera || !controls) return;
-      // Apply the pan to both camera and target (so the scene doesn't rotate)
-      camera.position.add(offset);
-      controls.target.add(offset);
-      controls.update();
-    };
-    window.addEventListener("keydown", handleKeyDown);
+    const cleanup = addKeyBoardInput(
+      cameraRef.current,
+      controlRef.current as OrbitControls
+    );
 
     fillInPatterns();
 
     return () => {
+      cleanup();
       isMounted = false;
       const renderer = rendererRef.current;
       if (!renderer) return;
@@ -186,8 +165,6 @@ const CanvasThree = ({ panelSize, patternIndex, materialMap }: CanvasProps) => {
       }
       renderer.dispose();
       scene.clear();
-      controls.dispose();
-      window.removeEventListener("keydown", handleKeyDown);
     };
   }, [
     panelSize.width,
@@ -269,7 +246,7 @@ const CanvasThree = ({ panelSize, patternIndex, materialMap }: CanvasProps) => {
 
   function change3D() {
     if (!mountRef.current || !rendererRef.current) return;
-    if (is3D == true) {
+    if (is3D) {
       (document.getElementById("3Dbtn") as HTMLElement).innerHTML = "2D";
       setIs3D(false);
       const aspect =
@@ -295,6 +272,7 @@ const CanvasThree = ({ panelSize, patternIndex, materialMap }: CanvasProps) => {
         panelConfig
       );
       controlRef.current.enableRotate = false;
+      console.log("Disable Rotat");
     } else {
       (document.getElementById("3Dbtn") as HTMLElement).innerHTML = "3D";
       setIs3D(true);
@@ -310,6 +288,7 @@ const CanvasThree = ({ panelSize, patternIndex, materialMap }: CanvasProps) => {
         panelConfig
       );
       controlRef.current.enableRotate = true;
+      console.log("ebnale Rotat");
     }
 
     if (!sceneRef.current) return;

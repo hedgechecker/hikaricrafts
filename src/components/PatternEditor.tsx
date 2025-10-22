@@ -6,10 +6,7 @@ import type { PatternConfig } from "./CanvasThree/Utils/InterfaceUtils";
 import { createPattern } from "./CanvasThree/Objects/CanvasPatterns";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import styles from "./styles/PatternEditor.module.css";
-import {
-  getMaterial,
-  getOpaqueMaterial,
-} from "./CanvasThree/Objects/Materials";
+import { getFastMaterial } from "./CanvasThree/Objects/Materials";
 
 interface EditorProps {
   index: number;
@@ -151,7 +148,7 @@ export default function EditorPanel({
       } else {
         localMaterialMap[i] = 0;
       }
-      (elements.at(i) as THREE.Mesh).material = getMaterial(
+      (elements.at(i) as THREE.Mesh).material = getFastMaterial(
         localMaterialMap[i]
       );
     }
@@ -201,7 +198,7 @@ export default function EditorPanel({
       } else {
         localMaterialMap[i] = 0;
       }
-      (elements.at(i) as THREE.Mesh).material = getMaterial(
+      (elements.at(i) as THREE.Mesh).material = getFastMaterial(
         localMaterialMap[i]
       );
     }
@@ -257,16 +254,16 @@ export default function EditorPanel({
         if (!(element as THREE.Mesh).isMesh) return;
         const mesh = element as THREE.Mesh;
         if (lastIndex != null)
-          (elements.at(lastIndex) as THREE.Mesh).material = getMaterial(
+          (elements.at(lastIndex) as THREE.Mesh).material = getFastMaterial(
             localMaterialMap[lastIndex] as number
           );
 
-        mesh.material = getOpaqueMaterial(selectedMaterial);
+        mesh.material = getFastMaterial(selectedMaterial, true);
         lastIndex = closest;
         return;
       }
       if (lastIndex != null) {
-        (elements.at(lastIndex) as THREE.Mesh).material = getMaterial(
+        (elements.at(lastIndex) as THREE.Mesh).material = getFastMaterial(
           localMaterialMap[lastIndex] as number
         );
         lastIndex = null;
@@ -289,7 +286,7 @@ export default function EditorPanel({
       const selectedMaterial = selectedMaterialRef.current;
       if (lastIndex != null) {
         localMaterialMap[lastIndex] = selectedMaterial;
-        (elements.at(lastIndex) as THREE.Mesh).material = getMaterial(
+        (elements.at(lastIndex) as THREE.Mesh).material = getFastMaterial(
           localMaterialMap[lastIndex] as number
         );
         var neww: number[] = [];

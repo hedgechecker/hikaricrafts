@@ -1,5 +1,5 @@
 import { createPanelFrame } from "./Frame";
-import { getMaterial } from "./Materials";
+import { getFastMaterial } from "./Materials";
 import { CSG } from "three-csg-ts";
 import { distanceBetweenParallels, isZnegative } from "../Utils/MathUtils";
 import * as THREE from "three";
@@ -15,7 +15,7 @@ import type { PanelConfig } from "../Utils/InterfaceUtils";
  * @returns THREE.Mesh
  */
 export function createGrid(config: PanelConfig) {
-  const material = getMaterial(0);
+  const material = getFastMaterial(0);
   const height = config.height - 2 * config.frameWidth;
   const width = config.width - 2 * config.frameWidth;
   //--------------------Constants --------------------

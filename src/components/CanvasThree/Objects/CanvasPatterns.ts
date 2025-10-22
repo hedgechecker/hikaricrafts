@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import type { PatternConfig } from "../Utils/InterfaceUtils";
-import { getFastMaterial, getOpaqueMaterial } from "./Materials";
+import { getFastMaterial } from "./Materials";
 /**
  * @param pattern the index of the wanted pattern
  * @param config includes the needed dimensions {spacing, lineWidth, depth}
@@ -24,10 +24,20 @@ export function createPattern(
       mesh = new THREE.Group();
       break;
     case 1:
-      mesh = createAsaNoHa(config, pattern, opaque, materialMap? materialMap:undefined);
+      mesh = createAsaNoHa(
+        config,
+        pattern,
+        opaque,
+        materialMap ? materialMap : undefined
+      );
       break;
     case 2:
-      mesh = createGomaGara(config, pattern, opaque, materialMap? materialMap:undefined);
+      mesh = createGomaGara(
+        config,
+        pattern,
+        opaque,
+        materialMap ? materialMap : undefined
+      );
       break;
     default:
       mesh = createAsaNoHa(config, pattern, opaque);
@@ -64,7 +74,7 @@ function createOutline({ spacing, lineWidth, depth }: PatternConfig) {
 
   const group = new THREE.Group();
 
-  const material = getOpaqueMaterial(0);
+  const material = getFastMaterial(0, true);
 
   const mesh1 = new THREE.Mesh(part1, material);
   const mesh2 = mesh1.clone();
@@ -110,21 +120,15 @@ function createAsaNoHa(
   group.add(
     new THREE.Mesh(
       part1,
-      opaque
-        ? getOpaqueMaterial(materialMap ? materialMap[0] : 0)
-        : getFastMaterial(materialMap ? materialMap[0] : 0)
+      getFastMaterial(materialMap ? materialMap[0] : 0, opaque)
     ),
     new THREE.Mesh(
       part2,
-      opaque
-        ? getOpaqueMaterial(materialMap ? materialMap[1] : 0)
-        : getFastMaterial(materialMap ? materialMap[1] : 0)
+      getFastMaterial(materialMap ? materialMap[1] : 0, opaque)
     ),
     new THREE.Mesh(
       part3,
-      opaque
-        ? getOpaqueMaterial(materialMap ? materialMap[2] : 0)
-        : getFastMaterial(materialMap ? materialMap[2] : 0)
+      getFastMaterial(materialMap ? materialMap[2] : 0, opaque)
     )
   );
 
@@ -155,21 +159,16 @@ function createGomaGara(
     bevelEnabled: false,
   });
 
-
   const mesh1 = new THREE.Mesh(
     part1,
-    opaque
-      ? getOpaqueMaterial(materialMap ? materialMap[0] : 0)
-      : getFastMaterial(materialMap ? materialMap[0] : 0)
+    getFastMaterial(materialMap ? materialMap[0] : 0, opaque)
   );
 
   const part2 = part1.clone();
   part2.rotateZ(Math.PI * (2 / 3));
   const mesh2 = new THREE.Mesh(
     part2,
-    opaque
-      ? getOpaqueMaterial(materialMap ? materialMap[1] : 0)
-      : getFastMaterial(materialMap ? materialMap[1] : 0)
+    getFastMaterial(materialMap ? materialMap[1] : 0, opaque)
   );
   mesh2.position.z = -0.05;
 
@@ -177,9 +176,7 @@ function createGomaGara(
   part3.rotateZ(Math.PI * (4 / 3));
   const mesh3 = new THREE.Mesh(
     part3,
-    opaque
-      ? getOpaqueMaterial(materialMap ? materialMap[2] : 0)
-      : getFastMaterial(materialMap ? materialMap[2] : 0)
+    getFastMaterial(materialMap ? materialMap[2] : 0, opaque)
   );
   mesh2.position.z = -0.1;
 

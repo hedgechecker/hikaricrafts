@@ -85,29 +85,28 @@ export function getMaterial(index: number) {
   });
 }
 
-export function getFastMaterial(index: number) {
+export function getFastMaterial(index: number, opaque = false) {
+  const material = new THREE.MeshStandardMaterial({
+    roughness: 1,
+    metalness: 0.0,
+    opacity: opaque ? 0.5 : 1.0,
+    transparent: opaque,
+  });
   switch (index) {
     case 0:
-      return new THREE.MeshStandardMaterial({
-        color: "#eae8d5",
-        roughness: 1,
-        metalness: 0.0,
-      });
+      material.color = new THREE.Color("#eae8d5");
+      break;
     case 1:
-      return new THREE.MeshStandardMaterial({
-        color: "#85390a",
-        roughness: 1,
-        metalness: 0.0,
-      });
-      case 2:
-      return new THREE.MeshStandardMaterial({
-        color: "#e36110",
-        roughness: 1,
-        metalness: 0.0,
-      });
+      material.color = new THREE.Color("#85390a");
+      break;
+    case 2:
+      material.color = new THREE.Color("#e36110");
+      break;
     default:
+      material.color = new THREE.Color("#eae8d5");
       break;
   }
+  return material;
 }
 
 /**

@@ -1,17 +1,33 @@
-import type { gridPosition, singlePattern } from "./InterfaceUtils";
+import type {
+  gridPosition,
+  PanelConfig,
+  singlePattern,
+} from "./InterfaceUtils";
 
-export function save(pos:gridPosition, pattern: singlePattern) {
+export function save(pos: gridPosition, pattern: singlePattern) {
   var minimal = [pattern.rotation, pattern.patternIndex];
   pattern.materialMap.forEach((num) => {
     minimal.push(num);
   });
-  localStorage.setItem("X" + pos.x + "Y" + pos.y + "Z" + pos.z, JSON.stringify(minimal));
+  localStorage.setItem(
+    "X" + pos.x + "Y" + pos.y + "Z" + pos.z,
+    JSON.stringify(minimal)
+  );
 }
 
-export function remove(pos:gridPosition){
+export function saveDimensions(config: PanelConfig) {
+  localStorage.setItem("Dim", JSON.stringify(config));
+}
+
+export function loadDimensions(): PanelConfig | null {
+  const dim = localStorage.getItem("Dim");
+  if (!dim) return null;
+  return JSON.parse(dim);
+}
+
+export function remove(pos: gridPosition) {
   localStorage.removeItem("X" + pos.x + "Y" + pos.y + "Z" + pos.z);
 }
-
 
 export function load(pos: gridPosition): singlePattern | undefined;
 export function load(key: string): singlePattern | undefined;
@@ -30,7 +46,12 @@ export function load(param: gridPosition | string): singlePattern | undefined {
   }
 
   if (value == null) {
-    console.log("Pattern invalid or empty " + (typeof param === "string" ? param : `X${param.x}Y${param.y}Z${param.z}`));
+    console.log(
+      "Pattern invalid or empty " +
+        (typeof param === "string"
+          ? param
+          : `X${param.x}Y${param.y}Z${param.z}`)
+    );
     return;
   }
 

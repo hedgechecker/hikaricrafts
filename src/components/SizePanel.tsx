@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import Card from "./Card";
 import styles from "./styles/SizePanel.module.css";
+import { saveDimensions } from "./CanvasThree/Utils/StorageUtils";
 
 interface SizePanelProps {
   panelSize: {
@@ -48,7 +49,6 @@ export default function SizePanel({ panelSize, setPanelSize }: SizePanelProps) {
       }));
     }, 1000);
   };
-
 
   const handleWidthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = Number(e.target.value);
@@ -111,7 +111,7 @@ export default function SizePanel({ panelSize, setPanelSize }: SizePanelProps) {
         2 * frameWidth,
       minheight
     );
-    height = Math.round(height*10)/10;
+    height = Math.round(height * 10) / 10;
     const width = Math.max(
       Math.round((localWidth - 2 * frameWidth) / (spacing / 2)) *
         (spacing / 2) +
@@ -127,6 +127,7 @@ export default function SizePanel({ panelSize, setPanelSize }: SizePanelProps) {
       height: height,
       width: width,
     }));
+    saveDimensions(panelSize);
   }, [height, width, spacing, frameWidth, checked]);
 
   return (
@@ -194,11 +195,13 @@ export default function SizePanel({ panelSize, setPanelSize }: SizePanelProps) {
         <div className={styles.label}>
           <span>Snap Size to Grid</span>
           <input
-          name="SnapToGrid?"
+            name="SnapToGrid?"
             type="checkbox"
             style={{ accentColor: "#e2e8f0" }}
             checked={checked}
-            onChange={(e) => {setChecked(e.target.checked)}}
+            onChange={(e) => {
+              setChecked(e.target.checked);
+            }}
           ></input>
         </div>
       </div>
