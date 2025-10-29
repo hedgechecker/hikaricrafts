@@ -57,6 +57,7 @@
 
 .Canvas{
     width: -webkit-fill-available;
+    width: -moz-available;
     height: -webkit-fill-available;
     margin-right: 1rem;
 }

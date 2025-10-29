@@ -14,6 +14,8 @@ let prevRotation = -10;
 let userRotation = 0;
 var lastX = -10;
 var lastY = -10;
+var lastMousePosX = 0;
+var lastMousePosY = 0;
 
 export function addClickHandle(
   renderer: THREE.WebGLRenderer,
@@ -44,6 +46,9 @@ export function addClickHandle(
       return;
     }
     pattern.rotation = prevRotation;
+    if(prevPoint.x <0){
+      return;
+    }
     save(prevPoint, pattern);
     console.log("Clicked" + JSON.stringify(prevPoint));
 
@@ -128,6 +133,8 @@ export function addHoverHandle(
   scene.add(patternRef.current);
 
   function onMouseMove(event: MouseEvent) {
+    lastMousePosX = event.x;
+    lastMousePosY = event.y;
     if (!patternRef.current) return;
     const pattern = patternRef.current;
 
@@ -190,9 +197,9 @@ export function addHoverHandle(
 
     //only perform cutting, if the pattern is on the perimeter of the Grid
     if (
-      (scenePos.pos.x <= -config.width / 2 + 20 ||
-        scenePos.pos.x >= config.width / 2 - 20 ||
-        scenePos.pos.y <= -config.height / 2 + 20) &&
+      (scenePos.pos.x <= -config.width / 2 + config.spacing ||
+        scenePos.pos.x >= config.width / 2 - config.spacing ||
+        scenePos.pos.y <= -config.height / 2 + config.spacing) &&
       eraserRef.current == false
     ) {
       if (cutpattern) scene.remove(cutpattern);
@@ -211,11 +218,11 @@ export function addHoverHandle(
 
     prevPoint = relPos;
   }
-  renderer.domElement.addEventListener("mousemove", onMouseMove);
+  window.addEventListener("mousemove", onMouseMove);
 
   //cleanup
   return () => {
-    renderer.domElement.removeEventListener("mousemove", onMouseMove);
+    window.removeEventListener("mousemove", onMouseMove);
     if (patternRef.current) scene.remove(patternRef.current);
     if (cutpattern) scene.remove(cutpattern);
   };
@@ -231,16 +238,16 @@ export function addKeyBoardInput(
     const offset = new THREE.Vector3();
 
     switch (event.key) {
-      case "ArrowUp":
+      case "w":
         offset.set(0, panSpeed, 0);
         break;
-      case "ArrowDown":
+      case "s":
         offset.set(0, -panSpeed, 0);
         break;
-      case "ArrowLeft":
+      case "a":
         offset.set(-panSpeed, 0, 0);
         break;
-      case "ArrowRight":
+      case "d":
         offset.set(panSpeed, 0, 0);
         break;
       case "r":
@@ -248,6 +255,13 @@ export function addKeyBoardInput(
         userRotation %= 6;
         console.log(userRotation);
         prevPoint = { x: -10, y: -10, z: -10 };
+        const eve = new MouseEvent('mousemove', {
+    bubbles: true,
+    cancelable: true,
+    clientX: lastMousePosX, // X coordinate
+    clientY: lastMousePosY, // Y coordinate
+  });
+        window.dispatchEvent(eve);
         break;
       default:
         return;

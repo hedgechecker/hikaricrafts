@@ -203,3 +203,10 @@ export function getSceneXY(pos: gridPosition, config: PanelConfig) {
   scenePos.pos = { x: snappedPoint.x, y: snappedPoint.y, z: snappedPoint.z };
   return scenePos;
 }
+
+export function parseXYZ(str: string) {
+    const match = str.match(/X(-?\d+)Y(-?\d+)Z(-?\d+)/);
+    if (!match) return null;
+    const [, x, y, z] = match.map(Number);
+    return { x: x, y: y, z: z };
+  }

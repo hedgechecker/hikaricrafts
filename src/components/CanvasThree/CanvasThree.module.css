@@ -3,7 +3,7 @@
   flex-direction: row;
   justify-content: end;
   align-items: center;
-  gap: 15px;
+  gap: 8px;
 }
 .button {
   font-size: 1.125rem;

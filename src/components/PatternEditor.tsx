@@ -7,6 +7,7 @@ import { createPattern } from "./CanvasThree/Objects/CanvasPatterns";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import styles from "./styles/PatternEditor.module.css";
 import { getFastMaterial } from "./CanvasThree/Objects/Materials";
+import { loadMaterial, saveMaterials } from "./CanvasThree/Utils/StorageUtils";
 
 interface EditorProps {
   index: number;
@@ -37,6 +38,7 @@ export default function EditorPanel({
   const patternRef = useRef<THREE.Group>(new THREE.Group());
   const selectedMaterialRef = useRef<number>(0);
   const [materialCard, setMaterialCard] = useState(0);
+  const lastIndexRef = useRef<number>(1);
 
   const spacing = panelSize.spacing;
   const triangleHeight = Math.sqrt(
@@ -53,6 +55,7 @@ export default function EditorPanel({
   //on first Load add camera, controls and scene
   useEffect(() => {
     if (!mountRef.current) return;
+    setMaterialMap(loadMaterial(index));
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xffffff);
@@ -177,9 +180,15 @@ export default function EditorPanel({
       cleanup();
       console.log("EDITOR SCENE CLEARED");
     };
-  }, [panelSize]);
+  }, [panelSize, materialMap]);
 
   useEffect(() => {
+    saveMaterials(lastIndexRef.current,materialMap);
+    console.log("Saved Material: "+materialMap+ " NR: "+lastIndexRef.current);
+    lastIndexRef.current = index;
+    console.log("LAST"+lastIndexRef.current);
+    setMaterialMap(loadMaterial(index));
+    console.log("Loaded Material: "+loadMaterial(index)+ " NR: "+index);
     sceneRef.current?.remove(patternRef.current);
     const pattern = createPattern(index, {
       depth: panelSize.depth,
@@ -203,6 +212,7 @@ export default function EditorPanel({
       );
     }
     pattern.updateMatrix();
+    
   }, [index]);
 
   //Make Parts invisible on Hover and change Material on Click
@@ -226,6 +236,11 @@ export default function EditorPanel({
     }
 
     function onMouseMove(event: MouseEvent) {
+      if (mountRef.current) {
+      const rect = mountRef.current.getBoundingClientRect();
+      offsetX = rect.x;
+      offsetY = rect.y;
+    }
       const elements = patternRef.current.children;
       const selectedMaterial = selectedMaterialRef.current;
       mouse.x =
@@ -295,6 +310,7 @@ export default function EditorPanel({
         }
         console.log("Set Material " + localMaterialMap);
         setMaterialMap(neww);
+        
         lastIndex = null;
       }
     }
@@ -308,6 +324,7 @@ export default function EditorPanel({
       renderer.domElement.removeEventListener("mousedown", onMouseDown);
     };
   }
+
 
   return (
     <Card title="Pattern Editor" padding foldable>

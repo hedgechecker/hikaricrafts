@@ -25,7 +25,7 @@ export function addControls(
 
   const minDistance = sphere.radius * 0.05;
   const maxDistance = sphere.radius * 1.5;
-  const minZoom = 0.001; // smaller number = zoomed out
+  const minZoom = 0.05; // smaller number = zoomed out
   const maxZoom = 0.5; // larger number = zoomed in
 
   //bounding box for X/Y/Z movement

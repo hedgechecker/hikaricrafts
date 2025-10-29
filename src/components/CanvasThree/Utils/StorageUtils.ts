@@ -3,6 +3,7 @@ import type {
   PanelConfig,
   singlePattern,
 } from "./InterfaceUtils";
+import { parseXYZ } from "./MathUtils";
 
 export function save(pos: gridPosition, pattern: singlePattern) {
   var minimal = [pattern.rotation, pattern.patternIndex];
@@ -17,6 +18,16 @@ export function save(pos: gridPosition, pattern: singlePattern) {
 
 export function saveDimensions(config: PanelConfig) {
   localStorage.setItem("Dim", JSON.stringify(config));
+}
+
+export function saveMaterials(index:number, map:number[]){
+  localStorage.setItem("Material"+index,JSON.stringify(map));
+}
+
+export function loadMaterial(index:number){
+  const mat = localStorage.getItem("Material"+index);
+  if (!mat) return [];
+  return JSON.parse(mat);
 }
 
 export function loadDimensions(): PanelConfig | null {
@@ -45,7 +56,7 @@ export function load(param: gridPosition | string): singlePattern | undefined {
     value = localStorage.getItem("X" + param.x + "Y" + param.y + "Z" + param.z);
   }
 
-  if (value == null) {
+  if (!value) {
     console.log(
       "Pattern invalid or empty " +
         (typeof param === "string"
@@ -54,7 +65,7 @@ export function load(param: gridPosition | string): singlePattern | undefined {
     );
     return;
   }
-
+  console.log("DATA"+value);
   const arr = JSON.parse(value);
   pattern.rotation = arr[0];
   pattern.patternIndex = arr[1];
@@ -65,3 +76,55 @@ export function load(param: gridPosition | string): singlePattern | undefined {
   pattern.materialMap = map;
   return pattern;
 }
+
+export function savePanel(){
+  var type = "text/plain";
+  //var content = JSON.stringify(loadDimensions());
+  var content = "V1\n";
+  for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i); // get the key name
+      if (!key) continue;
+      const value = localStorage.getItem(key);
+      if (!value) continue;
+      content += JSON.stringify([key,value]) +"\n";
+  }
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "myPanel.kumiko";
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
+export function loadPanel(){
+  // Example usage:
+getFileFromUser().then(file => {
+  if (file) {
+    console.log('User selected:', file.name, file.size, 'bytes');
+    
+  } else {
+    console.log('No file selected.');
+  }
+});
+}
+
+function getFileFromUser(): Promise<File | null> {
+  return new Promise((resolve) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '*/*'; // or e.g. 'image/*', '.txt', '.json'
+
+    input.onchange = () => {
+      const file = input.files?.[0] ?? null;
+      resolve(file);
+    };
+
+    // Trigger the file picker
+    input.click();
+  });
+}
+
+

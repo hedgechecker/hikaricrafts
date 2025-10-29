@@ -7,7 +7,7 @@ import SummaryPanel from "./components/SummaryPanel";
 import Card from "./components/Card";
 import Canvas from "./components/CanvasThree/CanvasThree";
 import PatternEditorPanel from "./components/PatternEditor";
-import { loadDimensions } from "./components/CanvasThree/Utils/StorageUtils";
+import { loadDimensions, loadMaterial } from "./components/CanvasThree/Utils/StorageUtils";
 
 function App() {
   const config = loadDimensions();
@@ -19,7 +19,7 @@ function App() {
     frameWidth: config ? config.frameWidth : 5,
     lineWidth: config ? config.lineWidth : 2,
   });
-  const [materialMap, setMaterialMap] = useState<number[]>([0, 0, 0]);
+  const [materialMap, setMaterialMap] = useState<number[]>(loadMaterial(1));
   const [patternIndex, setPatternIndex] = useState(1);
   // const [materialIndex, setMaterialIndex] = useState(0);
 

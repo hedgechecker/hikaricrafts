@@ -17,7 +17,7 @@ const buttonStyle = {
 
 export default function Button({ title, color = 'black'}: ButtonProps) {
   return (
-    <button style={{ ...buttonStyle, backgroundColor: color }}>
+    <button style={{ ...buttonStyle, backgroundColor: color }} onClick={() => {}}>
       {title}
     </button>
   );

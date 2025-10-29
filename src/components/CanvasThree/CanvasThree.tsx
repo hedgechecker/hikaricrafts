@@ -11,8 +11,9 @@ import {
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { createPattern } from "./Objects/CanvasPatterns";
 import styles from "./CanvasThree.module.css";
-import { load } from "./Utils/StorageUtils";
-import { getSceneXY } from "./Utils/MathUtils";
+import { load, loadPanel, savePanel } from "./Utils/StorageUtils";
+import { getSceneXY, mergeGroup, parseXYZ } from "./Utils/MathUtils";
+import { CSG } from "three-csg-ts";
 
 export const itemsById = new Map<string, THREE.Object3D>();
 
@@ -148,15 +149,9 @@ const CanvasThree = ({ panelSize, patternIndex, materialMap }: CanvasProps) => {
     };
     animate();
 
-    const cleanup = addKeyBoardInput(
-      cameraRef.current,
-      controlRef.current as OrbitControls
-    );
-
     fillInPatterns();
 
     return () => {
-      cleanup();
       isMounted = false;
       const renderer = rendererRef.current;
       if (!renderer) return;
@@ -190,7 +185,13 @@ const CanvasThree = ({ panelSize, patternIndex, materialMap }: CanvasProps) => {
       patternRef,
       eraserRef
     );
-    return cleanup;
+    const cleanup2 = addKeyBoardInput(
+      camera,
+      controlRef.current as OrbitControls
+    );
+    return () =>{ cleanup();
+      cleanup2();
+    }
   }, [isSceneReady, is3D]);
 
   useEffect(() => {
@@ -295,24 +296,42 @@ const CanvasThree = ({ panelSize, patternIndex, materialMap }: CanvasProps) => {
   }
 
   function fillInPatterns() {
+    const cuttingTool = createPanelFrame({
+    width: panelConfig.width + 20000,
+    height: panelConfig.height + 20000,
+    depth: 200,
+    frameWidth: panelConfig.frameWidth +10000,
+    lineWidth: 0,
+    spacing: 0,
+  });
+  cuttingTool.updateMatrix();
     console.time();
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i); // get the key name
       if (!key || !sceneRef.current) continue;
       const value = load(key); // get the value
       if (!value) continue;
-      const item = createPattern(
+      const pos = parseXYZ(key);
+      if (!pos) continue;
+      const scenePos = getSceneXY(pos, panelConfig);
+      if(scenePos.pos.x > panelSize.width /2 || scenePos.pos.x < -panelSize.width /2
+         || scenePos.pos.y > panelSize.height /2 || scenePos.pos.y < -panelSize.height /2 
+      ) continue;
+      var item = createPattern(
         value.patternIndex,
         panelConfig,
         false,
         value.materialMap
-      );
-      const pos = parseXYZ(key);
-      if (!pos) continue;
-      const scenePos = getSceneXY(pos, panelConfig);
+      ) as THREE.Object3D;
       item.position.copy(scenePos.pos);
       item.rotation.z = (Math.PI / 3) * value.rotation;
       item.updateMatrix();
+      if(scenePos.pos.x > panelSize.width /2 - panelConfig.spacing || scenePos.pos.x < -panelSize.width /2 + panelConfig.spacing
+         || scenePos.pos.y > panelSize.height /2 - panelConfig.spacing || scenePos.pos.y < -panelSize.height /2 + panelConfig.spacing 
+      ) {
+        const group = mergeGroup(item as THREE.Group);
+        item = CSG.subtract(group, cuttingTool);
+      }
       itemsById.set(key, item);
       sceneRef.current.add(item);
     }
@@ -320,16 +339,15 @@ const CanvasThree = ({ panelSize, patternIndex, materialMap }: CanvasProps) => {
     console.timeEnd();
   }
 
-  function parseXYZ(str: string) {
-    const match = str.match(/X(-?\d+)Y(-?\d+)Z(-?\d+)/);
-    if (!match) return null;
-    const [, x, y, z] = match.map(Number);
-    return { x: x, y: y, z: z };
-  }
-
   return (
     <>
       <div className={styles.navbar}>
+        <button className={styles.button} onClick={loadPanel}>
+          <img src="./src/assets/folder.svg" className={styles.image} />
+        </button>
+        <button className={styles.button} onClick={savePanel}>
+          <img src="./src/assets/saveIcon.png" className={styles.image} />
+        </button>
         <button className={styles.button} onClick={resetView}>
           <img src="./src/assets/home.png" className={styles.image} />
         </button>
