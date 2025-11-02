@@ -26,6 +26,7 @@ export interface PatternConfig {
   spacing: number;
 }
 
+
 export interface singlePattern {
   rotation: number;
   patternIndex: number;

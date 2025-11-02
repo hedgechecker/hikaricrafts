@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import type { PatternConfig } from "../Utils/InterfaceUtils";
 import { getFastMaterial } from "./Materials";
+
 /**
  * @param pattern the index of the wanted pattern
  * @param config includes the needed dimensions {spacing, lineWidth, depth}
@@ -12,197 +13,111 @@ export function createPattern(
   config: PatternConfig,
   opaque = false,
   materialMap?: number[]
-) {
-  let mesh: THREE.Group;
-  switch (pattern) {
-    case -1:
-      //for the PatternPanel Empty Pattern
-      mesh = createOutline(config);
-      break;
-    case 0:
-      //for the eraser Tool
-      mesh = new THREE.Group();
-      break;
-    case 1:
-      mesh = createAsaNoHa(
-        config,
-        pattern,
-        opaque,
-        materialMap ? materialMap : undefined
-      );
-      break;
-    case 2:
-      mesh = createGomaGara(
-        config,
-        pattern,
-        opaque,
-        materialMap ? materialMap : undefined
-      );
-      break;
-    default:
-      mesh = createAsaNoHa(config, pattern, opaque);
-      break;
-  }
-  return mesh as THREE.Group;
+): THREE.Group {
+  const factories: Record<number, () => THREE.Group> = {
+    [-1]: () => createOutline(config),
+    [0]: () => new THREE.Group(),
+    [1]: () => createPatternGroup("AsaNoHa", config, pattern, opaque, materialMap),
+    [2]: () => createPatternGroup("GomaGara", config, pattern, opaque, materialMap),
+  };
+
+  const factory = factories[pattern] ?? factories[1];
+  return factory();
 }
 
 /**
- *
- * @param dimensions includes the needed dimensions { spacing, lineWidth, depth }
- * @returns a mesh group with half the linewidth (could be used to create a grid with the actual linewidth)
+ * Create a generic pattern group (AsaNoHa or GomaGara)
  */
-function createOutline({ spacing, lineWidth, depth }: PatternConfig) {
-  const triangleHeight = Math.sqrt(
-    spacing * spacing - ((spacing / 2) * spacing) / 2
-  );
-  const l = lineWidth / 2;
+function createPatternGroup(
+  type: "AsaNoHa" | "GomaGara",
+  config: PatternConfig,
+  index: number,
+  opaque: boolean,
+  materialMap?: number[]
+): THREE.Group {
+  const shape = createShapeFromPoints(getPatternPoints(index, config));
+  const baseGeo = new THREE.ExtrudeGeometry(shape, {
+    depth: config.depth,
+    bevelEnabled: false,
+  });
 
+  const group = new THREE.Group();
+  const rotations = [0, Math.PI * (2 / 3), Math.PI * (4 / 3)];
+
+  rotations.forEach((rot, i) => {
+    const geo = baseGeo.clone();
+    geo.rotateZ(rot);
+
+    const mesh = new THREE.Mesh(
+      geo,
+      getFastMaterial(materialMap?.[i] ?? 0, opaque)
+    );
+
+    // GomaGara only: offset z slightly for each layer
+    if (type === "GomaGara") mesh.position.z = -i * 0.05;
+
+    group.add(mesh);
+  });
+
+  return group;
+}
+
+/**
+ * Helper to create a Shape from a list of points.
+ */
+function createShapeFromPoints(points: THREE.Vector2[]): THREE.Shape {
+  const shape = new THREE.Shape();
+  if (points.length === 0) return shape;
+
+  shape.moveTo(points[0].x, points[0].y);
+  points.slice(1).forEach((p) => shape.lineTo(p.x, p.y));
+
+  return shape;
+}
+
+/**
+ * Creates an outline pattern
+ */
+function createOutline({ spacing, lineWidth, depth }: PatternConfig): THREE.Group {
+  const triangleHeight = Math.sqrt(spacing ** 2 - ((spacing / 2) * spacing) / 2);
+  const l = lineWidth / 2;
   const inward = (l * Math.sin(Math.PI / 3)) / Math.sin(Math.PI / 6);
 
-  //a single side
   const shape = new THREE.Shape();
-  shape.moveTo(-spacing / 2, -triangleHeight * (1 / 3));
-  shape.lineTo(spacing / 2, -triangleHeight * (1 / 3));
-  shape.lineTo((spacing - 2 * inward) / 2, -triangleHeight * (1 / 3) + l);
-  shape.lineTo(-(spacing - 2 * inward) / 2, -triangleHeight * (1 / 3) + l);
-  shape.lineTo(-spacing / 2, -triangleHeight * (1 / 3));
+  shape.moveTo(-spacing / 2, -triangleHeight / 3);
+  shape.lineTo(spacing / 2, -triangleHeight / 3);
+  shape.lineTo((spacing - 2 * inward) / 2, -triangleHeight / 3 + l);
+  shape.lineTo(-(spacing - 2 * inward) / 2, -triangleHeight / 3 + l);
+  shape.lineTo(-spacing / 2, -triangleHeight / 3);
 
-  const part1 = new THREE.ExtrudeGeometry(shape, {
-    depth: depth,
-    bevelEnabled: false,
-  });
-
-  const group = new THREE.Group();
-
+  const geo = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: false });
   const material = getFastMaterial(0, true);
 
-  const mesh1 = new THREE.Mesh(part1, material);
-  const mesh2 = mesh1.clone();
-  mesh2.rotation.z = Math.PI * (2 / 3);
-  const mesh3 = mesh1.clone();
-  mesh3.rotation.z = Math.PI * (4 / 3);
-
-  group.add(mesh1, mesh2, mesh3);
-  return group;
-}
-
-/**
- * @param config the standard dimensions
- * @param index the index of this Pattern
- * @param [opaque=false] return a opaque pattern
- * @returns a AsaNoHa Pattern
- */
-function createAsaNoHa(
-  config: PatternConfig,
-  index: number,
-  opaque = false,
-  materialMap?: number[]
-) {
-  const shape = new THREE.Shape();
-  const points = getPatternPoints(index, config) as THREE.Vector2[];
-  shape.moveTo(points[0].x, points[0].y);
-  for (let i = 1; i < points.length; i++) {
-    shape.lineTo(points[i].x, points[i].y);
-  }
-
-  const part1 = new THREE.ExtrudeGeometry(shape, {
-    depth: config.depth,
-    bevelEnabled: false,
-  });
-  const part2 = part1.clone();
-  part2.rotateZ(Math.PI * (2 / 3));
-
-  const part3 = part1.clone();
-  part3.rotateZ(Math.PI * (4 / 3));
-
   const group = new THREE.Group();
-
-  group.add(
-    new THREE.Mesh(
-      part1,
-      getFastMaterial(materialMap ? materialMap[0] : 0, opaque)
-    ),
-    new THREE.Mesh(
-      part2,
-      getFastMaterial(materialMap ? materialMap[1] : 0, opaque)
-    ),
-    new THREE.Mesh(
-      part3,
-      getFastMaterial(materialMap ? materialMap[2] : 0, opaque)
-    )
-  );
-
-  return group;
-}
-
-/**
- * @param config the standard dimensions
- * @param index the index of this Pattern
- * @param [opaque=false] return a opaque pattern
- * @returns a GomaGara Pattern
- */
-function createGomaGara(
-  config: PatternConfig,
-  index: number,
-  opaque = false,
-  materialMap?: number[]
-) {
-  const shape = new THREE.Shape();
-  const points = getPatternPoints(index, config) as THREE.Vector2[];
-  shape.moveTo(points[0].x, points[0].y);
-  for (let i = 1; i < points.length; i++) {
-    shape.lineTo(points[i].x, points[i].y);
-  }
-
-  const part1 = new THREE.ExtrudeGeometry(shape, {
-    depth: config.depth,
-    bevelEnabled: false,
+  [0, Math.PI * (2 / 3), Math.PI * (4 / 3)].forEach((rot) => {
+    const mesh = new THREE.Mesh(geo.clone(), material);
+    mesh.rotation.z = rot;
+    group.add(mesh);
   });
 
-  const mesh1 = new THREE.Mesh(
-    part1,
-    getFastMaterial(materialMap ? materialMap[0] : 0, opaque)
-  );
-
-  const part2 = part1.clone();
-  part2.rotateZ(Math.PI * (2 / 3));
-  const mesh2 = new THREE.Mesh(
-    part2,
-    getFastMaterial(materialMap ? materialMap[1] : 0, opaque)
-  );
-  mesh2.position.z = -0.05;
-
-  const part3 = part1.clone();
-  part3.rotateZ(Math.PI * (4 / 3));
-  const mesh3 = new THREE.Mesh(
-    part3,
-    getFastMaterial(materialMap ? materialMap[2] : 0, opaque)
-  );
-  mesh2.position.z = -0.1;
-
-  const group = new THREE.Group();
-  group.add(mesh1, mesh2, mesh3);
   return group;
 }
+
 /**
- *
- * @param index the index of the pattern
- * @param config includes the dimensions {spacing, lineWidth}
- * @returns a Array of Points of the Polygon first and last point is the same
+ * Computes pattern points
  */
 export function getPatternPoints(
   index: number,
   { spacing, lineWidth }: PatternConfig
-) {
-  const triangleHeight = Math.sqrt(
-    spacing * spacing - ((spacing / 2) * spacing) / 2
-  );
-  //height, when the thickness of material is deducted
-  const innerheight = triangleHeight - (3 * lineWidth) / 2;
+): THREE.Vector2[] {
+  const triangleHeight = Math.sqrt(spacing ** 2 - ((spacing / 2) * spacing) / 2);
+  const innerHeight = triangleHeight - (3 * lineWidth) / 2;
+
   switch (index) {
     case 0:
-      return [] as THREE.Vector2[];
-    case 1:
+      return [];
+
+    case 1: {
       const bottomAngleHeight =
         ((lineWidth / 2) * Math.sin(Math.PI / 6)) / Math.sin(Math.PI / 3);
       const topAngleHeight =
@@ -211,49 +126,34 @@ export function getPatternPoints(
       return [
         new THREE.Vector2(0, 0),
         new THREE.Vector2(lineWidth / 2, bottomAngleHeight),
-        new THREE.Vector2(
-          lineWidth / 2,
-          innerheight * (2 / 3) - topAngleHeight
-        ),
-        new THREE.Vector2(0, innerheight * (2 / 3)),
-        new THREE.Vector2(
-          -lineWidth / 2,
-          innerheight * (2 / 3) - topAngleHeight
-        ),
+        new THREE.Vector2(lineWidth / 2, innerHeight * (2 / 3) - topAngleHeight),
+        new THREE.Vector2(0, innerHeight * (2 / 3)),
+        new THREE.Vector2(-lineWidth / 2, innerHeight * (2 / 3) - topAngleHeight),
         new THREE.Vector2(-lineWidth / 2, bottomAngleHeight),
         new THREE.Vector2(0, 0),
-      ] as THREE.Vector2[];
-      break;
-    case 2:
-      const bottom = -innerheight * (1 / 3) + lineWidth;
-      //b = a × sin beta / sin alpha
-      const b =
-        ((innerheight - (innerheight * (1 / 3) + bottom)) *
-          Math.sin(Math.PI / 2)) /
-        Math.sin(Math.PI / 3);
-      //c = b × sin gamma / sin beta
-      const leftlength = (b * Math.sin(Math.PI / 6)) / Math.sin(Math.PI / 2);
+      ];
+    }
 
-      const b2 =
-        (lineWidth * 2 * Math.sin(Math.PI / 2)) / Math.sin(Math.PI / 3);
-      //c = b × sin gamma / sin beta
+    case 2: {
+      const bottom = -innerHeight / 3 + lineWidth;
+      const b =
+        ((innerHeight - (innerHeight / 3 + bottom)) * Math.sin(Math.PI / 2)) /
+        Math.sin(Math.PI / 3);
+      const leftLength = (b * Math.sin(Math.PI / 6)) / Math.sin(Math.PI / 2);
+
+      const b2 = (lineWidth * 2 * Math.sin(Math.PI / 2)) / Math.sin(Math.PI / 3);
       const leftTopDelta = (b2 * Math.sin(Math.PI / 6)) / Math.sin(Math.PI / 2);
 
       return [
-        new THREE.Vector2(-leftlength, bottom),
-        new THREE.Vector2(-leftlength + leftTopDelta / 2, bottom + lineWidth),
-        new THREE.Vector2(leftlength - leftTopDelta / 2, bottom + lineWidth),
-        new THREE.Vector2(leftlength, bottom),
-        new THREE.Vector2(-leftlength, bottom),
-      ] as THREE.Vector2[];
-
-      break;
+        new THREE.Vector2(-leftLength, bottom),
+        new THREE.Vector2(-leftLength + leftTopDelta / 2, bottom + lineWidth),
+        new THREE.Vector2(leftLength - leftTopDelta / 2, bottom + lineWidth),
+        new THREE.Vector2(leftLength, bottom),
+        new THREE.Vector2(-leftLength, bottom),
+      ];
+    }
 
     default:
-      return [
-        new THREE.Vector2(0, 0),
-        new THREE.Vector2(0, 0),
-      ] as THREE.Vector2[];
-      break;
+      return [new THREE.Vector2(0, 0), new THREE.Vector2(0, 0)];
   }
 }

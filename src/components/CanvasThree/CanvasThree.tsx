@@ -11,7 +11,7 @@ import {
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { createPattern } from "./Objects/CanvasPatterns";
 import styles from "./CanvasThree.module.css";
-import { load, loadPanel, savePanel } from "./Utils/StorageUtils";
+import { clearScene, load, loadPanel, savePanel } from "./Utils/StorageUtils";
 import { getSceneXY, mergeGroup, parseXYZ } from "./Utils/MathUtils";
 import { CSG } from "three-csg-ts";
 
@@ -342,16 +342,19 @@ const CanvasThree = ({ panelSize, patternIndex, materialMap }: CanvasProps) => {
   return (
     <>
       <div className={styles.navbar}>
-        <button className={styles.button} onClick={loadPanel}>
+        <button className={`${styles.button} ${styles.tooltip}`} onClick={clearScene} data-tooltip="Clear Scene">
+          <img src="./src/assets/clearScene.svg" className={styles.image} />
+        </button>
+        <button className={`${styles.button} ${styles.tooltip}`} onClick={loadPanel} data-tooltip="Load File">
           <img src="./src/assets/folder.svg" className={styles.image} />
         </button>
-        <button className={styles.button} onClick={savePanel}>
+        <button className={`${styles.button} ${styles.tooltip}`} onClick={savePanel} data-tooltip="Save File">
           <img src="./src/assets/saveIcon.png" className={styles.image} />
         </button>
-        <button className={styles.button} onClick={resetView}>
+        <button className={`${styles.button} ${styles.tooltip}`} onClick={resetView} data-tooltip="Reset View">
           <img src="./src/assets/home.png" className={styles.image} />
         </button>
-        <button className={styles.button} onClick={change3D} id="3Dbtn">
+        <button className={`${styles.button} ${styles.tooltip}`} onClick={change3D} id="3Dbtn" data-tooltip="Change View">
           3D
         </button>
       </div>

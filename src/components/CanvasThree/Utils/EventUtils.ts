@@ -16,6 +16,8 @@ var lastX = -10;
 var lastY = -10;
 var lastMousePosX = 0;
 var lastMousePosY = 0;
+const lastPatterns = new Map<number, string>();
+var PatternCount = 0;
 
 export function addClickHandle(
   renderer: THREE.WebGLRenderer,
@@ -29,6 +31,15 @@ export function addClickHandle(
     patternIndex: index,
     materialMap: materialMap,
   };
+  const cuttingTool = createPanelFrame({
+    width: config.width + 20000,
+    height: config.height + 20000,
+    depth: 200,
+    frameWidth: 10000 + config.frameWidth,
+    lineWidth: 0,
+    spacing: 0,
+  });
+  cuttingTool.updateMatrix();
   function onMouseDown(event: MouseEvent) {
     lastX = event.clientX;
     lastY = event.clientY;
@@ -52,17 +63,35 @@ export function addClickHandle(
     save(prevPoint, pattern);
     console.log("Clicked" + JSON.stringify(prevPoint));
 
-    const item = createPattern(index, config, false, materialMap);
     const scenePos = getSceneXY(prevPoint, config);
+    const item = createPattern(index, config, false, materialMap);
     item.position.copy(scenePos.pos);
     item.rotation.z = (Math.PI / 3) * prevRotation;
     item.updateMatrix();
-    itemsById.set(
+    
+
+    if (
+      (scenePos.pos.x <= -config.width / 2 + config.spacing ||
+        scenePos.pos.x >= config.width / 2 - config.spacing ||
+        scenePos.pos.y <= -config.height / 2 + config.spacing)
+    ) {
+      const group = mergeGroup(item as THREE.Group);
+      const cutpattern = CSG.subtract(group, cuttingTool);
+      cutpattern.updateMatrix();
+      scene.add(cutpattern);
+      itemsById.set(
+      "X" + prevPoint.x + "Y" + prevPoint.y + "Z" + prevPoint.z,
+      cutpattern
+    );
+    } else {
+      scene.add(item);
+      itemsById.set(
       "X" + prevPoint.x + "Y" + prevPoint.y + "Z" + prevPoint.z,
       item
     );
-
-    scene.add(item);
+    }
+    lastPatterns.set(PatternCount, "X" + prevPoint.x + "Y" + prevPoint.y + "Z" + prevPoint.z);
+    PatternCount++;
   }
   function removeItem(id: string) {
     const item = itemsById.get(id);
@@ -229,7 +258,7 @@ export function addHoverHandle(
 }
 
 export //Add movement throug the arrow keys
-const panSpeed = 10;
+const panSpeed = 30;
 export function addKeyBoardInput(
   camera: THREE.Camera,
   controls: OrbitControls
@@ -237,7 +266,21 @@ export function addKeyBoardInput(
   const handleKeyDown = (event: KeyboardEvent) => {
     const offset = new THREE.Vector3();
 
-    switch (event.key) {
+    if (event.ctrlKey && event.key.toLowerCase() === "z" && PatternCount > 0) {
+      console.log("Undo action (Ctrl+Z)");
+      console.log("PATERN "+ lastPatterns.get(--PatternCount));
+      //remove(lastPatterns.get(PatternCount) as string);
+      //removeItem(lastPatterns.get(PatternCount) as string);
+    return; // Stop further handling
+  }
+
+  if (event.ctrlKey && event.key.toLowerCase() === "y") {
+    console.log("Redo action (Ctrl+Y)");
+
+    return;
+  }
+
+    switch (event.key.toLowerCase()) {
       case "w":
         offset.set(0, panSpeed, 0);
         break;

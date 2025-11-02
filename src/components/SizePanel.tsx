@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import Card from "./Card";
 import styles from "./styles/SizePanel.module.css";
 import { saveDimensions } from "./CanvasThree/Utils/StorageUtils";
+import { clamp } from "three/src/math/MathUtils.js";
 
 interface SizePanelProps {
   panelSize: {
@@ -57,9 +58,11 @@ export default function SizePanel({ panelSize, setPanelSize }: SizePanelProps) {
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
     debounceRef.current = setTimeout(() => {
+      const val = clamp(value, 100, 1000);
+      console.log(val +" ALSFHLKSAHDKLJA");
       setPanelSize((prev) => ({
         ...prev,
-        width: Math.max(100, value),
+        width: val,
       }));
     }, 500);
   };
@@ -94,6 +97,7 @@ export default function SizePanel({ panelSize, setPanelSize }: SizePanelProps) {
 
   useEffect(() => {
     const minSize = 100;
+    const maxSize = 5000;
     if (!checked) return;
     const triangleHeight = Math.sqrt(
       spacing * spacing - ((spacing / 2) * spacing) / 2
@@ -102,20 +106,26 @@ export default function SizePanel({ panelSize, setPanelSize }: SizePanelProps) {
     const minwidth =
       Math.ceil((minSize - 2 * frameWidth) / (spacing / 2)) * (spacing / 2) +
       2 * frameWidth;
+    const maxwidth =
+      Math.ceil((maxSize - 2 * frameWidth) / (spacing / 2)) * (spacing / 2) +
+      2 * frameWidth;
     const minheight =
       Math.ceil((minSize - 2 * frameWidth) / triangleHeight) * triangleHeight +
       2 * frameWidth;
+    const maxheight =
+      Math.ceil((maxSize - 2 * frameWidth) / triangleHeight) * triangleHeight +
+      2 * frameWidth;
     var height = Math.max(
+      Math.min(maxheight,
       Math.round((localHeight - 2 * frameWidth) / triangleHeight) *
-        triangleHeight +
-        2 * frameWidth,
+        triangleHeight + 2 * frameWidth),
       minheight
     );
     height = Math.round(height * 10) / 10;
     const width = Math.max(
+      Math.min(maxwidth, 
       Math.round((localWidth - 2 * frameWidth) / (spacing / 2)) *
-        (spacing / 2) +
-        2 * frameWidth,
+        (spacing / 2) + 2 * frameWidth),
       minwidth
     );
 

@@ -5,15 +5,23 @@ import type {
 } from "./InterfaceUtils";
 import { parseXYZ } from "./MathUtils";
 
-export function save(pos: gridPosition, pattern: singlePattern) {
-  var minimal = [pattern.rotation, pattern.patternIndex];
-  pattern.materialMap.forEach((num) => {
-    minimal.push(num);
-  });
-  localStorage.setItem(
-    "X" + pos.x + "Y" + pos.y + "Z" + pos.z,
-    JSON.stringify(minimal)
-  );
+export function save(pos: gridPosition, pattern: singlePattern) : void;
+export function save(pos: gridPosition, arr: number[]) : void;
+export function save(pos: gridPosition, param: singlePattern|number[]): void {
+  if (Array.isArray(param)) {
+    // Handle number[] case
+    localStorage.setItem(
+      `X${pos.x}Y${pos.y}Z${pos.z}`,
+      JSON.stringify(param)
+    );
+  } else {
+    // Handle singlePattern case
+    const minimal = [param.rotation, param.patternIndex, ...param.materialMap];
+    localStorage.setItem(
+      `X${pos.x}Y${pos.y}Z${pos.z}`,
+      JSON.stringify(minimal)
+    );
+  }
 }
 
 export function saveDimensions(config: PanelConfig) {
@@ -36,8 +44,15 @@ export function loadDimensions(): PanelConfig | null {
   return JSON.parse(dim);
 }
 
-export function remove(pos: gridPosition) {
-  localStorage.removeItem("X" + pos.x + "Y" + pos.y + "Z" + pos.z);
+export function remove(pos: gridPosition) : void;
+export function remove(str: string) : void;
+export function remove(param: gridPosition|string) {
+  console.log( typeof param === "string");
+  if(typeof param === "string"){
+    localStorage.removeItem(param);
+  }else{
+    localStorage.removeItem("X" + param.x + "Y" + param.y + "Z" + param.z);
+  }
 }
 
 export function load(pos: gridPosition): singlePattern | undefined;
@@ -65,7 +80,6 @@ export function load(param: gridPosition | string): singlePattern | undefined {
     );
     return;
   }
-  console.log("DATA"+value);
   const arr = JSON.parse(value);
   pattern.rotation = arr[0];
   pattern.patternIndex = arr[1];
@@ -100,15 +114,36 @@ export function savePanel(){
 }
 
 export function loadPanel(){
-  // Example usage:
-getFileFromUser().then(file => {
-  if (file) {
-    console.log('User selected:', file.name, file.size, 'bytes');
-    
-  } else {
-    console.log('No file selected.');
+  getFileFromUser().then(async (file) => {
+  if (!file) return;
+  const lines = await readFileLines(file);
+  for(const line of lines){
+    if(line == "V1"){
+      console.log("V11");
+      continue;
+    }if(line.length <= 1){
+      continue;
+    }
+    var parsed = JSON.parse(line);
+    if(parsed.length == 2 && parsed[0][0] == 'X'){
+      save(parseXYZ(parsed[0]) as gridPosition,JSON.parse(parsed[1])as number[]);
+    }else if(parsed.length == 2 && parsed[0][0] == 'M'){
+      const match = parsed[0].match(/Material\s*:?\s*(\d+)/);
+    if (match) {
+      saveMaterials(match[1], JSON.parse(parsed[1]));
+    }
+
+    }
   }
+  console.log('Total lines:', lines.length);
+  window.location.reload();
 });
+}
+async function readFileLines(file: File): Promise<string[]> {
+  const text = await file.text();
+  // Normalize line endings and split
+  const lines = text.split(/\r?\n/);
+  return lines;
 }
 
 function getFileFromUser(): Promise<File | null> {
@@ -127,4 +162,17 @@ function getFileFromUser(): Promise<File | null> {
   });
 }
 
+export function clearScene(){
+  const confirmed = window.confirm("Are you sure you want to clear the scene? Unsaved progress will be lost");
+  if (confirmed) {
+    localStorage.clear();
+    window.location.reload();
+  } else {
+    console.log("User canceled.");
+  }
+}
+
+export function undo(){
+
+}
 
