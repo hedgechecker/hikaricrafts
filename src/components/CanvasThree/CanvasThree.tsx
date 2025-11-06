@@ -8,12 +8,12 @@ import {
   addHoverHandle,
   addKeyBoardInput,
 } from "./Utils/EventUtils";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { createPattern } from "./Objects/CanvasPatterns";
 import styles from "./CanvasThree.module.css";
 import { clearScene, load, loadPanel, savePanel } from "./Utils/StorageUtils";
 import { getSceneXY, mergeGroup, parseXYZ } from "./Utils/MathUtils";
 import { CSG } from "three-csg-ts";
+import { threeRefs } from "./ThreeRefs";
 
 export const itemsById = new Map<string, THREE.Object3D>();
 
@@ -39,23 +39,22 @@ interface CanvasProps {
 const CanvasThree = ({ panelSize, patternIndex, materialMap }: CanvasProps) => {
   const [isSceneReady, setIsSceneReady] = useState(false);
   const [is3D, setIs3D] = useState(true);
-  const mountRef = useRef<HTMLDivElement>(null);
+  const mountRef = useRef<HTMLDivElement>(document.createElement("div"));
   const materialMapRef = useRef<number[]>([]);
 
   // Persist these across renders
-  const sceneRef = useRef<THREE.Scene>(null);
-  const rendererRef = useRef<THREE.WebGLRenderer>(null);
-  const cameraRef = useRef<THREE.Camera>(null);
-  const controlRef = useRef<OrbitControls>(null);
-  const patternRef = useRef<THREE.Object3D>(new THREE.Object3D());
-  const eraserRef = useRef<boolean>(false);
+  // const sceneRef = useRef<THREE.Scene>(null);
+  // const rendererRef = useRef<THREE.WebGLRenderer>(null);
+  // const cameraRef = useRef<THREE.Camera>(null);
+  // const controlRef = useRef<OrbitControls>(null);
+  // const patternRef = useRef<THREE.Object3D>(new THREE.Object3D());
+  // const eraserRef = useRef<boolean>(false);
+  // var sphereRef = useRef<THREE.Sphere>(new THREE.Sphere());
+
   const panelConfig = panelSize;
-  var sphereRef = useRef<THREE.Sphere>(new THREE.Sphere());
 
   // Initialize scene, camera, and renderer once
   useEffect(() => {
-    if (!mountRef.current) return;
-
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xffffff);
     const renderer = new THREE.WebGLRenderer();
@@ -65,21 +64,20 @@ const CanvasThree = ({ panelSize, patternIndex, materialMap }: CanvasProps) => {
     );
     const camera = createCamera(mountRef.current);
 
-    sceneRef.current = scene;
-    rendererRef.current = renderer;
-    cameraRef.current = camera;
+    threeRefs.scene.current = scene;
+    threeRefs.renderer.current = renderer;
+    threeRefs.camera.current = camera;
 
     //update the Camera to keep the proportions
     window.onresize = () => {
-      const renderer = rendererRef.current;
-      if (!mountRef.current || !renderer) return;
+      const renderer = threeRefs.renderer.current;
       const width = mountRef.current.clientWidth;
       const height = mountRef.current.clientHeight;
       renderer.setSize(width, height);
       // Update camera aspect and projection matrix
-      if (cameraRef.current instanceof THREE.PerspectiveCamera) {
-        cameraRef.current.aspect = width / height;
-        cameraRef.current.updateProjectionMatrix();
+      if (threeRefs.camera.current instanceof THREE.PerspectiveCamera) {
+        threeRefs.camera.current.aspect = width / height;
+        threeRefs.camera.current.updateProjectionMatrix();
       }
     };
     change3D();
@@ -91,23 +89,10 @@ const CanvasThree = ({ panelSize, patternIndex, materialMap }: CanvasProps) => {
     setIsSceneReady(!isSceneReady);
 
     console.log("new DIMENSIONS");
-    if (
-      !mountRef.current ||
-      !rendererRef.current ||
-      !sceneRef.current ||
-      !cameraRef.current
-    ) {
-      console.log("A Ref is null");
-      console.log("Mountref: " + mountRef);
-      console.log("rendererref: " + rendererRef);
-      console.log("sceneref: " + sceneRef);
-      console.log("cameraref: " + cameraRef);
-      return;
-    }
 
-    const renderer = rendererRef.current;
-    const scene = sceneRef.current;
-    const camera = cameraRef.current;
+    const renderer = threeRefs.renderer.current;
+    const scene = threeRefs.scene.current;
+    const camera = threeRefs.camera.current;
 
     // Clear old content
     mountRef.current.innerHTML = "";
@@ -124,27 +109,18 @@ const CanvasThree = ({ panelSize, patternIndex, materialMap }: CanvasProps) => {
         ? new THREE.Box3().setFromObject(panelFrame)
         : new THREE.Box3().setFromObject(grid);
     const sphere = boundingBox.getBoundingSphere(new THREE.Sphere());
-    sphereRef.current = sphere;
+    threeRefs.sphere.current = sphere;
     camera.position.z = sphere.radius * 1.5;
     camera.lookAt(sphere.center);
 
     addLighting(scene, sphere);
     resetView();
 
-    let isMounted = true;
     const animate = () => {
-      const renderer = rendererRef.current;
-      const controls = controlRef.current;
-      if (
-        !isMounted ||
-        !controls ||
-        !cameraRef.current ||
-        !sceneRef.current ||
-        !renderer
-      )
-        return;
+      const renderer = threeRefs.renderer.current;
+      const controls = threeRefs.controls.current;
       requestAnimationFrame(animate);
-      renderer.render(sceneRef.current, cameraRef.current);
+      renderer.render(threeRefs.scene.current, threeRefs.camera.current);
       controls.update();
     };
     animate();
@@ -152,9 +128,7 @@ const CanvasThree = ({ panelSize, patternIndex, materialMap }: CanvasProps) => {
     fillInPatterns();
 
     return () => {
-      isMounted = false;
-      const renderer = rendererRef.current;
-      if (!renderer) return;
+      const renderer = threeRefs.renderer.current;
       if (renderer.domElement.parentNode) {
         renderer.domElement.parentNode.removeChild(renderer.domElement);
       }
@@ -171,34 +145,20 @@ const CanvasThree = ({ panelSize, patternIndex, materialMap }: CanvasProps) => {
   // Handle hover pattern changes
   useEffect(() => {
     console.log("NEWHOVERHANDLE");
-    const camera = cameraRef.current;
-    const renderer = rendererRef.current;
-    const scene = sceneRef.current;
     const mount = mountRef.current;
-    if (!camera || !renderer || !scene || !mount) return;
-    const cleanup = addHoverHandle(
-      camera,
-      renderer,
-      scene,
-      mount,
-      panelConfig,
-      patternRef,
-      eraserRef
-    );
-    const cleanup2 = addKeyBoardInput(
-      camera,
-      controlRef.current as OrbitControls
-    );
-    return () =>{ cleanup();
+    const cleanup = addHoverHandle( mount, panelConfig);
+    const cleanup2 = addKeyBoardInput(panelConfig);
+    return () =>{ 
+      cleanup();
       cleanup2();
     }
   }, [isSceneReady, is3D]);
 
   useEffect(() => {
     materialMapRef.current = materialMap;
-    sceneRef.current?.remove(patternRef.current);
-    eraserRef.current = patternIndex == 0;
-    patternRef.current = createPattern(
+    threeRefs.scene.current.remove(threeRefs.pattern.current);
+    threeRefs.eraser.current = patternIndex == 0;
+    threeRefs.pattern.current = createPattern(
       patternIndex,
       {
         spacing: panelConfig.spacing,
@@ -208,25 +168,21 @@ const CanvasThree = ({ panelSize, patternIndex, materialMap }: CanvasProps) => {
       true,
       materialMapRef.current
     );
-    sceneRef.current?.add(patternRef.current);
-    if (!cameraRef.current || !rendererRef.current || !sceneRef.current) return;
-    patternRef.current.position.set(100000, 100000, 100000);
+    threeRefs.scene.current.add(threeRefs.pattern.current);
+    threeRefs.pattern.current.position.set(100000, 100000, 100000);
     const cleanup = addClickHandle(
-      rendererRef.current,
       patternIndex,
       materialMap,
-      sceneRef.current,
       panelConfig
     );
     return cleanup;
   }, [materialMap, patternIndex, isSceneReady]);
 
   function resetView() {
-    if (!cameraRef.current) return;
-    const camera = cameraRef.current;
+    const camera = threeRefs.camera.current;
     if (!is3D) {
-      camera.position.set(0, 0, 1.8 * sphereRef.current.radius);
-      camera.lookAt(sphereRef.current.center);
+      camera.position.set(0, 0, 1.8 * threeRefs.sphere.current.radius);
+      camera.lookAt(threeRefs.sphere.current.center);
     } else {
       camera.position.set(0, 0, 1000);
       camera.lookAt(0, 0, 0);
@@ -239,14 +195,13 @@ const CanvasThree = ({ panelSize, patternIndex, materialMap }: CanvasProps) => {
       camera.updateProjectionMatrix();
     }
 
-    if (controlRef.current) {
-      controlRef.current.target.set(0, 0, 0);
-      controlRef.current.update();
-    }
+    
+      threeRefs.controls.current.target.set(0, 0, 0);
+      threeRefs.controls.current.update();
+    
   }
 
   function change3D() {
-    if (!mountRef.current || !rendererRef.current) return;
     if (is3D) {
       (document.getElementById("3Dbtn") as HTMLElement).innerHTML = "2D";
       setIs3D(false);
@@ -264,35 +219,33 @@ const CanvasThree = ({ panelSize, patternIndex, materialMap }: CanvasProps) => {
       camera.position.set(0, 0, 1000);
       camera.lookAt(0, 0, 0);
       camera.up.set(0, 1, 0);
-      cameraRef.current = camera;
-      if (controlRef.current) controlRef.current.dispose();
-      controlRef.current = addControls(
+      threeRefs.camera.current = camera;
+      if (threeRefs.controls.current) threeRefs.controls.current.dispose();
+      threeRefs.controls.current = addControls(
         camera,
-        rendererRef.current,
-        sphereRef.current,
+        threeRefs.renderer.current,
+        threeRefs.sphere.current,
         panelConfig
       );
-      controlRef.current.enableRotate = false;
+      threeRefs.controls.current.enableRotate = false;
       console.log("Disable Rotat");
     } else {
       (document.getElementById("3Dbtn") as HTMLElement).innerHTML = "3D";
       setIs3D(true);
       const camera = createCamera(mountRef.current);
-      camera.position.z = sphereRef.current.radius * 1.5;
-      camera.lookAt(sphereRef.current.center);
-      cameraRef.current = camera;
-      if (controlRef.current) controlRef.current.dispose();
-      controlRef.current = addControls(
+      camera.position.z = threeRefs.sphere.current.radius * 1.5;
+      camera.lookAt(threeRefs.sphere.current.center);
+      threeRefs.camera.current = camera;
+      if (threeRefs.controls.current) threeRefs.controls.current.dispose();
+      threeRefs.controls.current = addControls(
         camera,
-        rendererRef.current,
-        sphereRef.current,
+        threeRefs.renderer.current,
+        threeRefs.sphere.current,
         panelConfig
       );
-      controlRef.current.enableRotate = true;
+      threeRefs.controls.current.enableRotate = true;
       console.log("ebnale Rotat");
     }
-
-    if (!sceneRef.current) return;
   }
 
   function fillInPatterns() {
@@ -308,7 +261,7 @@ const CanvasThree = ({ panelSize, patternIndex, materialMap }: CanvasProps) => {
     console.time();
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i); // get the key name
-      if (!key || !sceneRef.current) continue;
+      if (!key) continue;
       const value = load(key); // get the value
       if (!value) continue;
       const pos = parseXYZ(key);
@@ -333,7 +286,7 @@ const CanvasThree = ({ panelSize, patternIndex, materialMap }: CanvasProps) => {
         item = CSG.subtract(group, cuttingTool);
       }
       itemsById.set(key, item);
-      sceneRef.current.add(item);
+      threeRefs.scene.current.add(item);
     }
     console.timeLog();
     console.timeEnd();

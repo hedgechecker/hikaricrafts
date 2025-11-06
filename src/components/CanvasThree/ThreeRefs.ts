@@ -28,7 +28,7 @@ export class LazyRef<T> {
 export type ThreeRefsType = {
   scene: LazyRef<THREE.Scene>;
   renderer: LazyRef<THREE.WebGLRenderer>;
-  camera: LazyRef<THREE.PerspectiveCamera>;
+  camera: LazyRef<THREE.PerspectiveCamera|THREE.OrthographicCamera>;
   controls: LazyRef<OrbitControls>;
   pattern: LazyRef<THREE.Object3D>;
   eraser: LazyRef<boolean>;
