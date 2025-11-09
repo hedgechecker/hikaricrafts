@@ -3,29 +3,11 @@ import Card from "./Card";
 import styles from "./styles/SizePanel.module.css";
 import { saveDimensions } from "./CanvasThree/Utils/StorageUtils";
 import { clamp } from "three/src/math/MathUtils.js";
+import { useAppStore } from "../store/useAppStore";
 
-interface SizePanelProps {
-  panelSize: {
-    width: number;
-    height: number;
-    spacing: number;
-    depth: number;
-    frameWidth: number;
-    lineWidth: number;
-  };
-  setPanelSize: React.Dispatch<
-    React.SetStateAction<{
-      width: number;
-      height: number;
-      spacing: number;
-      depth: number;
-      frameWidth: number;
-      lineWidth: number;
-    }>
-  >;
-}
 
-export default function SizePanel({ panelSize, setPanelSize }: SizePanelProps) {
+export default function SizePanel() {
+  const {setPanelSize, panelSize } = useAppStore();
   const { width, height, spacing, frameWidth } = panelSize;
 
   const [localSpacing, setLocalSpacing] = useState<number>(spacing);
@@ -44,10 +26,7 @@ export default function SizePanel({ panelSize, setPanelSize }: SizePanelProps) {
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
     debounceRef.current = setTimeout(() => {
-      setPanelSize((prev) => ({
-        ...prev,
-        spacing: value,
-      }));
+      setPanelSize({spacing: value});
     }, 1000);
   };
 
@@ -60,10 +39,7 @@ export default function SizePanel({ panelSize, setPanelSize }: SizePanelProps) {
     debounceRef.current = setTimeout(() => {
       const val = clamp(value, 100, 1000);
       console.log(val +" ALSFHLKSAHDKLJA");
-      setPanelSize((prev) => ({
-        ...prev,
-        width: val,
-      }));
+      setPanelSize({width: val});
     }, 500);
   };
 
@@ -74,10 +50,7 @@ export default function SizePanel({ panelSize, setPanelSize }: SizePanelProps) {
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
     debounceRef.current = setTimeout(() => {
-      setPanelSize((prev) => ({
-        ...prev,
-        height: Math.max(100, value),
-      }));
+      setPanelSize({height: Math.max(100, value)});
     }, 500);
   };
 
@@ -88,10 +61,7 @@ export default function SizePanel({ panelSize, setPanelSize }: SizePanelProps) {
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
     debounceRef.current = setTimeout(() => {
-      setPanelSize((prev) => ({
-        ...prev,
-        frameWidth: value,
-      }));
+      setPanelSize({frameWidth: value});
     }, 1000);
   };
 
@@ -132,11 +102,7 @@ export default function SizePanel({ panelSize, setPanelSize }: SizePanelProps) {
     setLocalWidth(width);
     setLocalHeight(height);
 
-    setPanelSize((prev) => ({
-      ...prev,
-      height: height,
-      width: width,
-    }));
+    setPanelSize({height: height,width: width});
     saveDimensions(panelSize);
   }, [height, width, spacing, frameWidth, checked]);
 

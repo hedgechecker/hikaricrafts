@@ -7,28 +7,12 @@ import { createPattern } from "./CanvasThree/Objects/CanvasPatterns";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import styles from "./styles/PatternEditor.module.css";
 import { getFastMaterial } from "./CanvasThree/Objects/Materials";
-import { loadMaterial, saveMaterials } from "./CanvasThree/Utils/StorageUtils";
+import { loadMaterial } from "./CanvasThree/Utils/StorageUtils";
+import { useAppStore } from "../store/useAppStore";
 
-interface EditorProps {
-  index: number;
-  panelSize: {
-    width: number;
-    height: number;
-    spacing: number;
-    depth: number;
-    frameWidth: number;
-    lineWidth: number;
-  };
-  setMaterialMap: React.Dispatch<React.SetStateAction<number[]>>;
-  materialMap: number[];
-}
 
-export default function EditorPanel({
-  index,
-  panelSize,
-  setMaterialMap,
-  materialMap,
-}: EditorProps) {
+export default function EditorPanel() {
+    const {setMaterialMap, materialMap, panelSize, patternIndex } = useAppStore();
   //Same Functioning Way as CanvasThree except with a MaterialMap
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene>(null);
@@ -38,7 +22,8 @@ export default function EditorPanel({
   const patternRef = useRef<THREE.Group>(new THREE.Group());
   const selectedMaterialRef = useRef<number>(0);
   const [materialCard, setMaterialCard] = useState(0);
-  const lastIndexRef = useRef<number>(1);
+  const materialMapRef = useRef<number[]>([]);
+
 
   const spacing = panelSize.spacing;
   const triangleHeight = Math.sqrt(
@@ -50,12 +35,11 @@ export default function EditorPanel({
     { index: 1, name: "Eiche", img: "./src/assets/eiche.jpg" },
     { index: 2, name: "Douglasie", img: "./src/assets/douglasie.jpg" },
   ];
-  var localMaterialMap: number[] = [];
 
   //on first Load add camera, controls and scene
   useEffect(() => {
     if (!mountRef.current) return;
-    setMaterialMap(loadMaterial(index));
+    setMaterialMap(loadMaterial(patternIndex));
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xffffff);
@@ -123,7 +107,7 @@ export default function EditorPanel({
     const controls = controlRef.current;
     if (!camera || !renderer || !scene || !controls) return;
 
-    const pattern = createPattern(index, {
+    const pattern = createPattern(patternIndex, {
       depth: panelSize.depth,
       lineWidth: panelSize.lineWidth,
       spacing: panelSize.spacing,
@@ -146,13 +130,8 @@ export default function EditorPanel({
 
     const elements = pattern.children;
     for (var i = 0; i < elements.length; i++) {
-      if (materialMap[i]) {
-        localMaterialMap[i] = materialMap[i];
-      } else {
-        localMaterialMap[i] = 0;
-      }
       (elements.at(i) as THREE.Mesh).material = getFastMaterial(
-        localMaterialMap[i]
+        materialMap[i]
       );
     }
     pattern.updateMatrix();
@@ -180,17 +159,28 @@ export default function EditorPanel({
       cleanup();
       console.log("EDITOR SCENE CLEARED");
     };
-  }, [panelSize, materialMap]);
+  }, [panelSize]);
 
   useEffect(() => {
-    saveMaterials(lastIndexRef.current,materialMap);
-    console.log("Saved Material: "+materialMap+ " NR: "+lastIndexRef.current);
-    lastIndexRef.current = index;
-    console.log("LAST"+lastIndexRef.current);
-    setMaterialMap(loadMaterial(index));
-    console.log("Loaded Material: "+loadMaterial(index)+ " NR: "+index);
+    materialMapRef.current = materialMap;
+    const pattern = patternRef.current;
+
+    const elements = pattern.children;
+    for (var i = 0; i < elements.length; i++) {
+      (elements.at(i) as THREE.Mesh).material = getFastMaterial(
+        materialMap[i]
+      );
+    }
+    pattern.updateMatrix();
+    patternRef.current = pattern;
+  }, [materialMap])
+
+  useEffect(() => {
+    // console.log("LAST"+lastIndexRef.current);
+    // setMaterialMap(loadMaterial(patternIndex));
+    // console.log("Loaded Material: "+loadMaterial(patternIndex)+ " NR: "+patternIndex);
     sceneRef.current?.remove(patternRef.current);
-    const pattern = createPattern(index, {
+    const pattern = createPattern(patternIndex, {
       depth: panelSize.depth,
       lineWidth: panelSize.lineWidth,
       spacing: panelSize.spacing,
@@ -202,24 +192,19 @@ export default function EditorPanel({
     pattern.position.z = -panelSize.depth / 2;
     const elements = pattern.children;
     for (var i = 0; i < elements.length; i++) {
-      if (materialMap[i]) {
-        localMaterialMap[i] = materialMap[i];
-      } else {
-        localMaterialMap[i] = 0;
-      }
       (elements.at(i) as THREE.Mesh).material = getFastMaterial(
-        localMaterialMap[i]
+        materialMap[i]
       );
     }
     pattern.updateMatrix();
     
-  }, [index]);
+  }, [patternIndex]);
 
   //Make Parts invisible on Hover and change Material on Click
   function addHoverHandle(
     camera: THREE.OrthographicCamera,
     renderer: THREE.WebGLRenderer
-  ) {
+  ) {materialMapRef
     var lastX = 0;
     var lastY = 0;
     var lastIndex: number | null = null;
@@ -270,7 +255,7 @@ export default function EditorPanel({
         const mesh = element as THREE.Mesh;
         if (lastIndex != null)
           (elements.at(lastIndex) as THREE.Mesh).material = getFastMaterial(
-            localMaterialMap[lastIndex] as number
+            materialMapRef.current[lastIndex] as number
           );
 
         mesh.material = getFastMaterial(selectedMaterial, true);
@@ -279,7 +264,7 @@ export default function EditorPanel({
       }
       if (lastIndex != null) {
         (elements.at(lastIndex) as THREE.Mesh).material = getFastMaterial(
-          localMaterialMap[lastIndex] as number
+          materialMapRef.current[lastIndex] as number
         );
         lastIndex = null;
       }
@@ -297,18 +282,20 @@ export default function EditorPanel({
         return;
       }
       const elements = patternRef.current.children;
-
       const selectedMaterial = selectedMaterialRef.current;
+      var localMaterialMap = materialMapRef.current;
       if (lastIndex != null) {
         localMaterialMap[lastIndex] = selectedMaterial;
         (elements.at(lastIndex) as THREE.Mesh).material = getFastMaterial(
           localMaterialMap[lastIndex] as number
         );
+
+        //If not using neww setMaterialMap wont trigger a reRender in other Components
         var neww: number[] = [];
-        for (var i = 0; i < localMaterialMap.length; i++) {
+        for(var i = 0; i < localMaterialMap.length; i++){
           neww[i] = localMaterialMap[i];
         }
-        console.log("Set Material " + localMaterialMap);
+        materialMapRef.current = localMaterialMap;
         setMaterialMap(neww);
         
         lastIndex = null;

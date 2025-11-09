@@ -24,6 +24,14 @@ export function save(pos: gridPosition, param: singlePattern|number[]): void {
   }
 }
 
+export function saveKeyValue(key: string, value: any){
+  localStorage.setItem(key, JSON.stringify(value));
+}
+export function loadKeyValue(key: string): any{
+  return JSON.parse(localStorage.getItem(key) as string);
+}
+
+
 export function saveDimensions(config: PanelConfig) {
   localStorage.setItem("Dim", JSON.stringify(config));
 }
@@ -117,6 +125,7 @@ export function loadPanel(){
   getFileFromUser().then(async (file) => {
   if (!file) return;
   const lines = await readFileLines(file);
+  localStorage.clear();
   for(const line of lines){
     if(line == "V1"){
       console.log("V11");

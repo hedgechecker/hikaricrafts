@@ -5,12 +5,8 @@ import { createPanelFrame } from "../Objects/Frame";
 import { CSG } from "three-csg-ts";
 import { itemsById } from "../CanvasThree";
 import { threeRefs } from "../ThreeRefs";
-
 import { patternContainer } from "./PatternContainer";
 
-//save the last index
-let prevPoint = { x: -10, y: -10, z: -10 };
-let userRotation = 0;
 var lastX = -10;
 var lastY = -10;
 
@@ -31,7 +27,7 @@ export function addClickHandle(
       return;
     }
     patternContainer.removePatternAtCurrent();
-  patternContainer.addPattern(index, materialMap, config);
+    patternContainer.addPattern(index, materialMap, config);
   }  
 
   threeRefs.renderer.current.domElement.addEventListener("mouseup", onMouseUp);
@@ -57,7 +53,7 @@ export function addKeyBoardInput(config: PanelConfig) {
       return;
     }
 
-    if (event.key.toLowerCase() === "r") {
+    if (event.key.toLowerCase() == "r") {
       patternContainer.rotatePattern();
       return;
     }
@@ -75,6 +71,23 @@ export function addKeyBoardInput(config: PanelConfig) {
       case "d":
         offset.set(panSpeed, 0, 0);
         break;
+      case "e":
+        patternContainer.moveDownPattern();
+        patternContainer.userRotation = 0;
+        return;
+       case "q":
+        patternContainer.moveUpPattern();
+        patternContainer.userRotation = 0;
+      return; 
+      case "+":
+        const event = new WheelEvent("wheel", { deltaY: -100 }); // zoom in
+        threeRefs.renderer.current.domElement.dispatchEvent(event);
+        return;
+      case "-": {
+        const event = new WheelEvent("wheel", { deltaY: 100 }); // zoom out
+        threeRefs.renderer.current.domElement.dispatchEvent(event);
+        return;
+      }
       default:
         return;
     }
@@ -97,7 +110,6 @@ export function addHoverHandle(
   mount: HTMLDivElement,
   config: PanelConfig,
 ) {
-  //
   var cutpattern: THREE.Object3D | null = null;
 
   const raycaster = new THREE.Raycaster();
@@ -129,6 +141,9 @@ export function addHoverHandle(
   threeRefs.scene.current.add(threeRefs.pattern.current);
 
   function onMouseMove(event: MouseEvent) {
+    patternContainer.lastMousePosX = event.clientX;
+    patternContainer.lastMousePosY = event.clientY;
+
     if (!threeRefs.pattern.current) return;
     const pattern = threeRefs.pattern.current;
 
@@ -155,6 +170,8 @@ export function addHoverHandle(
     //when the mouse is not over the grid
     if (intersects.length <= 0) {
       pattern.visible = false;
+      pattern.position.x = 100000;
+      pattern.position.y = 100000;
       if (cutpattern) cutpattern.visible = false;
       return;
     }
@@ -164,18 +181,18 @@ export function addHoverHandle(
 
     //When still over the same Cell, we dont need to update anything
     if (
-      prevPoint.x === relPos.x &&
-      prevPoint.y === relPos.y &&
-      prevPoint.z === relPos.z
+      patternContainer.prevPoint.x === relPos.x &&
+      patternContainer.prevPoint.y === relPos.y &&
+      patternContainer.prevPoint.z === relPos.z
     ) {
       return;
     }
 
     const scenePos = getSceneXY(relPos, config);
     pattern.position.copy(scenePos.pos);
-    pattern.rotation.z = (Math.PI / 3) * (scenePos.rotation + userRotation);
+    pattern.rotation.z = (Math.PI / 3) * (scenePos.rotation + patternContainer.userRotation);
     const prevItem = itemsById.get(
-      "X" + prevPoint.x + "Y" + prevPoint.y + "Z" + prevPoint.z
+      "X" + patternContainer.prevPoint.x + "Y" + patternContainer.prevPoint.y + "Z" + patternContainer.prevPoint.z
     );
     if (prevItem) {
       prevItem.visible = true;
@@ -208,9 +225,8 @@ export function addHoverHandle(
       pattern.visible = true;
     }
 
-    prevPoint = relPos;
     patternContainer.prevPoint = relPos;
-    patternContainer.prevRotation = scenePos.rotation + patternContainer.userRotation;
+    patternContainer.prevRotation = scenePos.rotation;
 
   }
   window.addEventListener("mousemove", onMouseMove);
@@ -222,3 +238,5 @@ export function addHoverHandle(
     if (cutpattern) threeRefs.scene.current.remove(cutpattern);
   };
 }
+
+

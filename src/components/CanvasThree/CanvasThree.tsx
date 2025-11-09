@@ -11,47 +11,25 @@ import {
 import { createPattern } from "./Objects/CanvasPatterns";
 import styles from "./CanvasThree.module.css";
 import { clearScene, load, loadPanel, savePanel } from "./Utils/StorageUtils";
-import { getSceneXY, mergeGroup, parseXYZ } from "./Utils/MathUtils";
+import { getGridXYZ, getSceneXY, mergeGroup, parseXYZ } from "./Utils/MathUtils";
 import { CSG } from "three-csg-ts";
 import { threeRefs } from "./ThreeRefs";
+import { useAppStore } from "../../store/useAppStore";
+
 
 export const itemsById = new Map<string, THREE.Object3D>();
 
-interface CanvasProps {
-  panelSize: {
-    width: number;
-    height: number;
-    spacing: number;
-    depth: number;
-    frameWidth: number;
-    lineWidth: number;
-  };
-  patternIndex: number;
-  materialMap: number[];
-}
-
 /**
  * Manages all states and updates on new inputs
- * @param panelSize the dimensions
- * @param patternIndex the currently previewed Pattern
  * @returns the Canvas Div
  */
-const CanvasThree = ({ panelSize, patternIndex, materialMap }: CanvasProps) => {
+const CanvasThree = () => {
+  const {patternIndex, panelSize, materialMap } = useAppStore();
+
   const [isSceneReady, setIsSceneReady] = useState(false);
   const [is3D, setIs3D] = useState(true);
   const mountRef = useRef<HTMLDivElement>(document.createElement("div"));
   const materialMapRef = useRef<number[]>([]);
-
-  // Persist these across renders
-  // const sceneRef = useRef<THREE.Scene>(null);
-  // const rendererRef = useRef<THREE.WebGLRenderer>(null);
-  // const cameraRef = useRef<THREE.Camera>(null);
-  // const controlRef = useRef<OrbitControls>(null);
-  // const patternRef = useRef<THREE.Object3D>(new THREE.Object3D());
-  // const eraserRef = useRef<boolean>(false);
-  // var sphereRef = useRef<THREE.Sphere>(new THREE.Sphere());
-
-  const panelConfig = panelSize;
 
   // Initialize scene, camera, and renderer once
   useEffect(() => {
@@ -78,6 +56,16 @@ const CanvasThree = ({ panelSize, patternIndex, materialMap }: CanvasProps) => {
       if (threeRefs.camera.current instanceof THREE.PerspectiveCamera) {
         threeRefs.camera.current.aspect = width / height;
         threeRefs.camera.current.updateProjectionMatrix();
+      }else if(threeRefs.camera.current instanceof THREE.OrthographicCamera){
+        console.log("ORTHO update")
+        const aspect =
+        mountRef.current.clientWidth / mountRef.current.clientHeight;
+        const frustumSize = panelSize.spacing; // like zoom level
+        threeRefs.camera.current.left = (frustumSize * aspect) / -2; 
+        threeRefs.camera.current.right = (frustumSize * aspect) / 2;
+        threeRefs.camera.current.top = frustumSize  / 2; 
+        threeRefs.camera.current.bottom = frustumSize / -2; 
+        threeRefs.camera.current.updateProjectionMatrix();
       }
     };
     change3D();
@@ -98,14 +86,14 @@ const CanvasThree = ({ panelSize, patternIndex, materialMap }: CanvasProps) => {
     mountRef.current.innerHTML = "";
     mountRef.current.appendChild(renderer.domElement);
 
-    const panelFrame = createPanelFrame(panelConfig);
-    const grid = createGrid(panelConfig);
+    const panelFrame = createPanelFrame(panelSize);
+    const grid = createGrid(panelSize);
     scene.add(panelFrame);
     scene.add(grid);
 
     //Check if a frame is given or if its 0 width
     const boundingBox =
-      panelConfig.frameWidth != 0
+      panelSize.frameWidth != 0
         ? new THREE.Box3().setFromObject(panelFrame)
         : new THREE.Box3().setFromObject(grid);
     const sphere = boundingBox.getBoundingSphere(new THREE.Sphere());
@@ -146,8 +134,8 @@ const CanvasThree = ({ panelSize, patternIndex, materialMap }: CanvasProps) => {
   useEffect(() => {
     console.log("NEWHOVERHANDLE");
     const mount = mountRef.current;
-    const cleanup = addHoverHandle( mount, panelConfig);
-    const cleanup2 = addKeyBoardInput(panelConfig);
+    const cleanup = addHoverHandle( mount, panelSize);
+    const cleanup2 = addKeyBoardInput(panelSize);
     return () =>{ 
       cleanup();
       cleanup2();
@@ -158,22 +146,33 @@ const CanvasThree = ({ panelSize, patternIndex, materialMap }: CanvasProps) => {
     materialMapRef.current = materialMap;
     threeRefs.scene.current.remove(threeRefs.pattern.current);
     threeRefs.eraser.current = patternIndex == 0;
+
+    const pos = threeRefs.pattern.current.position; 
+    const relPos = getGridXYZ(pos.x, pos.y, panelSize);
+    const scenePos = getSceneXY(relPos, panelSize);
+
+    console.log("created pattern");
+    
     threeRefs.pattern.current = createPattern(
       patternIndex,
       {
-        spacing: panelConfig.spacing,
-        depth: panelConfig.depth - 0.5,
-        lineWidth: panelConfig.lineWidth,
+        spacing: panelSize.spacing,
+        depth: panelSize.depth - 0.5,
+        lineWidth: panelSize.lineWidth,
       },
       true,
       materialMapRef.current
     );
+
+    threeRefs.pattern.current.position.copy(scenePos.pos);
+    threeRefs.pattern.current.rotation.z = (Math.PI / 3) * (scenePos.rotation);
+
     threeRefs.scene.current.add(threeRefs.pattern.current);
-    threeRefs.pattern.current.position.set(100000, 100000, 100000);
+    
     const cleanup = addClickHandle(
       patternIndex,
       materialMap,
-      panelConfig
+      panelSize
     );
     return cleanup;
   }, [materialMap, patternIndex, isSceneReady]);
@@ -207,7 +206,7 @@ const CanvasThree = ({ panelSize, patternIndex, materialMap }: CanvasProps) => {
       setIs3D(false);
       const aspect =
         mountRef.current.clientWidth / mountRef.current.clientHeight;
-      const frustumSize = panelConfig.spacing; // like zoom level
+      const frustumSize = panelSize.spacing; // like zoom level
       const camera = new THREE.OrthographicCamera(
         (frustumSize * aspect) / -2, // left
         (frustumSize * aspect) / 2, // right
@@ -225,7 +224,7 @@ const CanvasThree = ({ panelSize, patternIndex, materialMap }: CanvasProps) => {
         camera,
         threeRefs.renderer.current,
         threeRefs.sphere.current,
-        panelConfig
+        panelSize
       );
       threeRefs.controls.current.enableRotate = false;
       console.log("Disable Rotat");
@@ -241,7 +240,7 @@ const CanvasThree = ({ panelSize, patternIndex, materialMap }: CanvasProps) => {
         camera,
         threeRefs.renderer.current,
         threeRefs.sphere.current,
-        panelConfig
+        panelSize
       );
       threeRefs.controls.current.enableRotate = true;
       console.log("ebnale Rotat");
@@ -250,10 +249,10 @@ const CanvasThree = ({ panelSize, patternIndex, materialMap }: CanvasProps) => {
 
   function fillInPatterns() {
     const cuttingTool = createPanelFrame({
-    width: panelConfig.width + 20000,
-    height: panelConfig.height + 20000,
+    width: panelSize.width + 20000,
+    height: panelSize.height + 20000,
     depth: 200,
-    frameWidth: panelConfig.frameWidth +10000,
+    frameWidth: panelSize.frameWidth +10000,
     lineWidth: 0,
     spacing: 0,
   });
@@ -266,21 +265,21 @@ const CanvasThree = ({ panelSize, patternIndex, materialMap }: CanvasProps) => {
       if (!value) continue;
       const pos = parseXYZ(key);
       if (!pos) continue;
-      const scenePos = getSceneXY(pos, panelConfig);
+      const scenePos = getSceneXY(pos, panelSize);
       if(scenePos.pos.x > panelSize.width /2 || scenePos.pos.x < -panelSize.width /2
          || scenePos.pos.y > panelSize.height /2 || scenePos.pos.y < -panelSize.height /2 
       ) continue;
       var item = createPattern(
         value.patternIndex,
-        panelConfig,
+        panelSize,
         false,
         value.materialMap
       ) as THREE.Object3D;
       item.position.copy(scenePos.pos);
       item.rotation.z = (Math.PI / 3) * value.rotation;
       item.updateMatrix();
-      if(scenePos.pos.x > panelSize.width /2 - panelConfig.spacing || scenePos.pos.x < -panelSize.width /2 + panelConfig.spacing
-         || scenePos.pos.y > panelSize.height /2 - panelConfig.spacing || scenePos.pos.y < -panelSize.height /2 + panelConfig.spacing 
+      if(scenePos.pos.x > panelSize.width /2 - panelSize.spacing || scenePos.pos.x < -panelSize.width /2 + panelSize.spacing
+         || scenePos.pos.y > panelSize.height /2 - panelSize.spacing || scenePos.pos.y < -panelSize.height /2 + panelSize.spacing 
       ) {
         const group = mergeGroup(item as THREE.Group);
         item = CSG.subtract(group, cuttingTool);

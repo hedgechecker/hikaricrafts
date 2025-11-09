@@ -1,4 +1,4 @@
 Make slider full black : SizePanel
 linewidth celsize dynamicly input field
-LastPatternMaterials
-resize on 2D View
+resize PatternEditor
+STRG-Z/Y with eraser

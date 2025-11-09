@@ -5,15 +5,17 @@ import { getSceneXY, mergeGroup, parseXYZ } from "./MathUtils";
 import { createPanelFrame } from "../Objects/Frame";
 import { CSG } from "three-csg-ts";
 import { createPattern } from "../Objects/CanvasPatterns";
-import { remove, save } from "./StorageUtils";
+import { loadKeyValue, remove, save, saveKeyValue } from "./StorageUtils";
 import { itemsById } from "../CanvasThree";
 import { threeRefs } from "../ThreeRefs";
+import { useAppStore } from "../../../store/useAppStore";
 
 /**
  * PatternContainer centralizes all pattern-related state:
  * - Pattern creation, removal, undo/redo, and rotation.
  * - Tracks grid position, rotation, and interaction history.
  */
+
 export class PatternContainer {
   prevPoint: gridPosition = { x: -10, y: -10, z: -10 };
   prevRotation = -10;
@@ -28,6 +30,17 @@ export class PatternContainer {
   patternCount = 0;
   maxPatternCount = 0;
 
+  currConfiguration = 0;
+  configurationStack: { materialmap: number[]; index:number}[] = [];
+
+  public constructor(test:number){
+    if(test){}
+    var value = loadKeyValue("configurations");
+    if(!value)return;
+    this.configurationStack = value;
+    this.currConfiguration = 1;
+    this.moveDownPattern();
+  }
   /**
    * Creates a new pattern at the current grid position
    */
@@ -35,10 +48,25 @@ export class PatternContainer {
     if (index === 0 || this.prevPoint.x < 0) return;
 
     const pattern: singlePattern = {
-      rotation: this.prevRotation,
+      rotation: this.prevRotation + this.userRotation,
       patternIndex: index,
       materialMap,
     };
+    
+    const existingIndex = this.configurationStack.findIndex(
+      (el) =>
+        el.index === index &&
+        JSON.stringify(el.materialmap) === JSON.stringify(materialMap)
+    );
+    // If it exists, remove it from current position
+    if (existingIndex !== -1) {
+      this.configurationStack.splice(existingIndex, 1);
+    }
+    // Push it to the *top* (front) of the stack
+    this.configurationStack.unshift({materialmap: [...materialMap], index:index});
+    this.currConfiguration = 0;
+    console.log(this.configurationStack);
+    saveKeyValue("configurations", this.configurationStack);
 
     // Save to persistent storage
     save(this.prevPoint, pattern);
@@ -117,15 +145,8 @@ export class PatternContainer {
    * Rotate pattern (R key handler)
    */
   rotatePattern() {
-    this.userRotation = (this.userRotation - 2 + 6) % 6;
-    this.prevPoint = { x: -10, y: -10, z: -10 };
-    const ev = new MouseEvent("mousemove", {
-      bubbles: true,
-      cancelable: true,
-      clientX: this.lastMousePosX,
-      clientY: this.lastMousePosY,
-    });
-    window.dispatchEvent(ev);
+    this.userRotation = (this.userRotation - 2) % 6;
+    this.updatePanel();
   }
 
   /**
@@ -179,6 +200,36 @@ export class PatternContainer {
     this.patternCount = 0;
     this.maxPatternCount = 0;
   }
+
+  moveDownPattern(){
+    if(this.currConfiguration <= 0)return;
+    const  {setMaterialMap, setPatternIndex }= useAppStore.getState();
+    this.currConfiguration--;
+    setMaterialMap([...this.configurationStack[this.currConfiguration].materialmap]);
+    setPatternIndex(this.configurationStack[this.currConfiguration].index);
+    this.updatePanel();
+  }
+
+  moveUpPattern(){
+    if(this.currConfiguration >= this.configurationStack.length -1)return;
+    const  {setMaterialMap, setPatternIndex }= useAppStore.getState();
+    this.currConfiguration ++;
+    setMaterialMap([...this.configurationStack[this.currConfiguration].materialmap]);
+    setPatternIndex(this.configurationStack[this.currConfiguration].index);
+    this.updatePanel();
+  } 
+
+  updatePanel(){
+    this.prevPoint = { x: -10, y: -10, z: -10 };
+    const ev = new MouseEvent("mousemove", {
+      bubbles: true,
+      cancelable: true,
+      clientX: this.lastMousePosX,
+      clientY: this.lastMousePosY,
+    });
+    window.dispatchEvent(ev);
+  }
 }
 
-export const patternContainer = new PatternContainer();
+
+export const patternContainer = new PatternContainer(1);

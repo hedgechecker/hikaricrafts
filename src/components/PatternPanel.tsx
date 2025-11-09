@@ -1,20 +1,20 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Card from "./Card";
 import styles from "./styles/PatternPanel.module.css";
 import SVG from "./SVG";
+import { useAppStore } from "../store/useAppStore";
 
-interface PatternProps {
-  index: number;
-  setIndex: React.Dispatch<React.SetStateAction<number>>;
-}
-
-export default function PatternPanel({ index, setIndex }: PatternProps) {
+export default function PatternPanel() {
+    const {setPatternIndex, patternIndex } = useAppStore();
   const patterns = [
     { index: 0, name: "Empty" },
     { index: 1, name: "Asanoha" },
     { index: 2, name: "Gomagara" },
   ];
-  const [selected, setSelected] = useState(index);
+  const [selected, setSelected] = useState(patternIndex);
+  useEffect(() => {
+    setSelected(patternIndex);
+  },[patternIndex])
 
   return (
     <Card title="Pattern Library" padding foldable>
@@ -27,12 +27,12 @@ export default function PatternPanel({ index, setIndex }: PatternProps) {
               className={styles.container}
               onClick={() => {
                 setSelected(pattern.index);
-                setIndex(pattern.index);
+                setPatternIndex(pattern.index);
               }}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   setSelected(pattern.index);
-                  setIndex(pattern.index);
+                  setPatternIndex(pattern.index);
                 }
               }}
             >
