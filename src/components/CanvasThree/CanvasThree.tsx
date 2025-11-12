@@ -135,7 +135,7 @@ const CanvasThree = () => {
     console.log("NEWHOVERHANDLE");
     const mount = mountRef.current;
     const cleanup = addHoverHandle( mount, panelSize);
-    const cleanup2 = addKeyBoardInput(panelSize);
+    const cleanup2 = addKeyBoardInput();
     return () =>{ 
       cleanup();
       cleanup2();
@@ -171,8 +171,7 @@ const CanvasThree = () => {
     
     const cleanup = addClickHandle(
       patternIndex,
-      materialMap,
-      panelSize
+      materialMap
     );
     return cleanup;
   }, [materialMap, patternIndex, isSceneReady]);
@@ -294,6 +293,10 @@ const CanvasThree = () => {
   return (
     <>
       <div className={styles.navbar}>
+        <button className={`${styles.button} ${styles.tooltip}`} onClick={() => {
+          window.alert("R - Rotate Pattern\nE - Previous selected Pattern\nQ - Next selected Pattern\nWASD - Move Panel")}} data-tooltip="Show keybindings">
+          <img src="./src/assets/keyboard.svg" className={styles.image} />
+        </button>
         <button className={`${styles.button} ${styles.tooltip}`} onClick={clearScene} data-tooltip="Clear Scene">
           <img src="./src/assets/clearScene.svg" className={styles.image} />
         </button>

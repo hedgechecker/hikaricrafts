@@ -14,7 +14,7 @@ import { useAppStore } from "../store/useAppStore";
 export default function EditorPanel() {
     const {setMaterialMap, materialMap, panelSize, patternIndex } = useAppStore();
   //Same Functioning Way as CanvasThree except with a MaterialMap
-  const mountRef = useRef<HTMLDivElement>(null);
+  const mountRef = useRef<HTMLDivElement>(document.createElement("div"));
   const sceneRef = useRef<THREE.Scene>(null);
   const rendererRef = useRef<THREE.WebGLRenderer>(null);
   const cameraRef = useRef<THREE.OrthographicCamera>(null);
@@ -35,6 +35,21 @@ export default function EditorPanel() {
     { index: 1, name: "Eiche", img: "./src/assets/eiche.jpg" },
     { index: 2, name: "Douglasie", img: "./src/assets/douglasie.jpg" },
   ];
+
+  window.onresize = () => {
+    if(!rendererRef.current||!cameraRef.current) return;
+    const width = mountRef.current.clientWidth;
+    const height = mountRef.current.clientHeight;
+    rendererRef.current.setSize(width, height);
+
+    const aspect = mountRef.current.clientWidth / mountRef.current.clientHeight;
+    const frustumSize = spacing;
+    cameraRef.current.left = (frustumSize * aspect) / -2; 
+    cameraRef.current.right = (frustumSize * aspect) / 2;
+    cameraRef.current.top = frustumSize  / 2; 
+    cameraRef.current.bottom = frustumSize / -2; 
+    cameraRef.current.updateProjectionMatrix();
+  };
 
   //on first Load add camera, controls and scene
   useEffect(() => {
@@ -86,6 +101,8 @@ export default function EditorPanel() {
       controls.update();
     };
     animate();
+
+    
 
     return () => {
       isMounted = false;
@@ -315,7 +332,7 @@ export default function EditorPanel() {
 
   return (
     <Card title="Pattern Editor" padding foldable>
-      <div style={{ position: "relative" }}>
+      <div style = {{position: "relative"}}>
         <div
           style={{
             position: "absolute",
@@ -364,7 +381,7 @@ export default function EditorPanel() {
             </Card>
           ))}
         </div>
-      </div>
+        </div>
     </Card>
   );
 }

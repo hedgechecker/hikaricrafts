@@ -5,7 +5,7 @@ import { getSceneXY, mergeGroup, parseXYZ } from "./MathUtils";
 import { createPanelFrame } from "../Objects/Frame";
 import { CSG } from "three-csg-ts";
 import { createPattern } from "../Objects/CanvasPatterns";
-import { loadKeyValue, remove, save, saveKeyValue } from "./StorageUtils";
+import { load, loadKeyValue, remove, save, saveKeyValue } from "./StorageUtils";
 import { itemsById } from "../CanvasThree";
 import { threeRefs } from "../ThreeRefs";
 import { useAppStore } from "../../../store/useAppStore";
@@ -15,6 +15,11 @@ import { useAppStore } from "../../../store/useAppStore";
  * - Pattern creation, removal, undo/redo, and rotation.
  * - Tracks grid position, rotation, and interaction history.
  */
+interface UndoAction {
+  type: "add" | "remove" | "replace";
+  id: string;
+  pattern: singlePattern;
+}
 
 export class PatternContainer {
   prevPoint: gridPosition = { x: -10, y: -10, z: -10 };
@@ -24,11 +29,8 @@ export class PatternContainer {
   lastMousePosX = 0;
   lastMousePosY = 0;
 
-  undoStack: { id: string; config: singlePattern }[] = [];
-  redoStack: { id: string; config: singlePattern }[] = [];
-
-  patternCount = 0;
-  maxPatternCount = 0;
+  undoStack: UndoAction[] = [];
+  redoStack: UndoAction[] = [];
 
   currConfiguration = 0;
   configurationStack: { materialmap: number[]; index:number}[] = [];
@@ -44,13 +46,32 @@ export class PatternContainer {
   /**
    * Creates a new pattern at the current grid position
    */
-  addPattern(index: number, materialMap: number[], config: PanelConfig) {
+  addPattern(index: number, materialMap: number[], rotation?: number) {
+    const pid = this.getId(this.prevPoint);
+    const pItem = itemsById.get(pid);
+    if(pItem){
+      if(index === 0){
+        this.removePattern(this.prevPoint, true);
+        return;
+      }else{
+        const pattern = {
+          rotation: rotation? rotation :this.prevRotation+ this.userRotation,
+          materialMap: [...materialMap],
+          patternIndex: index,
+        };
+        const action = this.replacePattern(this.prevPoint, pattern);
+        if(action){this.undoStack.push(action);
+          this.redoStack = [];
+        }
+        return;
+      }
+    };
     if (index === 0 || this.prevPoint.x < 0) return;
 
     const pattern: singlePattern = {
-      rotation: this.prevRotation + this.userRotation,
+      rotation: (rotation)? rotation :  this.prevRotation + this.userRotation,
       patternIndex: index,
-      materialMap,
+      materialMap: [...materialMap],
     };
     
     const existingIndex = this.configurationStack.findIndex(
@@ -64,6 +85,10 @@ export class PatternContainer {
     }
     // Push it to the *top* (front) of the stack
     this.configurationStack.unshift({materialmap: [...materialMap], index:index});
+    if (this.configurationStack.length > 10) {
+      this.configurationStack.length = 10;
+    }
+    
     this.currConfiguration = 0;
     console.log(this.configurationStack);
     saveKeyValue("configurations", this.configurationStack);
@@ -71,34 +96,70 @@ export class PatternContainer {
     // Save to persistent storage
     save(this.prevPoint, pattern);
 
+    const { panelSize } = useAppStore.getState();
     const id = this.getId(this.prevPoint);
-    const item = this._createThreeObject(this.prevPoint, pattern, config);
+    const item = this._createThreeObject(this.prevPoint, pattern, panelSize);
 
     itemsById.set(id, item);
     threeRefs.scene.current.add(item);
 
     // Register for undo
-    this.undoStack.push({ id, config: pattern });
+    this.undoStack.push({
+      type: "add",
+      id : id,
+      pattern: pattern
+    });
+
     this.redoStack = []; // clear redo on new action
-    this.patternCount++;
-    this.maxPatternCount = Math.max(this.maxPatternCount, this.patternCount);
   }
 
   /**
    * Removes a pattern from the scene and saves it to redo stack (if undo)
    */
-  removePattern(point: gridPosition) {
+  removePattern(point: gridPosition, undoEntry: boolean = true) {
     const id = this.getId(point);
     const item = itemsById.get(id);
-    if (item) {
-      // get current pattern config if available
-
-      threeRefs.scene.current.remove(item);
-      itemsById.delete(id);
-      remove(point);
+    if(!item)return;
+    const pattern = load(id) as singlePattern; 
+    // Push undo info
+    if(undoEntry){
+      this.undoStack.push({
+      type: "remove",
+      id,
+      pattern,
+      });
+      this.redoStack = [];
     }
+    
+    threeRefs.scene.current.remove(item);
+    itemsById.delete(id);
+    remove(point);
   }
 
+  replacePattern(point: gridPosition, newPattern: singlePattern ){
+    const id = this.getId(point);
+    const existingItem = itemsById.get(id);
+    if(!existingItem)return;
+
+    const oldPattern = load(id) as singlePattern;
+    if (!oldPattern) return;
+
+    threeRefs.scene.current.remove(existingItem);
+    itemsById.delete(id);
+    remove(point);
+
+    const { panelSize } = useAppStore.getState();
+    const newItem = this._createThreeObject(point, newPattern, panelSize);
+    itemsById.set(id, newItem);
+    threeRefs.scene.current.add(newItem);
+
+    // Save new pattern to storage
+    save(point, newPattern);
+    return {
+      type: "replace",
+      id,
+      pattern: oldPattern,} as UndoAction;
+  }
   /** Removes pattern at current hover/click position */
   removePatternAtCurrent() {
     this.removePattern(this.prevPoint);
@@ -111,34 +172,59 @@ export class PatternContainer {
     if (this.undoStack.length === 0) return;
     const last = this.undoStack.pop();
     if (!last) return;
+    this.userRotation = 0;
 
-    const point = parseXYZ(last.id) as gridPosition;
-    this.removePattern(point);
-    this.redoStack.push(last);
-    this.patternCount--;
+    const point = parseXYZ(last.id) as gridPosition;  
+    const { panelSize } = useAppStore.getState();
+
+    if(last.type === "add"){
+      this.removePattern(point, false);
+      this.redoStack.push(last);
+    }else if(last.type === "remove"){
+      const item = this._createThreeObject(point, last.pattern, panelSize);
+      itemsById.set(last.id, item);
+      threeRefs.scene.current.add(item);
+      save(point,last.pattern);
+      this.redoStack.push(last);
+    }else if(last.type === "replace"){
+      const action = 
+      this.replacePattern(point, last.pattern);
+      if(action){
+        this.redoStack.push(action);
+      }
+    }
+
   }
 
   /**
    * Redo the last undone action
    */
-  redo(config?: PanelConfig) {
+  redo() {
     console.log("REDO ACHTION");
-    if (this.redoStack.length === 0 || !config) return;
-    const entry = this.redoStack.pop();
-    if (!entry) return;
+    if (this.redoStack.length === 0) return;
+    const last = this.redoStack.pop();
+    if (!last) return;
+    this.userRotation = 0;
 
-    const point = parseXYZ(entry.id) as gridPosition;
-    this.prevPoint = point;
-    this.prevRotation = entry.config.rotation;
+    const point = parseXYZ(last.id) as gridPosition;
+    const { panelSize } = useAppStore.getState();
+    if(last.type === "add"){
+      const item = this._createThreeObject(point, last.pattern,panelSize);
+      itemsById.set(last.id, item);
+      threeRefs.scene.current.add(item);
+      save(point,last.pattern);
+      this.undoStack.push(last);
+    }else if(last.type === "remove"){
+      this.removePattern(point, false);
+      this.undoStack.push(last);
+    }else if(last.type === "replace"){
+      const action = 
+      this.replacePattern(point, last.pattern);
+      if(action){
+        this.undoStack.push(action);
+      }
+    }
 
-    // Recreate the pattern
-    const item = this._createThreeObject(point, entry.config, config);
-    itemsById.set(entry.id, item);
-    threeRefs.scene.current.add(item);
-    save(point, entry.config);
-
-    this.undoStack.push(entry);
-    this.patternCount++;
   }
 
   /**
@@ -154,7 +240,7 @@ export class PatternContainer {
    */
   private _createThreeObject(point: gridPosition, pattern: singlePattern, config: PanelConfig) {
     const scenePos = getSceneXY(point, config);
-    const item = createPattern(pattern.patternIndex, config, false, pattern.materialMap);
+    const item = createPattern(pattern.patternIndex, config, false, [...pattern.materialMap]);
     item.position.copy(scenePos.pos);
     item.rotation.z = (Math.PI / 3) * pattern.rotation;
     item.updateMatrix();
@@ -197,8 +283,6 @@ export class PatternContainer {
     this.lastMousePosY = 0;
     this.undoStack = [];
     this.redoStack = [];
-    this.patternCount = 0;
-    this.maxPatternCount = 0;
   }
 
   moveDownPattern(){

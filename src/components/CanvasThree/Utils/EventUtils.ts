@@ -12,8 +12,7 @@ var lastY = -10;
 
 export function addClickHandle(
   index: number,
-  materialMap: number[],
-  config: PanelConfig
+  materialMap: number[]
 ) {
   function onMouseDown(event: MouseEvent) {
     lastX = event.clientX;
@@ -26,8 +25,8 @@ export function addClickHandle(
     ) {
       return;
     }
-    patternContainer.removePatternAtCurrent();
-    patternContainer.addPattern(index, materialMap, config);
+    //patternContainer.removePatternAtCurrent();
+    patternContainer.addPattern(index, materialMap);
   }  
 
   threeRefs.renderer.current.domElement.addEventListener("mouseup", onMouseUp);
@@ -39,7 +38,7 @@ export function addClickHandle(
 }
 
 
-export function addKeyBoardInput(config: PanelConfig) {
+export function addKeyBoardInput() {
   const panSpeed = 30;
   const handleKeyDown = (event: KeyboardEvent) => {
     const offset = new THREE.Vector3();
@@ -49,7 +48,7 @@ export function addKeyBoardInput(config: PanelConfig) {
     }
 
     if (event.ctrlKey && event.key.toLowerCase() === "y") {
-      patternContainer.redo(config);
+      patternContainer.redo();
       return;
     }
 
