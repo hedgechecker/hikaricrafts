@@ -1,0 +1,123 @@
+.layout{
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+}
+
+.center{
+    width: 500px;
+    height: 400px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+.mainImage{
+    user-select: none;
+    min-width: 500px;
+    max-width: 500px;
+    min-height: 380px;
+    max-height: 380px;
+    object-fit: cover;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    border-color: var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 2px;
+
+    pointer-events: none;
+}
+
+
+.leftWrapper {
+  position: relative; /* wrapper for absolute positioning */
+  width: 100px;
+  max-height: 400px;
+}
+.left{
+    display: flex;
+    flex-direction: column;
+    width: 100px;
+    align-items: center;
+    gap: var(--space-sm);
+    overflow-y: auto;
+    max-height: 400px;
+    -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    scrollbar-width: none;
+}
+.image{
+    user-select: none;
+    min-width: 90px;
+    max-width: 90px;
+    min-height: 90px;
+    max-height: 90px;
+    object-fit: cover;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    border-color: var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 2px;
+}
+.image:hover{
+    padding: 0px;
+    border: 2px solid var(--color-accent) ;
+}
+.arrow {
+    position: absolute;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    transform: translateX(-50%);
+    font-size: var(--font-size-lg);
+        color: var(--color-accent);
+    z-index: 10;
+    user-select: none;
+
+    /* Transparent circular background */
+    background: rgba(0, 0, 0, 0.3); /* semi-transparent black */
+    border-radius: 50%;             /* make it a circle */
+    padding: 6px;                   /* space around the arrow */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.arrow.top {
+    top: 0;
+}
+
+.arrow.bottom {
+    bottom: 0;
+}
+.arrow.left {
+    left: 10px;         /* move slightly inside the image */
+    transform: none;
+
+}
+
+.arrow.right {
+    right: 10px;
+    left: auto;         /* reset inherited left */
+    transform: none;
+}
+
+.arrow.left:hover{
+    cursor: pointer;
+    border: 2px solid var(--color-accent);
+    padding: 4px;
+}
+.arrow.right:hover{
+    cursor: pointer;
+    border: 2px solid var(--color-accent);
+    padding: 4px;
+
+}
+.selectedThumb {
+  border: 2px solid var(--color-accent);
+  padding: 0px !important;
+}

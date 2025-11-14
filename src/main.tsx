@@ -1,13 +1,25 @@
-import { StrictMode } from "react";
+import { StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
-import "bootstrap/dist/css/bootstrap.min.css";
+import WoodenCasesSite from "./home/home.tsx";
+import './styles/theme.css';
 
-document.body.style.backgroundColor = "#f2f2f2ff";
-document.body.style.overflowX = "hidden";
+function Main() {
+  const [showWoodenSite, setShowWoodenSite] = useState(true);
+
+  return (
+    <div>
+      <button onClick={() => setShowWoodenSite(!showWoodenSite)}>
+        Switch Site
+      </button>
+      {showWoodenSite ? <WoodenCasesSite /> : <App />}
+    </div>
+  );
+}
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <App />
+    <Main />
   </StrictMode>
 );
+

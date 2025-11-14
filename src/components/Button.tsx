@@ -1,5 +1,3 @@
-
-
 interface ButtonProps {
   title?: string;
   color?: string;

@@ -294,7 +294,7 @@ const CanvasThree = () => {
     <>
       <div className={styles.navbar}>
         <button className={`${styles.button} ${styles.tooltip}`} onClick={() => {
-          window.alert("R - Rotate Pattern\nE - Previous selected Pattern\nQ - Next selected Pattern\nWASD - Move Panel")}} data-tooltip="Show keybindings">
+          window.alert("R - Rotate Pattern\nE - Previous selected Pattern\nQ - Next selected Pattern\nWASD - Move Panel\nStrg-Z - Undo last input\nStrg-Y - Redo last input")}} data-tooltip="Show keybindings">
           <img src="./src/assets/keyboard.svg" className={styles.image} />
         </button>
         <button className={`${styles.button} ${styles.tooltip}`} onClick={clearScene} data-tooltip="Clear Scene">
