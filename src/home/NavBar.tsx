@@ -7,65 +7,93 @@ interface NavBarProps {
 
 export default function NavBar({ selected }: NavBarProps) {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleDropdown = (name: string) => {
     setOpenDropdown(openDropdown === name ? null : name);
   };
 
+  const closeMobile = () => {
+    setMobileOpen(false);
+    setOpenDropdown(null);
+  };
+
   return (
-    <nav className={styles.bar}>
-      <div className={styles.logo}>HikariCraft</div>
+    <>
+      {/* BACKDROP */}
+      {mobileOpen && (
+        <div className={styles.backdrop} onClick={closeMobile} />
+      )}
 
-      <div className={styles.links}>
-        {/* Etuis Dropdown */}
+      <nav className={styles.bar}>
+        <div className={styles.logo}>HikariCraft</div>
+        <img src="./src/assets/shopping-box.svg" className={styles.cart}/>
+
+
+        {/* HAMBURGER BUTTON */}
+        <button
+          className={`${styles.hamburger} ${mobileOpen ? styles.open : ""}`}
+          onClick={() => setMobileOpen(!mobileOpen)}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+
+        {/* MAIN NAV */}
         <div
-          className={`${styles.elem} ${
-            selected === 1 ? styles.selected : ""
-          } ${styles.dropdown}`}
-          onMouseEnter={() => handleDropdown("etuis")}
-          onMouseLeave={() => handleDropdown("")}
+          className={`${styles.links} ${mobileOpen ? styles.showMobile : ""}`}
         >
-          Etuis ▾
-          {openDropdown === "etuis" && (
-            <div className={styles.dropdownContent}>
-              <a href="#etuis-oboe">Rohretui für Oboe</a>
-              <a href="#etuis-klar">Klarinettenblättchen Etui</a>
-              <a href="#etuis-saxo">Saxophonblättchen Etui</a>
-            </div>
-          )}
-        </div>
+          {/* Etuis Dropdown */}
+          <div
+            className={`${styles.elem} ${
+              selected === 1 ? styles.selected : ""
+            } ${styles.dropdown}`}
+            onClick={() => handleDropdown("etuis")}
+          >
+            Etuis ▾
+            {openDropdown === "etuis" && (
+              <div className={styles.dropdownContent}>
+                <a onClick={closeMobile} href="#etuis-oboe">Rohretui für Oboe</a>
+                <a onClick={closeMobile} href="#etuis-klar">Klarinettenblättchen Etui</a>
+                <a onClick={closeMobile} href="#etuis-saxo">Saxophonblättchen Etui</a>
+              </div>
+            )}
+          </div>
 
-        {/* Koffer Dropdown */}
-        <div
-          className={`${styles.elem} ${
-            selected === 2 ? styles.selected : ""
-          } ${styles.dropdown}`}
-          onMouseEnter={() => handleDropdown("koffer")}
-          onMouseLeave={() => handleDropdown("")}
-        >
-          Koffer ▾
-          {openDropdown === "koffer" && (
-            <div className={styles.dropdownContent}>
-              <a href="#case-picc">Piccolo Koffer</a>
-              <a href="#case-flute">Querflöten Koffer</a>
-            </div>
-          )}
-        </div>
+          {/* Koffer Dropdown */}
+          <div
+            className={`${styles.elem} ${
+              selected === 2 ? styles.selected : ""
+            } ${styles.dropdown}`}
+            onClick={() => handleDropdown("koffer")}
+          >
+            Koffer ▾
+            {openDropdown === "koffer" && (
+              <div className={styles.dropdownContent}>
+                <a onClick={closeMobile} href="#case-picc">Piccolo Koffer</a>
+                <a onClick={closeMobile} href="#case-flute">Querflöten Koffer</a>
+              </div>
+            )}
+          </div>
 
-        {/* Regular Links */}
-        <a
-          href="#kumiko"
-          className={`${styles.elem} ${selected === 3 ? styles.selected : ""}`}
-        >
-          Kumiko (experimentell)
-        </a>
-        <a
-          href="#contact"
-          className={`${styles.elem} ${selected === 4 ? styles.selected : ""}`}
-        >
-          Kontakt
-        </a>
-      </div>
-    </nav>
+          <a
+            href="#kumiko"
+            onClick={closeMobile}
+            className={`${styles.elem} ${selected === 3 ? styles.selected : ""}`}
+          >
+            Kumiko (experimentell)
+          </a>
+
+          <a
+            href="#contact"
+            onClick={closeMobile}
+            className={`${styles.elem} ${selected === 4 ? styles.selected : ""}`}
+          >
+            Kontakt
+          </a>
+        </div>
+      </nav>
+    </>
   );
 }

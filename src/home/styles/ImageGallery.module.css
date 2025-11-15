@@ -5,8 +5,8 @@
 }
 
 .center{
-    width: 500px;
-    height: 400px;
+    max-height: 400px;
+    height: fit-content;
     position: relative;
     display: flex;
     align-items: center;
@@ -15,10 +15,8 @@
 }
 .mainImage{
     user-select: none;
-    min-width: 500px;
-    max-width: 500px;
-    min-height: 380px;
-    max-height: 380px;
+    max-height: 400px;
+    width: 100%;
     object-fit: cover;
     cursor: pointer;
     box-shadow: var(--shadow-sm);
@@ -120,4 +118,13 @@
 .selectedThumb {
   border: 2px solid var(--color-accent);
   padding: 0px !important;
+}
+
+@media (max-width: 600px) {
+    .leftWrapper{
+        display: none;
+    }
+    .arrow{
+        opacity: 1;
+    }
 }

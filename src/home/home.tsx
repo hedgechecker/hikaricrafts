@@ -1,16 +1,51 @@
 import NavBar from './NavBar';
 import { ImageGallery } from './ImageGallery';
+import { ProductDescription } from './ProductDescription';
+import { ProductDetails } from './ProductDetails';
+import { CustomerReviews } from './Reviews';
+import { BuyInformation } from './BuyInformation';
+import { Login } from './Login';
+import { Register } from './Register';
 
 
 export default function WoodenCasesSite() {
 
   return (
-    <div style={{ fontFamily: 'Arial, sans-serif', backgroundColor: '#F5F3EF', color: '#2E2E2E', minHeight: '100vh' }}>
-      <NavBar selected={1}></NavBar>      
-      <ImageGallery 
-        images={["./src/assets/eiche.jpg","./src/assets/douglasie.jpg","./src/assets/douglasie.jpg","./src/assets/douglasie.jpg","./src/assets/douglasie.jpg","./src/assets/douglasie.jpg","./src/assets/douglasie.jpg" ]}
-        title = "Oboenrohr Etui"
-      ></ImageGallery>
+    <div style={{ fontFamily: 'Arial, sans-serif', backgroundColor: '#F5F3EF', color: '#2E2E2E', minHeight: '100vh'}}>
+      <NavBar selected={1}></NavBar>
+      <div style={{display: 'flex', flexDirection: 'column', paddingLeft:'2rem', paddingRight: '2rem'}}>
+        <div style={{display: 'flex', flexDirection: 'row', flexWrap: 'wrap'}}>      
+          <ImageGallery 
+            images={["./src/assets/eiche.jpg","./src/assets/douglasie.jpg","./src/assets/douglasie.jpg","./src/assets/douglasie.jpg","./src/assets/douglasie.jpg","./src/assets/douglasie.jpg","./src/assets/douglasie.jpg" ]}
+            selected = "Oboenrohr Etui"
+          ></ImageGallery>
+        <ProductDescription 
+          title='Oboenrohr Etui' 
+          price={35}
+          available
+          //description='Ein Etui für 6 Oboen rohre, gefertigt aus Eichenholz'
+          >
+          <div style={{width: '100%'}}>VARIATIONEN
+            <div style={{height: '20px'}}></div>
+            <BuyInformation available></BuyInformation>
+          </div>
+        </ProductDescription>
+        </div>
+          <div>
+            <ProductDetails 
+              dimensions={[90,90,20]}
+              weightGrams={150}
+              material='Eichenholz'
+              surfaceFinish='geölt'
+              warranty='10 Jahre'
+              series='"ob2et5"'
+              >
+            </ProductDetails>
+          <CustomerReviews productId={1}></CustomerReviews>
+          </div>
+        <Login></Login>
+        <Register></Register>
+      </div>
       {/* Footer */}
       <footer id="contact" style={{ backgroundColor: '#2E2E2E', color: '#F5F3EF', textAlign: 'center', padding: '2rem' }}>
         <p style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>Stay Connected</p>

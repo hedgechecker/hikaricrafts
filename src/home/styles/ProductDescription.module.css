@@ -1,0 +1,46 @@
+.layout{
+    padding: var(--space-xl);
+    width: fit-content;
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    justify-content: space-between;
+}
+.title{
+    font-size: var(--font-size-2xl);
+    color: var(--color-text-primary);
+    letter-spacing: var(--letter-spacing);
+    line-height: var(--line-height-base);
+    font-weight: bold;
+}
+.cost{
+    font-size: var(--font-size-xl);
+    color: var(--color-text-secondary);
+    letter-spacing: var(--letter-spacing);
+    line-height: var(--line-height-base);
+    font-weight: bold;
+}
+
+.available{
+    font-size: var(--font-size-md);
+    color: var(--color-text-primary);
+    letter-spacing: var(--letter-spacing);
+    line-height: var(--line-height-base);
+    font-weight: bold;
+}
+
+.unavailable{
+    font-size: var(--font-size-md);
+    color: var(--color-accent);
+    letter-spacing: var(--letter-spacing);
+    line-height: var(--line-height-base);
+    font-weight: bold;
+}
+
+.description{
+   font-size: var(--font-size-md);
+    color: var(--color-text-primary);
+    letter-spacing: var(--letter-spacing);
+    line-height: var(--line-height-base);
+    font-weight: bold; 
+}

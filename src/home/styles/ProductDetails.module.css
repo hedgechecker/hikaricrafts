@@ -1,0 +1,26 @@
+.table {
+  width: 100%;
+  border-collapse: collapse; /* ensures shared borders */
+  margin-top: 1rem;
+  font-size: var(--font-size-md);
+}
+
+.row {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.cell {
+  border-right: 1px solid var(--color-border);
+  padding: 8px 12px;
+  text-align: left;
+}
+
+/* Remove last column border */
+.row .cell:last-child {
+  border-right: none;
+}
+
+/* Optional: slight background alternation */
+.row:nth-child(even) {
+  background: var(--color-background);
+}

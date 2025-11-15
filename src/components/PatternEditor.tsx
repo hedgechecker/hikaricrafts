@@ -37,7 +37,7 @@ export default function EditorPanel() {
   ];
 
   window.onresize = () => {
-    if(!rendererRef.current||!cameraRef.current) return;
+    if(!rendererRef.current||!cameraRef.current || !mountRef.current) return;
     const width = mountRef.current.clientWidth;
     const height = mountRef.current.clientHeight;
     rendererRef.current.setSize(width, height);

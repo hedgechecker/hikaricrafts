@@ -3,6 +3,7 @@
   justify-content: space-between;
   align-items: center;
   padding: var(--space-md) var(--space-md);
+  margin-bottom: var(--space-md);
   background-color: var(--color-background);
   box-shadow: var(--shadow-lg);
 }
@@ -18,7 +19,7 @@
 .links {
   display: flex;
   align-items: center;
-  gap: var(--space-xl);
+  gap: var(--space-md);
 }
 
 .elem {
@@ -66,3 +67,82 @@
   color: var(--color-accent);
   border-radius: var(--radius-md);
 }
+
+.cart{
+  width: 50px;
+  height: 50px;
+}
+
+/* HAMBURGER BUTTON */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  z-index: 30;
+}
+
+.hamburger span {
+  width: 28px;
+  height: 3px;
+  background: var(--color-text-primary);
+  border-radius: 5px;
+  transition: all 0.3s ease;
+}
+
+/* Animate hamburger to X */
+.hamburger.open span:nth-child(1) {
+  transform: translateY(9px) rotate(45deg);
+}
+.hamburger.open span:nth-child(2) {
+  opacity: 0;
+}
+.hamburger.open span:nth-child(3) {
+  transform: translateY(-9px) rotate(-45deg);
+}
+
+/* MOBILE MENU */
+@media (max-width: 700px) {
+  .links {
+    position: fixed;
+    top: 0;
+    right: -260px;
+    background: var(--color-background);
+    flex-direction: column;
+    padding: 100px 0px;
+    gap: 30px;
+    box-shadow: var(--shadow-lg);
+    transition: right 0.3s ease;
+    z-index: 20;
+  }
+
+  .showMobile {
+    right: 0;
+    width: 100%;
+  }
+
+  .hamburger {
+    display: flex;
+  }
+  .dropdownContent{
+    left: -100px;  
+  }
+}
+
+/* BACKDROP FOR MOBILE MENU */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(2px);
+  z-index: 10;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
