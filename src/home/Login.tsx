@@ -1,8 +1,12 @@
 import { useState } from "react";
+import style from "./styles/Login.module.css";
+import { useNavigate } from "react-router-dom";
+
 
 export function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
   const login = async () => {
     const res = await fetch("http://localhost:4000/auth/login", {
@@ -15,26 +19,44 @@ export function Login() {
     if (data.token) {
       localStorage.setItem("token", data.token);
       alert("Logged in!");
+      navigate("/");
     } else {
       alert(data.message || "Login failed");
     }
   };
 
   return (
-    <div style={{ maxWidth: 300, margin: "60px auto" }}>
-      <h2>Login</h2>
-      <input 
-        placeholder="Email" 
-        value={email} 
-        onChange={e => setEmail(e.target.value)} 
+    <div className={style.container}>
+      
+      <h2 className={style.title}>Anmelden</h2>
+
+      <input
+        className={style.input}
+        placeholder="Email"
+        value={email}
+        onChange={e => setEmail(e.target.value)}
       />
-      <input 
-        placeholder="Password" 
+
+      <input
+        className={style.input}
+        placeholder="Passwort"
         type="password"
-        value={password} 
-        onChange={e => setPassword(e.target.value)} 
+        value={password}
+        onChange={e => setPassword(e.target.value)}
       />
-      <button onClick={login}>Login</button>
+
+      <p>Noch keinen Account? <a className={style.link} onClick={() => navigate("/register")}>Registrieren</a></p>
+
+      <button className={style.button} onClick={login}>
+        Anmelden
+      </button>
+      <button className={style.backButton} onClick={() => {
+        navigate("/");
+      }}>
+        Abbrechen
+      </button>
     </div>
   );
 }
+
+export default Login;

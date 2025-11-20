@@ -22,6 +22,21 @@ app.get("/dashboard", authRequired, (req, res) => {
 app.get("/admin/stats", adminRequired, (req, res) => {
   res.json({ message: "Admin stats", user: req.user });
 });
+app.post("/auth/check-email", async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ exists: false, message: "No email provided" });
+  }
+
+  const user = await prisma.user.findUnique({ where: { email } });
+
+  if (user) {
+    return res.json({ exists: true });
+  } else {
+    return res.json({ exists: false });
+  }
+});
 // --Register--
 app.post("/auth/register", async (req, res) => {
   const { email, password, name } = req.body;
@@ -70,12 +85,19 @@ app.get("/auth/me", async (req, res) => {
 });
 
 
-// Get all reviews
 app.get("/reviews", async (req, res) => {
   const { productId } = req.query;
 
+  // Explicit conversion
+  const productIdNumber = productId ? Number(productId) : undefined;
+
+  // Validate
+  if (productId && isNaN(productIdNumber)) {
+    return res.status(400).json({ error: "Invalid productId" });
+  }
+
   const reviews = await prisma.review.findMany({
-    where: productId ? { productId } : undefined,
+    where: productIdNumber ? { productId: productIdNumber } : undefined,
     orderBy: { id: "desc" },
   });
 
@@ -83,21 +105,39 @@ app.get("/reviews", async (req, res) => {
 });
 
 // Create a review
-app.post("/reviews",authRequired, async (req, res) => {
-    try{
-        const review = await prisma.review.create({
-        data: {
-          rating: req.body.rating,
-          comment: req.body.comment,
-          userId: req.user.id,
-          productId: req.body.productId,
-        },
-        });
-        res.json(review);
-    } catch(err){
-        res.status(400).json({error: "You have already reviewed this product"});
+app.post("/reviews", authRequired, async (req, res) => {
+  try {
+    const { rating, comment, productId } = req.body;
+
+    const productIdNumber = Number(productId);
+    if (isNaN(productIdNumber)) {
+      return res.status(400).json({ error: "Invalid productId" });
     }
+
+    const review = await prisma.review.create({
+      data: {
+        rating,
+        comment,
+        userId: req.user.id,     // <-- FIXED
+        productId: productIdNumber
+      },
+    });
+
+    res.json(review);
+  } catch (err) {
+    if (err.code === "P2002") {
+      return res.status(400).json({
+        error: "You have already reviewed this product"
+      });
+    }
+
+    console.error(err);
+    res.status(500).json({ error: "Unexpected error" });
+  }
 });
+
+
+
 app.put("/reviews/:id", authRequired, async (req, res) => {
   const reviewId = parseInt(req.params.id);
   const { rating, comment } = req.body;
@@ -121,12 +161,43 @@ app.put("/reviews/:id", authRequired, async (req, res) => {
     where: { id: reviewId },
     data: {
       rating,
-      comment
+      comment,
     }
   });
 
   res.json(updated);
 });
+
+// Delete a review
+app.delete("/reviews/:id", authRequired, async (req, res) => {
+  const reviewId = parseInt(req.params.id);
+
+  if (isNaN(reviewId)) {
+    return res.status(400).json({ message: "Invalid review ID" });
+  }
+
+  // Load the review
+  const review = await prisma.review.findUnique({
+    where: { id: reviewId }
+  });
+
+  if (!review) {
+    return res.status(404).json({ message: "Review not found" });
+  }
+
+  // Only the review owner or an admin can delete
+  if (review.userId !== req.user.id && req.user.role !== "ADMIN") {
+    return res.status(403).json({ message: "Not allowed to delete this review" });
+  }
+
+  // Delete review
+  await prisma.review.delete({
+    where: { id: reviewId }
+  });
+
+  res.json({ message: "Review deleted" });
+});
+
 
 
 

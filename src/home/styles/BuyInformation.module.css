@@ -12,5 +12,5 @@
 .cart:hover{
     color: var(--color-background);
     background-color: var(--color-primary);
-    border: 2px solid var(--color-accent);
+    border-color: var(--color-primary);
 }

@@ -2,3 +2,9 @@ Make slider full black : SizePanel
 linewidth celsize dynamicly input field
 Keyboard anleitung
 Select a range of patterns to move them
+General Product
+Product-Routing
+Logout/ dont show login
+basket info
+basket site
+start Feedback site

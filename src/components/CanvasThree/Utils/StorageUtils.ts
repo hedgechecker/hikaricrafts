@@ -88,7 +88,13 @@ export function load(param: gridPosition | string): singlePattern | undefined {
     );
     return;
   }
-  const arr = JSON.parse(value);
+  var arr;
+  try {
+    arr = JSON.parse(value);
+  } catch (error) {
+    console.log("Unidentified Key-Value in LocalStorage "+ param);
+    return;
+  }
   pattern.rotation = arr[0];
   pattern.patternIndex = arr[1];
   var map = [];

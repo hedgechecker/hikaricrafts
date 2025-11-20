@@ -1,5 +1,6 @@
 import { useState } from "react";
 import styles from "./styles/NavBar.module.css";
+import { Link } from "react-router-dom";
 
 interface NavBarProps {
   selected: number;
@@ -77,13 +78,13 @@ export default function NavBar({ selected }: NavBarProps) {
             )}
           </div>
 
-          <a
-            href="#kumiko"
+          <Link
+            to="/kumiko"
             onClick={closeMobile}
-            className={`${styles.elem} ${selected === 3 ? styles.selected : ""}`}
+            className={`${styles.elem} ${selected === 5 ? styles.selected : ""}`}
           >
-            Kumiko (experimentell)
-          </a>
+            Kumiko(experimentell)
+          </Link>
 
           <a
             href="#contact"
@@ -92,6 +93,14 @@ export default function NavBar({ selected }: NavBarProps) {
           >
             Kontakt
           </a>
+
+          <Link
+            to="/login"
+            onClick={closeMobile}
+            className={`${styles.elem} ${selected === 5 ? styles.selected : ""}`}
+          >
+            Login
+          </Link>
         </div>
       </nav>
     </>

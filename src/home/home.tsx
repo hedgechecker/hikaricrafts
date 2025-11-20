@@ -4,8 +4,6 @@ import { ProductDescription } from './ProductDescription';
 import { ProductDetails } from './ProductDetails';
 import { CustomerReviews } from './Reviews';
 import { BuyInformation } from './BuyInformation';
-import { Login } from './Login';
-import { Register } from './Register';
 
 
 export default function WoodenCasesSite() {
@@ -17,7 +15,6 @@ export default function WoodenCasesSite() {
         <div style={{display: 'flex', flexDirection: 'row', flexWrap: 'wrap'}}>      
           <ImageGallery 
             images={["./src/assets/eiche.jpg","./src/assets/douglasie.jpg","./src/assets/douglasie.jpg","./src/assets/douglasie.jpg","./src/assets/douglasie.jpg","./src/assets/douglasie.jpg","./src/assets/douglasie.jpg" ]}
-            selected = "Oboenrohr Etui"
           ></ImageGallery>
         <ProductDescription 
           title='Oboenrohr Etui' 
@@ -43,8 +40,6 @@ export default function WoodenCasesSite() {
             </ProductDetails>
           <CustomerReviews productId={1}></CustomerReviews>
           </div>
-        <Login></Login>
-        <Register></Register>
       </div>
       {/* Footer */}
       <footer id="contact" style={{ backgroundColor: '#2E2E2E', color: '#F5F3EF', textAlign: 'center', padding: '2rem' }}>

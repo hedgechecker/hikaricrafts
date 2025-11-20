@@ -9,6 +9,7 @@
   --color-text-primary: #693d16;    /* Dark brown text */
   --color-text-secondary: #6B4E34;  /* Softer text */
   --color-border: #E0D6C6;          /* Neutral border */
+  --color-warning: #680000;         /* Warning for important info */
 
   /* ✍️ Typography */
   --font-family-base: "Lora", serif;

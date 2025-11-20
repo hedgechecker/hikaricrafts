@@ -3,10 +3,9 @@ import styles from "./styles/ImageGallery.module.css";
 
 interface ProductGalleryProps {
   images: string[];
-  selected: string;
 }
 
-export function ImageGallery({ images = [], selected }: ProductGalleryProps) {
+export function ImageGallery({ images = [] }: ProductGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const leftDivRef = useRef<HTMLDivElement>(null);
