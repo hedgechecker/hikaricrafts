@@ -198,6 +198,28 @@ app.delete("/reviews/:id", authRequired, async (req, res) => {
   res.json({ message: "Review deleted" });
 });
 
+//Create Feedback
+app.post("/feedback", async (req, res) => {
+  try {
+    const { message, rating } = req.body;
+
+    if (!message || message.trim() === "") {
+      return res.status(400).json({ error: "Feedback cannot be empty" });
+    }
+
+    const feedback = await prisma.feedback.create({
+      data: {
+        message,
+        rating: rating ? rating : null,
+      }
+    });
+
+    res.json(feedback);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Unexpected error" });
+  }
+});
 
 
 

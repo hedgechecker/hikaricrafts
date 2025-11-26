@@ -1,8 +1,10 @@
 .bar {
+  width: calc(100% - 2*var(--space-md));
+
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--space-md) var(--space-md);
+  padding: var(--space-md);
   margin-bottom: var(--space-md);
   background-color: var(--color-background);
   box-shadow: var(--shadow-lg);
@@ -14,6 +16,7 @@
   letter-spacing: var(--letter-spacing);
   color: var(--color-text-primary);
   font-weight: bold;
+  text-decoration: none;
 }
 
 .links {

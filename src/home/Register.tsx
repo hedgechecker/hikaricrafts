@@ -1,6 +1,8 @@
 import { useState } from "react";
 import style from "./styles/Login.module.css";
 import { useNavigate } from "react-router-dom";
+const BASE_URL = import.meta.env.VITE_API_URL;
+
 
 export function Register() {
   const [email, setEmail] = useState("");
@@ -24,7 +26,7 @@ export function Register() {
 
   const checkEmailExists = async (email: string) => {
   try {
-    const res = await fetch("http://localhost:4000/auth/check-email", {
+    const res = await fetch(`${BASE_URL}/auth/check-email`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email })
@@ -38,7 +40,7 @@ export function Register() {
   }
 };
   const login = async () => {
-    const res = await fetch("http://localhost:4000/auth/login", {
+    const res = await fetch(`${BASE_URL}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password })
@@ -75,7 +77,7 @@ export function Register() {
      return;
     }
 
-    const res = await fetch("http://localhost:4000/auth/register", {
+    const res = await fetch(`${BASE_URL}/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password, name })

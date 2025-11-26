@@ -19,7 +19,7 @@ echo "Starting all services..."
 
 # --- Frontend ---
 echo "Starting frontend (npm run dev)..."
-npm run dev > "$LOG_DIR/frontend.log" 2>&1 &
+npm run dev -- --host 0.0.0.0 --port 5173> "$LOG_DIR/frontend.log" 2>&1 &
 
 # --- Backend ---
 echo "Starting backend (node index.js)..."

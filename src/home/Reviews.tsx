@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import styles from "./styles/Reviews.module.css"
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 interface Review {
   id: number;
@@ -32,14 +33,14 @@ export function CustomerReviews({productId} : CustomerReviewProps) {
   }
 
   useEffect(() => {
-  fetch(`http://localhost:4000/reviews?productId=${productId}`)
+  fetch(`${BASE_URL}/reviews?productId=${productId}`)
     .then(res => res.json())
     .then(setReviews);
 
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    fetch("http://localhost:4000/auth/me", {
+    fetch(`${BASE_URL}/auth/me`, {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -65,7 +66,7 @@ export function CustomerReviews({productId} : CustomerReviewProps) {
     productId,
   };
 
-  const response = await fetch("http://localhost:4000/reviews", {
+  const response = await fetch("${BASE_URL}/reviews", {
     method: "POST",
     headers: { 
       "Content-Type": "application/json",
@@ -86,7 +87,7 @@ const submitEdit = async () => {
 
   const token = localStorage.getItem("token");
 
-  const res = await fetch(`http://localhost:4000/reviews/${editing.id}`, {
+  const res = await fetch(`${BASE_URL}/reviews/${editing.id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -111,7 +112,7 @@ const submitEdit = async () => {
 
 const deleteComment = async () => {
   if(!editing)return;
-  await fetch(`http://localhost:4000/reviews/${editing.id}`, {
+  await fetch(`${BASE_URL}/reviews/${editing.id}`, {
   method: "DELETE",
   headers: {
     "Authorization": `Bearer ${localStorage.getItem("token")}`
