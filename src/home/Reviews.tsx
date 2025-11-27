@@ -66,7 +66,7 @@ export function CustomerReviews({productId} : CustomerReviewProps) {
     productId,
   };
 
-  const response = await fetch("${BASE_URL}/reviews", {
+  const response = await fetch(`${BASE_URL}/reviews`, {
     method: "POST",
     headers: { 
       "Content-Type": "application/json",
