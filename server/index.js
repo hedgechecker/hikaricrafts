@@ -7,7 +7,16 @@ const jwt = require("jsonwebtoken");
 const app = express();
 const prisma = new PrismaClient();
 
-app.use(cors());
+app.use(cors({
+  origin: [
+    "https://nowakl.org",
+    "https://api.nowakl.org",
+    "http://localhost:5173"   // for local dev
+  ],
+  methods: "GET,POST,PUT,DELETE",
+  credentials: true
+}));
+
 app.use(express.json());
 
 const JWT_SECRET = "your-secret-key"; // move into process.env later
@@ -224,5 +233,5 @@ app.post("/feedback", async (req, res) => {
 
 
 app.listen(4000, () =>
-  console.log("Server running on http://localhost:4000")
+  console.log("Server running on 4000")
 );

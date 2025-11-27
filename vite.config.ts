@@ -7,6 +7,11 @@ export default defineConfig({
   server: {
     host: true, // listen on all addresses
     port: 5173,
-    allowedHosts: ['nowakl.org', 'localhost', '127.0.0.1'],
+    hmr: {
+      protocol: 'wss',   // use secure WebSocket
+      host: 'nowakl.org',// must match public domain
+      port: 443,         // Cloudflare Tunnel default HTTPS port
+    },
+    allowedHosts: ['nowakl.org', 'localhost'],
   },
 })
