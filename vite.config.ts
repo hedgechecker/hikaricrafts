@@ -1,17 +1,14 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
   server: {
     host: "0.0.0.0",
     port: 5173,
-    strictPort: true,
     hmr: {
-      host: "nowakl.org",
-      protocol: "wss",
-      port: 443
+      protocol: "wss",       // secure WebSocket
+      host: "nowakl.org",    // Cloudflare domain
+      port: 443,             // tunnel HTTPS port
     }
   }
-})
+});
