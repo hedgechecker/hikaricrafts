@@ -5,13 +5,13 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    host: true, // listen on all addresses
+    host: "0.0.0.0",
     port: 5173,
+    strictPort: true,
     hmr: {
-      protocol: 'wss',   // use secure WebSocket
-      host: 'nowakl.org',// must match public domain
-      port: 443,         // Cloudflare Tunnel default HTTPS port
-    },
-    allowedHosts: ['nowakl.org', 'localhost'],
-  },
+      host: "nowakl.org",
+      protocol: "wss",
+      port: 443
+    }
+  }
 })
