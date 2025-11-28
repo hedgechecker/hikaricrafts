@@ -5,6 +5,9 @@ import Login from "./home/Login.tsx";
 import './styles/theme.css';
 import { Register } from "./home/Register.tsx";
 import Feedback from "./home/Feedback.tsx";
+
+import eiche from "/src/assets/eiche.jpg";
+import douglasie from "/src/assets/douglasie.jpg";
 function VariationDropdown() {
   return (
     <select value={"small"} onChange={(e) => console.log(e.target.value)}>
@@ -26,9 +29,7 @@ return (
         available={12}
             
         images= {[
-          "./src/assets/eiche.jpg",
-          "/src/assets/douglasie.jpg",
-          "./src/assets/eiche.jpg"
+          eiche, douglasie, eiche
         ]}
       
         dimensions={[90, 90, 20]}

@@ -8,5 +8,10 @@ export default defineConfig({
     port: 5173,
     hmr: false,            // optional: disable HMR behind tunnel
     allowedHosts: ["nowakl.org"] // <-- allow your Cloudflare hostname
-  }
+  },
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    chunkSizeWarningLimit: 1000, // optional, reduces warnings for large JS
+  },
 });

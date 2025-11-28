@@ -1,7 +1,7 @@
 import { useState } from "react";
 import styles from "./styles/NavBar.module.css";
 import { Link } from "react-router-dom";
-
+import shoppingBox from '/src/assets/shopping-box.svg';
 interface NavBarProps {
   selected: number;
 }
@@ -34,7 +34,7 @@ export default function NavBar({ selected }: NavBarProps) {
           >
             HikariCraft
           </Link>
-        <img src="./src/assets/shopping-box.svg" className={styles.cart}/>
+        <img src={shoppingBox} className={styles.cart}/>
 
 
         {/* HAMBURGER BUTTON */}
@@ -61,7 +61,10 @@ export default function NavBar({ selected }: NavBarProps) {
             Etuis ▾
             {openDropdown === "etuis" && (
               <div className={styles.dropdownContent}>
-                <a onClick={closeMobile} href="#etuis-oboe">Rohretui für Oboe</a>
+                <Link to="/etui" 
+                onClick={closeMobile}>
+                  Rohretui für Oboe
+                </Link>
                 <a onClick={closeMobile} href="#etuis-klar">Klarinettenblättchen Etui</a>
                 <a onClick={closeMobile} href="#etuis-saxo">Saxophonblättchen Etui</a>
               </div>
