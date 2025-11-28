@@ -25,3 +25,8 @@ dist-ssr
 
 .env
 update_and_restart.sh
+
+
+/server/prisma/dev.db-journal
+/server/prisma/migrations/dev.db
+/server/prisma/migrations
