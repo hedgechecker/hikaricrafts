@@ -11,7 +11,8 @@ app.use(cors({
   origin: [
     "https://nowakl.org",
     "https://api.nowakl.org",
-    "http://localhost:5173"   // for local dev
+    "http://localhost:5173",
+    "*"   // for local dev
   ],
   methods: "GET,POST,PUT,DELETE",
   credentials: true
@@ -224,6 +225,43 @@ app.post("/feedback", async (req, res) => {
     });
 
     res.json(feedback);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Unexpected error" });
+  }
+});
+
+app.get("/products/full", async (req, res) => {
+  try {
+    const products = await prisma.product.findMany({
+      include: {
+        // Include product options
+        options: {
+          include: {
+            values: true, // all values for this option
+          },
+        },
+        // Include all variations
+        variations: {
+          include: {
+            // Include the option values for each variation
+            optionValues: {
+              include: {
+                optionValue: {
+                  include: {
+                    option: true, // also include option info (e.g., name)
+                  },
+                },
+              },
+            },
+          },
+        },
+        // Optionally include images if you have a separate table
+        // images: true
+      },
+    });
+
+    res.json(products);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Unexpected error" });

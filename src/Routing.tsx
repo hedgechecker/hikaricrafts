@@ -8,6 +8,7 @@ import Feedback from "./home/Feedback.tsx";
 
 import eiche from "/src/assets/eiche.jpg";
 import douglasie from "/src/assets/douglasie.jpg";
+import AllProductsPage from "./home/AllProducts.tsx";
 function VariationDropdown() {
   return (
     <select value={"small"} onChange={(e) => console.log(e.target.value)}>
@@ -22,6 +23,7 @@ export default function Main() {
 return (
     <Routes>
       <Route path="/" element={<Feedback />} />
+      <Route path="/all" element={<AllProductsPage />} />
       <Route path="/etui" element={
         <ProductTemplate
         title="Oboenrohr Etui"

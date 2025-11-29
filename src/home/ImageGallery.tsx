@@ -134,6 +134,7 @@ export function ImageGallery({ images = [] }: ProductGalleryProps) {
           {images.map((img, i) => (
             <img
               key={i}
+              //import shoppingBox from '/src/assets/shopping-box.svg';
               src={img}
               className={
                 i === currentIndex
