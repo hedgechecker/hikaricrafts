@@ -1,6 +1,8 @@
 import { useState } from "react";
 import NavBar from "./NavBar";
 import styles from "./styles/Feedback.module.css";
+const BASE_URL = import.meta.env.VITE_API_URL;
+
 
 export default function Feedback() {
   const [text, setText] = useState("");
@@ -11,7 +13,7 @@ export default function Feedback() {
   if (!text.trim()) { return; }
 
   try {
-    const response = await fetch("http://localhost:4000/feedback", {
+    const response = await fetch(`${BASE_URL}/feedback`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

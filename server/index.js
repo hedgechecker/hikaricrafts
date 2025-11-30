@@ -142,7 +142,7 @@ app.post("/reviews", authRequired, async (req, res) => {
     }
 
     console.error(err);
-    res.status(500).json({ error: "Unexpected error" });
+    res.status(500).json({ error: err });
   }
 });
 
