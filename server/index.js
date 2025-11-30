@@ -245,6 +245,7 @@ app.get("/products/full", async (req, res) => {
         variations: {
           include: {
             // Include the option values for each variation
+            images : true,
             optionValues: {
               include: {
                 optionValue: {

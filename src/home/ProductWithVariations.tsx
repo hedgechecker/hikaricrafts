@@ -115,9 +115,10 @@ function getCurrentlyValidValues(optionName: string) {
   // -----------------------------------------------------
   // 5. Render Template + Auto-filtered Selectors
   // -----------------------------------------------------
+  console.log(selectedVariation.images);
   return (
     <ProductTemplate
-      images={selectedVariation.images}
+      images={selectedVariation?.images?.map(i => i.path) ?? []}
       title={product.name}
       price={selectedVariation.priceCents / 100}
       available={selectedVariation.stock}

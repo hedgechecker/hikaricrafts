@@ -8,7 +8,8 @@ import type {
   ProductOption,
   ProductOptionValue,
   ProductVariation,
-  ProductVariationOptionValue
+  ProductVariationOptionValue,
+  Image
 } from "../../server/node_modules/@prisma/client";
 import ProductWithVariations from "./ProductWithVariations";
 const BASE_URL = import.meta.env.VITE_API_URL;
@@ -18,6 +19,7 @@ const BASE_URL = import.meta.env.VITE_API_URL;
 export interface FullProduct extends Product {
   options: (ProductOption & { values: ProductOptionValue[] })[];
   variations: (ProductVariation & {
+    images: Image[];
     optionValues: (ProductVariationOptionValue & {
       optionValue: ProductOptionValue & {
         option: ProductOption;

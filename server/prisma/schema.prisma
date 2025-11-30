@@ -87,9 +87,10 @@ model ProductVariation {
   weightGrams Int?
 
   product      Product                       @relation(fields: [productId], references: [id])
+  images       Image[]
   optionValues ProductVariationOptionValue[]
   orderItems   OrderItem[]
-  images       Image[]
+  
 }
 
 model ProductVariationOptionValue {

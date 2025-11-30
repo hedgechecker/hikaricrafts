@@ -40,6 +40,7 @@ export function ImageGallery({ images = [] }: ProductGalleryProps) {
   // Update arrow visibility
   // ------------------------------
   useEffect(() => {
+    setCurrentIndex(0);
     const leftDiv = leftDivRef.current;
     const topArrow = topArrowRef.current;
     const bottomArrow = bottomArrowRef.current;
@@ -134,7 +135,6 @@ export function ImageGallery({ images = [] }: ProductGalleryProps) {
           {images.map((img, i) => (
             <img
               key={i}
-              //import shoppingBox from '/src/assets/shopping-box.svg';
               src={img}
               className={
                 i === currentIndex
