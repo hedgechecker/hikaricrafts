@@ -82,7 +82,7 @@ export default function NavBar({ selected }: NavBarProps) {
             {openDropdown === "koffer" && (
               <div className={styles.dropdownContent}>
                 <a onClick={closeMobile} href="#case-picc">Piccolo Koffer</a>
-                <a onClick={closeMobile} href="#case-flute">Querflöten Koffer</a>
+                <a onClick={closeMobile} href="/fluteCase">Querflöten Koffer</a>
               </div>
             )}
           </div>
@@ -96,7 +96,7 @@ export default function NavBar({ selected }: NavBarProps) {
           </Link>
 
           <a
-            href="#contact"
+            href="/kontakt"
             onClick={closeMobile}
             className={`${styles.elem} ${selected === 4 ? styles.selected : ""}`}
           >

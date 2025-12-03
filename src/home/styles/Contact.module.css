@@ -24,12 +24,14 @@
 }
 
 .textarea {
-  height: 140px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   resize: none;
   font-size: var(--font-size-md);
+  padding: var(--space-sm);
   accent-color: var(--color-accent);
+  font-family: var(--font-family-base);
+  z-index: 2;
 }
 
 .label {
@@ -64,4 +66,20 @@
   background: var(--color-text-primary);
   border-color: var(--color-text-primary);
   color: var(--color-background);
+}
+
+.charCount{
+    color: var(--color-text-secondary)
+}
+
+.inputField{
+    display: flex;
+    flex-direction: column;
+}
+
+.labeling{
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    align-items: center;
 }

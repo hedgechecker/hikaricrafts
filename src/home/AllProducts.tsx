@@ -35,7 +35,7 @@ export default function AllProductsPage() {
     fetch(`${BASE_URL}/products/full`)
     .then(res => res.json())
     .then((data) => setProducts(data));
-  }, []);
+  }, []); 
 
   if (products.length === 0) return <div>Loading...</div>;
 

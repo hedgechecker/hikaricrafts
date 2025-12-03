@@ -18,6 +18,9 @@
   font-weight: bold;
   text-decoration: none;
 }
+.logo:hover {
+  color: var(--color-accent);
+}
 
 .links {
   display: flex;
@@ -107,7 +110,7 @@
 }
 
 /* MOBILE MENU */
-@media (max-width: 700px) {
+@media (max-width: 900px) {
   .links {
     position: fixed;
     top: 0;

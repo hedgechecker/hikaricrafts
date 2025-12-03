@@ -71,7 +71,6 @@
   resize: none;
   background-color: var(--color-background);
   accent-color: var(--color-accent);
-  width: 100%;
 }
 
 .submit { 

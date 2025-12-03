@@ -220,7 +220,9 @@ const deleteComment = async () => {
               className={styles.textarea}
               value={comment}
               onChange={e => setComment(e.target.value)}
+              maxLength={400}
             />
+            <div className={styles.charCount}>{comment.length}/400</div>
 
             <button className={styles.button} onClick={submitEdit}>Änderungen speichern</button>
             <button className={styles.button}  onClick={() => setEditing(null)}>Abbrechen</button>

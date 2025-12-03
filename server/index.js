@@ -1,3 +1,4 @@
+const nodemailer = require("nodemailer");
 const express = require("express");
 const cors = require("cors");
 const { PrismaClient } = require("@prisma/client");
@@ -6,6 +7,20 @@ const jwt = require("jsonwebtoken");
 
 const app = express();
 const prisma = new PrismaClient();
+
+const rateLimit = require("express-rate-limit");
+
+const contactLimiter = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000, // 24 hours
+  max: 5,                       // allow 5 messages per IP per day
+  message: { error: "Daily message limit reached. Try again tomorrow." }
+});
+const feedBackLimiter = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000, // 24 hours
+  max: 10,                       // allow 5 messages per IP per day
+  message: { error: "Daily feedback limit reached. Try again tomorrow." }
+});
+
 
 app.use(cors({
   origin: [
@@ -23,15 +38,30 @@ app.use(express.json());
 const JWT_SECRET = "your-secret-key"; // move into process.env later
 const { authRequired, adminRequired } = require("./authMiddleware");
 
-// Example protected route (logged in users only)
-app.get("/dashboard", authRequired, (req, res) => {
-  res.json({ message: "You are logged in", user: req.user });
+app.post("/contact", contactLimiter, async (req, res) => {
+  const { name, email, subject, message } = req.body;
+
+  const transporter = nodemailer.createTransport({
+    service: "gmx",
+    auth: {
+      user: process.env.MAIL_USER,
+      pass: process.env.MAIL_PASS
+    }
+  });
+
+  await transporter.sendMail({
+    from: `"${name}" <lukas_n3@gmx.de>`,
+    to: "lukas_n3@gmx.de",
+    subject,
+    text: `Email: ${email}\n${name} schrieb am: ${new Date()}\n${message}`
+  });
+
+
+  res.json({ ok: true });
 });
 
-// Example admin-only route
-app.get("/admin/stats", adminRequired, (req, res) => {
-  res.json({ message: "Admin stats", user: req.user });
-});
+
+
 app.post("/auth/check-email", async (req, res) => {
   const { email } = req.body;
 
@@ -128,7 +158,7 @@ app.post("/reviews", authRequired, async (req, res) => {
       data: {
         rating,
         comment,
-        userId: req.user.id,     // <-- FIXED
+        userId: req.user.id,
         productId: productIdNumber
       },
     });
@@ -209,7 +239,7 @@ app.delete("/reviews/:id", authRequired, async (req, res) => {
 });
 
 //Create Feedback
-app.post("/feedback", async (req, res) => {
+app.post("/feedback", feedBackLimiter, async (req, res) => {
   try {
     const { message, rating } = req.body;
 
