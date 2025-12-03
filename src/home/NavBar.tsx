@@ -61,12 +61,9 @@ export default function NavBar({ selected }: NavBarProps) {
             Etuis ▾
             {openDropdown === "etuis" && (
               <div className={styles.dropdownContent}>
-                <Link to="/etui" 
-                onClick={closeMobile}>
-                  Rohretui für Oboe
-                </Link>
-                <a onClick={closeMobile} href="#etuis-klar">Klarinettenblättchen Etui</a>
-                <a onClick={closeMobile} href="#etuis-saxo">Saxophonblättchen Etui</a>
+                <Link to="/oboereedsetui" onClick={closeMobile}>Rohretui für Oboe</Link>
+                <Link to="/klarinettreedsetui" onClick={closeMobile}>Klarinettenblättchen Etui</Link>
+                <Link to="/saxophonreedsetui" onClick={closeMobile}>Saxophonblättchen Etui</Link>
               </div>
             )}
           </div>
@@ -81,8 +78,8 @@ export default function NavBar({ selected }: NavBarProps) {
             Koffer ▾
             {openDropdown === "koffer" && (
               <div className={styles.dropdownContent}>
-                <a onClick={closeMobile} href="#case-picc">Piccolo Koffer</a>
-                <a onClick={closeMobile} href="/fluteCase">Querflöten Koffer</a>
+                <Link to="/piccoloCase" onClick={closeMobile}>Piccolo Koffer</Link>
+                <Link to="/fluteCase" onClick={closeMobile}>Querflöten Koffer</Link>
               </div>
             )}
           </div>

@@ -26,8 +26,11 @@ return (
     <Routes>
       <Route path="/" element={<Feedback />} />
       <Route path="/all" element={<AllProductsPage />} />
-      <Route path="/etui" element={<ProductWithVariations key={1} product={products[0]} />}/>
+      <Route path="/oboereedsetui" element={<ProductWithVariations key={1} product={products[0]} />}/>
       <Route path="/fluteCase" element={<ProductWithVariations key={2} product={products[1]} />}/>
+      <Route path="/klarinettreedsetui" element={<ProductWithVariations key={3} product={products[2]} />}/>
+      <Route path="/saxophonreedsetui" element={<ProductWithVariations key={4} product={products[3]} />}/>
+      <Route path="/piccoloCase" element={<ProductWithVariations key={5} product={products[4]} />}/>
       <Route path="/kontakt" element={<Contact />} />
       <Route path="/kumiko" element={<App />} />
       <Route path="/login" element={<Login />} />
