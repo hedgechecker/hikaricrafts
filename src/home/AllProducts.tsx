@@ -1,28 +1,29 @@
 import { useEffect, useState } from "react";
-//import ProductTemplate from "./ProductTemplate";
-//import { prisma } from "../lib/prisma";
-
-// Types you get from Prisma
 import type {
   Product,
   ProductOption,
-  ProductOptionValue,
+  Option,
+  OptionValue,
   ProductVariation,
   ProductVariationOptionValue,
-  Image
+  Image,
 } from "../../server/node_modules/@prisma/client";
 import ProductWithVariations from "./ProductWithVariations";
+
 const BASE_URL = import.meta.env.VITE_API_URL;
 
-
-
 export interface FullProduct extends Product {
-  options: (ProductOption & { values: ProductOptionValue[] })[];
+  // Each product has ProductOption rows linking it to global Options
+  productOptions: (ProductOption & {
+    option: Option & {
+      values: OptionValue[];
+    };
+  })[];
   variations: (ProductVariation & {
     images: Image[];
     optionValues: (ProductVariationOptionValue & {
-      optionValue: ProductOptionValue & {
-        option: ProductOption;
+      optionValue: OptionValue & {
+        option: Option;
       };
     })[];
   })[];
@@ -33,9 +34,9 @@ export default function AllProductsPage() {
 
   useEffect(() => {
     fetch(`${BASE_URL}/products/full`)
-    .then(res => res.json())
-    .then((data) => setProducts(data));
-  }, []); 
+      .then((res) => res.json())
+      .then((data) => setProducts(data));
+  }, []);
 
   if (products.length === 0) return <div>Loading...</div>;
 

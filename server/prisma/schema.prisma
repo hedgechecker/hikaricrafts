@@ -51,9 +51,9 @@ model Product {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  options    ProductOption[]
-  variations ProductVariation[]
-  reviews    Review[]
+  productOptions  ProductOption[]
+  variations      ProductVariation[]
+  reviews         Review[]
 }
 
 model Option {

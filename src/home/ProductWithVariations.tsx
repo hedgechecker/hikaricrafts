@@ -11,8 +11,8 @@ export default function ProductWithVariations({ product }: Props) {
   const validValuesPerOption = useMemo(() => {
     const map: Record<string, Set<number>> = {};
     
-    for (const option of product.options) {
-      map[option.name] = new Set();
+    for (const po of product.productOptions) {
+      map[po.option.name] = new Set();
     }
 
     for (const variation of product.variations) {
@@ -31,9 +31,9 @@ export default function ProductWithVariations({ product }: Props) {
   // -----------------------------------------------------
   const [selected, setSelected] = useState(() =>
   Object.fromEntries(
-    product.options.map(o => {
-      const valid = [...validValuesPerOption[o.name]];
-      return [o.name, valid[0] ?? null];
+    product.productOptions.map(po => {
+      const valid = [...validValuesPerOption[po.option.name]];
+      return [po.option.name, valid[0] ?? null];
     })
   )
   );
@@ -52,13 +52,13 @@ export default function ProductWithVariations({ product }: Props) {
   if (match) return; // valid combo
 
   // if invalid → fix by adjusting ONE option
-  for (const option of product.options) {
-    const validValues = [...validValuesPerOption[option.name]];
+  for (const po of product.productOptions) {
+    const validValues = [...validValuesPerOption[po.option.name]];
 
     const newValue = validValues[0]; // choose first valid
 
-    if (newValue !== selected[option.name]) {
-      setSelected(prev => ({ ...prev, [option.name]: newValue }));
+    if (newValue !== selected[po.option.name]) {
+      setSelected(prev => ({ ...prev, [po.option.name]: newValue }));
       return;
     }
   }
@@ -134,21 +134,21 @@ function getCurrentlyValidValues(optionName: string) {
       series={product.series ?? ""}
     >
       {/* Render selectors dynamically */}
-      {product.options.map(option => {
-        const allValidValues = option.values.filter(v =>
-          validValuesPerOption[option.name].has(v.id)
+      {product.productOptions.map(po => {
+        const allValidValues = po.option.values.filter(v =>
+          validValuesPerOption[po.option.name].has(v.id)
         );
       
-        const currentlyValid = getCurrentlyValidValues(option.name);
+        const currentlyValid = getCurrentlyValidValues(po.option.name);
       
         return (
           <OptionSquares
-            key={option.name}
-            label={option.name}
+            key={po.option.name}
+            label={po.option.name}
             values={allValidValues}
-            selected={selected[option.name]}
+            selected={selected[po.option.name]}
             disabledValues={currentlyValid}
-            onSelect={value => setSelected(prev => ({ ...prev, [option.name]: value }))}
+            onSelect={value => setSelected(prev => ({ ...prev, [po.option.name]: value }))}
           />
         );
       })}

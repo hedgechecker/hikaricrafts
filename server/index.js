@@ -265,30 +265,33 @@ app.get("/products/full", async (req, res) => {
   try {
     const products = await prisma.product.findMany({
       include: {
-        // Include product options
-        options: {
+        // Include the productOptions linking to global Options
+        productOptions: {
           include: {
-            values: true, // all values for this option
+            option: {
+              include: {
+                values: true, // all OptionValues for this Option
+              },
+            },
           },
         },
         // Include all variations
         variations: {
           include: {
-            // Include the option values for each variation
-            images : true,
+            images: true,
             optionValues: {
               include: {
                 optionValue: {
                   include: {
-                    option: true, // also include option info (e.g., name)
+                    option: true, // include the global Option info
                   },
                 },
               },
             },
           },
         },
-        // Optionally include images if you have a separate table
-        // images: true
+        // Keep reviews if needed
+        reviews: true,
       },
     });
 
@@ -298,6 +301,7 @@ app.get("/products/full", async (req, res) => {
     res.status(500).json({ error: "Unexpected error" });
   }
 });
+
 
 
 
