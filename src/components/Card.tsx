@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import styles from "./styles/Card.module.css";
+import dropdownIcon from '/src/assets/dropdown.png';
 
 interface CardProps {
   title?: string;
@@ -30,7 +31,7 @@ export default function Card({
           <button className={styles.button} onClick={() => setOpen(!open)}>
             <img
               id="image"
-              src="./src/assets/dropdown.png"
+              src={dropdownIcon}
               className={styles.image}
               style={{
                 transform: open ? "rotate(0deg)" : "rotate(90deg)",

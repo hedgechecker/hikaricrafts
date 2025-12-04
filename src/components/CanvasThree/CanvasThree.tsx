@@ -16,6 +16,13 @@ import { CSG } from "three-csg-ts";
 import { threeRefs } from "./ThreeRefs";
 import { useAppStore } from "../../store/useAppStore";
 
+import homeIcon from '/src/assets/home.png';
+import saveIcon from '/src/assets/saveIcon.png';
+import folderIcon from '/src/assets/folder.svg';
+import clearSceneIcon from '/src/assets/clearScene.svg';
+import keyboardIcon from '/src/assets/keyboard.svg';
+
+
 
 export const itemsById = new Map<string, THREE.Object3D>();
 
@@ -295,19 +302,19 @@ const CanvasThree = () => {
       <div className={styles.navbar}>
         <button className={`${styles.button} ${styles.tooltip}`} onClick={() => {
           window.alert("R - Rotate Pattern\nE - Previous selected Pattern\nQ - Next selected Pattern\nWASD - Move Panel\nStrg-Z - Undo last input\nStrg-Y - Redo last input")}} data-tooltip="Show keybindings">
-          <img src="./src/assets/keyboard.svg" className={styles.image} />
+          <img src={keyboardIcon} className={styles.image} />
         </button>
         <button className={`${styles.button} ${styles.tooltip}`} onClick={clearScene} data-tooltip="Clear Scene">
-          <img src="./src/assets/clearScene.svg" className={styles.image} />
+          <img src={clearSceneIcon} className={styles.image} />
         </button>
         <button className={`${styles.button} ${styles.tooltip}`} onClick={loadPanel} data-tooltip="Load File">
-          <img src="./src/assets/folder.svg" className={styles.image} />
+          <img src={folderIcon} className={styles.image} />
         </button>
         <button className={`${styles.button} ${styles.tooltip}`} onClick={savePanel} data-tooltip="Save File">
-          <img src="./src/assets/saveIcon.png" className={styles.image} />
+          <img src={saveIcon} className={styles.image} />
         </button>
         <button className={`${styles.button} ${styles.tooltip}`} onClick={resetView} data-tooltip="Reset View">
-          <img src="./src/assets/home.png" className={styles.image} />
+          <img src={homeIcon} className={styles.image} />
         </button>
         <button className={`${styles.button} ${styles.tooltip}`} onClick={change3D} id="3Dbtn" data-tooltip="Change View">
           3D

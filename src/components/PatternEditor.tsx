@@ -9,6 +9,10 @@ import styles from "./styles/PatternEditor.module.css";
 import { getFastMaterial } from "./CanvasThree/Objects/Materials";
 import { loadMaterial } from "./CanvasThree/Utils/StorageUtils";
 import { useAppStore } from "../store/useAppStore";
+import arrowsIcon from '/src/assets/arrows.png';
+import fichteMaterial from './src/assets/fichte.jpg';
+import eicheMaterial from './src/assets/eiche.jpg';
+import dougMaterial from './src/assets/douglasie.jpg';
 
 
 export default function EditorPanel() {
@@ -31,9 +35,9 @@ export default function EditorPanel() {
   );
 
   const materials = [
-    { index: 0, name: "Fichte", img: "./src/assets/fichte.jpg" },
-    { index: 1, name: "Eiche", img: "./src/assets/eiche.jpg" },
-    { index: 2, name: "Douglasie", img: "./src/assets/douglasie.jpg" },
+    { index: 0, name: "Fichte", img: {fichteMaterial} },
+    { index: 1, name: "Eiche", img: {eicheMaterial} },
+    { index: 2, name: "Douglasie", img: {dougMaterial} },
   ];
 
   window.onresize = () => {
@@ -342,7 +346,7 @@ export default function EditorPanel() {
           }}
         >
           <img
-            src="./src/assets/arrows.png"
+            src={arrowsIcon}
             style={{ width: "25px", height: "25px" }}
           ></img>
         </div>

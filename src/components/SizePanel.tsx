@@ -38,7 +38,6 @@ export default function SizePanel() {
 
     debounceRef.current = setTimeout(() => {
       const val = clamp(value, 100, 1000);
-      console.log(val +" ALSFHLKSAHDKLJA");
       setPanelSize({width: val});
     }, 500);
   };
