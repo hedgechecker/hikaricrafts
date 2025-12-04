@@ -10,9 +10,9 @@ import { getFastMaterial } from "./CanvasThree/Objects/Materials";
 import { loadMaterial } from "./CanvasThree/Utils/StorageUtils";
 import { useAppStore } from "../store/useAppStore";
 import arrowsIcon from '/src/assets/arrows.png';
-import fichteMaterial from './src/assets/fichte.jpg';
-import eicheMaterial from './src/assets/eiche.jpg';
-import dougMaterial from './src/assets/douglasie.jpg';
+import fichteMaterial from '/src/assets/fichte.jpg';
+import eicheMaterial from '/src/assets/eiche.jpg';
+import dougMaterial from '/src/assets/douglasie.jpg';
 
 
 export default function EditorPanel() {
