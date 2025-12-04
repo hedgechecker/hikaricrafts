@@ -7,8 +7,9 @@ import { type ReactNode } from "react";
 
 
 interface ProductTemplateProps {
+  id: number;
   images: string[];
-
+  
   title: string;
   price: number;
   available: number;
@@ -25,10 +26,10 @@ interface ProductTemplateProps {
 
 
 export default function ProductTemplate(props:ProductTemplateProps) {
-
+  var navbar_select = (props.id == 1 || props.id == 3 || props.id == 4 )? 1: 2;
   return (
     <div style={{backgroundColor: 'var(--color-background)', color: '#2E2E2E', minHeight: '100vh'}}>
-      <NavBar selected={1}></NavBar>
+      <NavBar selected={navbar_select}></NavBar>
       <div style={{display: 'flex', flexDirection: 'column', paddingLeft:'1rem', paddingRight: '1rem'}}>
         <div style={{display: 'flex', flexDirection: 'row', flexWrap: 'wrap'}}>      
 
@@ -56,7 +57,7 @@ export default function ProductTemplate(props:ProductTemplateProps) {
               series={props.series}
               >
             </ProductDetails>
-          <CustomerReviews productId={1}></CustomerReviews>
+          <CustomerReviews productId={props.id}></CustomerReviews>
           </div>
       </div>
     </div>

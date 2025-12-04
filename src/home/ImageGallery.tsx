@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./styles/ImageGallery.module.css";
+import arrow from '/src/assets/imageArrow.svg';
+
 
 interface ProductGalleryProps {
   images: string[];
@@ -51,6 +53,14 @@ export function ImageGallery({ images = [] }: ProductGalleryProps) {
 
     if (!leftDiv || !mainDiv || !topArrow || !bottomArrow || !leftArrow || !rightArrow)
       return;
+    
+    if (images.length <= 1) {
+      rightArrow.style.cursor = "default";
+      leftArrow.style.cursor = "default";
+    }else{
+      rightArrow.style.cursor = "pointer";
+      leftArrow.style.cursor = "pointer";  
+    }
 
     function updateThumbnailArrows() {
       if(!leftDiv || !topArrow ||!bottomArrow )return;
@@ -74,6 +84,7 @@ export function ImageGallery({ images = [] }: ProductGalleryProps) {
       const show = images.length > 1 ? "1" : "0";
       leftArrow.style.opacity = show;
       rightArrow.style.opacity = show;
+      
     }
 
     leftDiv.addEventListener("mouseenter", updateThumbnailArrows);
@@ -146,8 +157,12 @@ export function ImageGallery({ images = [] }: ProductGalleryProps) {
           ))}
         </div>
 
-        <div className={`${styles.top} ${styles.arrow}`} ref={topArrowRef}>▲</div>
-        <div className={`${styles.bottom} ${styles.arrow}`} ref={bottomArrowRef}>▼</div>
+        <div className={`${styles.top} ${styles.arrow}`} ref={topArrowRef}>
+          <img src={arrow} className={styles.arrowImg} style={{transform: 'rotate(270deg)'}}/>
+        </div>
+        <div className={`${styles.bottom} ${styles.arrow}`} ref={bottomArrowRef}>
+          <img src={arrow} className={styles.arrowImg} style={{transform: 'rotate(90deg)'}}/>
+        </div>
       </div>
 
       {/* MAIN IMAGE */}
@@ -159,7 +174,7 @@ export function ImageGallery({ images = [] }: ProductGalleryProps) {
           ref={leftArrowRef}
           onClick={goLeft}
         >
-          ◀
+          <img src={arrow} className={styles.arrowImg} style={{transform: 'rotate(180deg)'}}/>
         </div>
 
         <div
@@ -167,7 +182,7 @@ export function ImageGallery({ images = [] }: ProductGalleryProps) {
           ref={rightArrowRef}
           onClick={goRight}
         >
-          ▶
+          <img src={arrow} className={styles.arrowImg}/>
         </div>
       </div>
     </div>

@@ -16,8 +16,9 @@
 .mainImage{
     user-select: none;
     max-height: 400px;
-    width: 100%;
-    object-fit: cover;
+    width: 500px;
+    max-width: 100%;
+    object-fit: contain;
     cursor: pointer;
     box-shadow: var(--shadow-sm);
     border-color: var(--color-border);
@@ -127,4 +128,9 @@
     .arrow{
         opacity: 1;
     }
+}
+
+.arrowImg{
+    height: 20px;
+    width: 20px;
 }

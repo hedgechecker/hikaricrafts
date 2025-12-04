@@ -118,6 +118,7 @@ function getCurrentlyValidValues(optionName: string) {
   console.log(selectedVariation.images);
   return (
     <ProductTemplate
+      id={product.id}
       images={selectedVariation?.images?.map(i => i.path) ?? []}
       title={product.name}
       price={selectedVariation.priceCents / 100}
