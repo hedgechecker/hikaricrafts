@@ -43,7 +43,7 @@ export default function AllProductsPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "3rem" }}>
       {products.map((product) => (
-        <ProductWithVariations key={product.id} product={product} />
+        <ProductWithVariations key={product.id} id={product.id} />
       ))}
     </div>
   );
