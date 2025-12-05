@@ -31,7 +31,7 @@ export default function ProductTemplate(props:ProductTemplateProps) {
     <div style={{backgroundColor: 'var(--color-background)', color: '#2E2E2E', minHeight: '100vh'}}>
       <NavBar selected={navbar_select}></NavBar>
       <div style={{display: 'flex', flexDirection: 'column', paddingLeft:'1rem', paddingRight: '1rem'}}>
-        <div style={{display: 'flex', flexDirection: 'row', flexWrap: 'wrap'}}>      
+        <div style={{display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center'}}>      
 
           <ImageGallery 
             images={props.images}

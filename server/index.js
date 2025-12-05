@@ -261,6 +261,54 @@ app.post("/feedback", feedBackLimiter, async (req, res) => {
   }
 });
 
+app.get("/products/:id", async (req, res) => {
+  const reviewId = parseInt(req.params.id);
+
+  if (isNaN(reviewId)) {
+    return res.status(400).json({ message: "Invalid product ID" });
+  }
+
+  try {
+    const products = await prisma.product.findUnique({
+      where: { id: reviewId },
+      include: {
+        // Include the productOptions linking to global Options
+        productOptions: {
+          include: {
+            option: {
+              include: {
+                values: true, // all OptionValues for this Option
+              },
+            },
+          },
+        },
+        // Include all variations
+        variations: {
+          include: {
+            images: true,
+            optionValues: {
+              include: {
+                optionValue: {
+                  include: {
+                    option: true, // include the global Option info
+                  },
+                },
+              },
+            },
+          },
+        },
+        // Keep reviews if needed
+        reviews: true,
+      },
+    });
+
+    res.json(products);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Unexpected error" + err });
+  }
+});
+
 app.get("/products/full", async (req, res) => {
   try {
     const products = await prisma.product.findMany({

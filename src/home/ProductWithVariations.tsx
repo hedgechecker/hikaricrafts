@@ -3,14 +3,47 @@ import type { FullProduct } from "./AllProducts";
 import ProductTemplate from "./ProductTemplate";
 import OptionSquares from "./OptionSquares";
 
-interface Props {
-  product: FullProduct;
+const BASE_URL = import.meta.env.VITE_API_URL;
+
+interface Props { 
+  id: number;
 }
 
-export default function ProductWithVariations({ product }: Props) {
+export default function ProductWithVariations({ id }: Props) {
+  const [product, setProduct] = useState<FullProduct | null>(null);
+  const [selected, setSelected] = useState<Record<string, number | null>>({});
+
+  // -----------------------------------------------------
+  // 1) Fetch product
+  // -----------------------------------------------------
+  useEffect(() => {
+    setProduct(null); // reset when id changes
+
+    fetch(`${BASE_URL}/products/${id}`)
+      .then(res => res.json())
+      .then((data: FullProduct) => {
+        setProduct(data);
+
+        // initialize selected values (AFTER product is loaded)
+        const initial = Object.fromEntries(
+          data.productOptions.map(po => {
+            const valid = po.option.values.map(v => v.id);
+            return [po.option.name, valid[0] ?? null];
+          })
+        );
+        setSelected(initial);
+      });
+  }, [id]);
+
+  // guard — fetch not done yet
+
+  // -----------------------------------------------------
+  // 2) Valid values per option (global)
+  // -----------------------------------------------------
   const validValuesPerOption = useMemo(() => {
+    if(!product)return;
     const map: Record<string, Set<number>> = {};
-    
+
     for (const po of product.productOptions) {
       map[po.option.name] = new Set();
     }
@@ -21,89 +54,74 @@ export default function ProductWithVariations({ product }: Props) {
       }
     }
 
-    return map; // e.g. { wood: Set([1,2]), finish: Set([10,11]) }
+    return map;
   }, [product]);
 
-
-
   // -----------------------------------------------------
-  // 1. Store ALL selected option values in one object
-  // -----------------------------------------------------
-  const [selected, setSelected] = useState(() =>
-  Object.fromEntries(
-    product.productOptions.map(po => {
-      const valid = [...validValuesPerOption[po.option.name]];
-      return [po.option.name, valid[0] ?? null];
-    })
-  )
-  );
-
-
-  // -----------------------------------------------------
-  // 2. AUTO-FIX: always ensure a valid variation exists
+  // 3) Auto-correct invalid selections
   // -----------------------------------------------------
   useEffect(() => {
-  const selectedIds = new Set(Object.values(selected));
+    // skip until product is loaded
+    if (!product || !validValuesPerOption) return;
 
-  const match = product.variations.find(v =>
-    v.optionValues.every(ov => selectedIds.has(ov.optionValueId))
-  );
+    const selectedIds = new Set(Object.values(selected));
 
-  if (match) return; // valid combo
+    const match = product.variations.find(v =>
+      v.optionValues.every(ov => selectedIds.has(ov.optionValueId))
+    );
 
-  // if invalid → fix by adjusting ONE option
-  for (const po of product.productOptions) {
-    const validValues = [...validValuesPerOption[po.option.name]];
+    if (match) return; // valid combination
 
-    const newValue = validValues[0]; // choose first valid
+    // adjust ONE value
+    for (const po of product.productOptions) {
+      const valid = [...validValuesPerOption[po.option.name]];
 
-    if (newValue !== selected[po.option.name]) {
-      setSelected(prev => ({ ...prev, [po.option.name]: newValue }));
-      return;
+      if (!valid.includes(selected[po.option.name]!)) {
+        setSelected(prev => ({ ...prev, [po.option.name]: valid[0] ?? null }));
+        break;
+      }
     }
-  }
-}, [selected, validValuesPerOption, product]);
-
-function getCurrentlyValidValues(optionName: string) {
-  // all other selected options
-  const otherSelected = { ...selected };
-  delete otherSelected[optionName];
-
-  const otherIds = new Set(Object.values(otherSelected));
-
-  // variations that match all other selections
-  const matchingVariations = product.variations.filter(v =>
-    v.optionValues
-      .filter(ov => ov.optionValue.option.name !== optionName)
-      .every(ov => otherIds.has(ov.optionValueId))
-  );
-
-  // IDs of values valid for THIS option given the current selection
-  return new Set(
-    matchingVariations.flatMap(v =>
-      v.optionValues
-        .filter(ov => ov.optionValue.option.name === optionName)
-        .map(ov => ov.optionValueId)
-    )
-  );
-}
-
+  }, [selected, validValuesPerOption, product]);
 
   // -----------------------------------------------------
-  // 3. Find the currently selected variation (guaranteed valid)
+  // 4) Currently valid options for a specific attribute
+  // -----------------------------------------------------
+  function getCurrentlyValidValues(optionName: string) {
+    if(!product)return new Set<number>;
+    const otherSelected = { ...selected };
+    delete otherSelected[optionName];
+
+    const otherIds = new Set(Object.values(otherSelected));
+
+    const matchingVariations = product.variations.filter(v =>
+      v.optionValues
+        .filter(ov => ov.optionValue.option.name !== optionName)
+        .every(ov => otherIds.has(ov.optionValueId))
+    );
+
+    return new Set(
+      matchingVariations.flatMap(v =>
+        v.optionValues
+          .filter(ov => ov.optionValue.option.name === optionName)
+          .map(ov => ov.optionValueId)
+      )
+    );
+  }
+
+  // -----------------------------------------------------
+  // 5) Find active variation
   // -----------------------------------------------------
   const selectedVariation = useMemo(() => {
+    if(!product)return;
     const ids = new Set(Object.values(selected));
     return product.variations.find(v =>
       v.optionValues.every(ov => ids.has(ov.optionValueId))
     );
-  }, [selected, product.variations]);
+  }, [selected, product]);
 
+  if (!product||!validValuesPerOption) return <div></div>;
   if (!selectedVariation) return <div>No matching variation</div>;
 
-  // -----------------------------------------------------
-  // 4. Extract material + finish display values
-  // -----------------------------------------------------
   const materialVal = selectedVariation.optionValues.find(
     ov => ov.optionValue.option.name.toLowerCase() === "holz"
   )?.optionValue.value;
@@ -112,14 +130,14 @@ function getCurrentlyValidValues(optionName: string) {
     ov => ov.optionValue.option.name.toLowerCase() === "oberfläche"
   )?.optionValue.value;
 
+
   // -----------------------------------------------------
-  // 5. Render Template + Auto-filtered Selectors
+  // 6) Render
   // -----------------------------------------------------
-  console.log(selectedVariation.images);
   return (
     <ProductTemplate
       id={product.id}
-      images={selectedVariation?.images?.map(i => i.path) ?? []}
+      images={selectedVariation.images?.map(i => i.path) ?? []}
       title={product.name}
       price={selectedVariation.priceCents / 100}
       available={selectedVariation.stock}
@@ -134,14 +152,13 @@ function getCurrentlyValidValues(optionName: string) {
       warranty={product.warranty ?? ""}
       series={product.series ?? ""}
     >
-      {/* Render selectors dynamically */}
       {product.productOptions.map(po => {
         const allValidValues = po.option.values.filter(v =>
           validValuesPerOption[po.option.name].has(v.id)
         );
-      
+
         const currentlyValid = getCurrentlyValidValues(po.option.name);
-      
+
         return (
           <OptionSquares
             key={po.option.name}
@@ -153,9 +170,6 @@ function getCurrentlyValidValues(optionName: string) {
           />
         );
       })}
-
-
-
     </ProductTemplate>
   );
 }
