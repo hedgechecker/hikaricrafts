@@ -1,0 +1,21 @@
+.toolbar{
+  display: flex;
+  justify-content: left;
+  align-items: center;
+  padding: var(--space-md);
+  width: 100%;
+  box-sizing: border-box;
+  background-color: var(--color-background);
+  gap: var(--space-sm);
+  /* box-shadow: var(--shadow-lg); */
+  font-size: var(--font-size-xl);
+  color: var(--color-primary-dark);
+}
+.title {
+    margin: 0;
+}
+.toolSection {
+    display: flex;
+    flex-direction: row;
+    gap: var(--space-sm);
+}

@@ -6,10 +6,9 @@ import { Register } from "./home/Register.tsx";
 import Feedback from "./home/Feedback.tsx";
 
 import AllProductsPage from "./home/AllProducts.tsx";
-//import { useEffect, useState } from "react";
 import ProductWithVariations from "./home/ProductWithVariations.tsx";
 import Contact from "./home/Contact.tsx";
-//const BASE_URL = import.meta.env.VITE_API_URL;
+import WireArtEditor from "./pages/WireArtEditor/WireArtEditor.tsx"
 
 
 export default function Main() {
@@ -35,6 +34,7 @@ return (
       <Route path="/kumiko" element={<App />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/wireart" element={<WireArtEditor />} />
     </Routes>
   );
 }
