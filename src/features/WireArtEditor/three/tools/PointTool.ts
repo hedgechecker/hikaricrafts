@@ -1,0 +1,47 @@
+import * as THREE from "three";
+import type { Tool } from "./Tool";
+import { PointManager } from "../objects/PointManager";
+
+export class PointTool implements Tool {
+  private camera: THREE.Camera;
+  private domElement: HTMLElement;
+  private raycaster = new THREE.Raycaster();
+  private mouse = new THREE.Vector2();
+  private plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+  private pointManager: PointManager;
+  private position: number[] = [];
+
+  constructor(
+    camera: THREE.Camera,
+    domElement: HTMLElement,
+    pointManager: PointManager
+  ) {
+    this.camera = camera;
+    this.domElement = domElement;
+    this.pointManager = pointManager;
+  }
+
+  onMouseDown(event: MouseEvent): void {
+      this.position[0] = event.clientX;
+      this.position[1] = event.clientY;
+  }
+
+  onMouseUp(event: MouseEvent): void {
+    if(Math.abs(this.position[0] - event.clientX) > 0.5 || Math.abs(this.position[1] - event.clientY) > 0.5){
+      return;
+    }  
+    const rect = this.domElement.getBoundingClientRect();
+
+    this.mouse.x =
+      ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    this.mouse.y =
+      -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+
+    const intersection = new THREE.Vector3();
+    this.raycaster.ray.intersectPlane(this.plane, intersection);
+
+    this.pointManager.addPoint(intersection);
+  }
+}

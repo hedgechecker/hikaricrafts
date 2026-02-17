@@ -1,0 +1,11 @@
+.wrapper{
+    background-color: var(--color-background);
+    border-radius: var(--radius-md);
+    border: 3px solid var(--color-border);
+    width: 20%;
+    min-width: 200px;
+    max-width: 500px;
+    height: 90%;
+    margin: var(--space-md);
+    box-sizing: border-box;
+}

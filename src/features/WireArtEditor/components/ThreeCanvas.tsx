@@ -19,6 +19,8 @@ export default function ThreeCanvas({ imageUrl }: Props) {
 
   editorRef.current = new ThreeEditor(mountRef.current);
 
+  //For testing Purpose
+  imageUrl = "./test-image.webp";
   return () => {
     editorRef.current?.dispose();
     editorRef.current = null;

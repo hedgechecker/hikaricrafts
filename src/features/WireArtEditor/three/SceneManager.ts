@@ -10,12 +10,11 @@ export class SceneManager {
 
   constructor(container: HTMLDivElement) {
     this.container = container;
-
     const width = container.clientWidth;
     const height = container.clientHeight;
 
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x313131);
+    this.scene.background = new THREE.Color(0xFAF7F2);
 
     const aspect = width / height;
     const frustumSize = 10;

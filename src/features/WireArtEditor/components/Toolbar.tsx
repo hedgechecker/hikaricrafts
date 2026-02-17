@@ -16,7 +16,8 @@ export default function Toolbar({ onImageSelected }: Props) {
     <div className={styles.toolbar}>
         <ToolButton label="Zurück zum Anfang" image="/icons/back-arrow.png" onClick={() => navigate("/")}/>
       <div className={styles.toolSection}>
-        <ToolButton label="Punkt" image="/icons/single-point.png" toolTip="Einen Punkt zeichnen" active/>
+        <ToolButton label="Bewegen" image="/icons/move.png" toolTip="Ansicht bewegen" active/>
+        <ToolButton label="Punkt" image="/icons/single-point.png" toolTip="Einen Punkt zeichnen"/>
         <ToolButton label="Linie" image="/icons/line.png" toolTip="Eine Linie zeichnen"/>
       </div>
       <ImageUploader onImageSelected={onImageSelected} />
