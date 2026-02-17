@@ -1,4 +1,4 @@
-import EditorLayout from '/src/features/WireArtEditor/components/EditorLayout.tsx';
+import EditorLayout from '../../features/WireArtEditor/components/EditorLayout';
 
 export default function EditorPage() {
   return <EditorLayout />;

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { ThreeEditor } from "../three/threeEditor"
+import { ThreeEditor } from "../three/ThreeEditor"
 import styles from "./styles/ThreeCanvas.module.css";
 
 
