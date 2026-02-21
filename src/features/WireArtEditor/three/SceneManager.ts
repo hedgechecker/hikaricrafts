@@ -1,9 +1,11 @@
-import * as THREE from "three";
+import * as THREE from 'three';
+import { CameraController } from './core/CameraController';
 
 export class SceneManager {
   scene: THREE.Scene;
   camera: THREE.OrthographicCamera;
   renderer: THREE.WebGLRenderer;
+  cameraController: CameraController;
 
   private container: HTMLDivElement;
   private animationId?: number;
@@ -14,7 +16,7 @@ export class SceneManager {
     const height = container.clientHeight;
 
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0xFAF7F2);
+    this.scene.background = new THREE.Color(0xfaf7f2);
 
     const aspect = width / height;
     const frustumSize = 10;
@@ -25,16 +27,19 @@ export class SceneManager {
       frustumSize / 2,
       -frustumSize / 2,
       -1000,
-      1000
+      1000,
     );
 
     this.camera.position.z = 10;
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setSize(width, height);
+    this.cameraController = new CameraController(this.camera, this.renderer.domElement);
+
     container.appendChild(this.renderer.domElement);
 
-    window.addEventListener("resize", this.onResize);
+    window.addEventListener('resize', this.onResize);
+    this.renderer.domElement.addEventListener('contextmenu', (e) => e.preventDefault());
   }
 
   private onResize = () => {
@@ -57,24 +62,25 @@ export class SceneManager {
     const animate = () => {
       this.renderer.render(this.scene, this.camera);
       this.animationId = requestAnimationFrame(animate);
+      this.camera.updateProjectionMatrix();
     };
 
     animate();
   }
 
   dispose() {
-  if (this.animationId) cancelAnimationFrame(this.animationId);
+    if (this.animationId) cancelAnimationFrame(this.animationId);
 
-  this.renderer.dispose();
+    this.renderer.dispose();
 
-  // Remove canvas from DOM safely
-  if (this.renderer.domElement.parentNode) {
-    this.renderer.domElement.parentNode.removeChild(
-      this.renderer.domElement
-    );
+    // Remove canvas from DOM safely
+    if (this.renderer.domElement.parentNode) {
+      this.renderer.domElement.parentNode.removeChild(this.renderer.domElement);
+    }
+
+    window.removeEventListener('resize', this.onResize);
   }
-
-  window.removeEventListener("resize", this.onResize);
-}
-
+  getCameraController() {
+    return this.cameraController;
+  }
 }

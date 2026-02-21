@@ -1,5 +1,6 @@
 import type { Tool } from "./Tool";
 
+
 export class ToolManager {
   private domElement: HTMLElement;
   private activeTool: Tool | null = null;
@@ -33,6 +34,7 @@ export class ToolManager {
   private handleClick = (e: MouseEvent) => {
     this.activeTool?.onClick?.(e);
   };
+
 
   dispose() {
     this.domElement.removeEventListener("mousedown", this.handleMouseDown);

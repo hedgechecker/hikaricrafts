@@ -5,9 +5,10 @@ import styles from "./styles/ThreeCanvas.module.css";
 
 interface Props {
   imageUrl: string | null;
+  onEditorReady?: (editor: ThreeEditor) => void;
 }
 
-export default function ThreeCanvas({ imageUrl }: Props) {
+export default function ThreeCanvas({ imageUrl, onEditorReady }: Props) {
   const mountRef = useRef<HTMLDivElement | null>(null);
   const editorRef = useRef<ThreeEditor | null>(null);
 
@@ -17,12 +18,13 @@ export default function ThreeCanvas({ imageUrl }: Props) {
   // Prevent duplicate canvas
   mountRef.current.innerHTML = "";
 
-  editorRef.current = new ThreeEditor(mountRef.current);
-
+  const editor = new ThreeEditor(mountRef.current);
+  editorRef.current = editor;
+  onEditorReady?.(editor);
   //For testing Purpose
   imageUrl = "./test-image.webp";
   return () => {
-    editorRef.current?.dispose();
+    editor.dispose();
     editorRef.current = null;
   };
 }, []);
