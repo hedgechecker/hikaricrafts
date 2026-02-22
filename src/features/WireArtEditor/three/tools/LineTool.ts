@@ -117,8 +117,6 @@ export class LineTool implements Tool {
   }
 
   onMouseMove(event: MouseEvent) {
-    if (!this.lastPoint || !this.previewLine) return;
-
     const worldPos = this.getWorldPosition(event);
 
     // Adjust snap distance based on zoom
@@ -130,7 +128,10 @@ export class LineTool implements Tool {
     let endPosition = worldPos;
 
     //Snap to existing point
-    if (snapCandidate && snapCandidate !== this.lastPoint) {
+    if (snapCandidate && this.lastPoint == null) {
+      this.snapTarget = snapCandidate;
+      this.pointManager.setHovered(snapCandidate);
+    } else if (snapCandidate && snapCandidate !== this.lastPoint) {
       this.snapTarget = snapCandidate;
       endPosition = snapCandidate.position;
 
@@ -144,6 +145,7 @@ export class LineTool implements Tool {
         endPosition = this.snapAngle(this.lastPoint.position, worldPos);
       }
     }
+    if (!this.lastPoint || !this.previewLine) return;
 
     this.previewLine.geometry.setFromPoints([this.lastPoint.position.clone(), endPosition.clone()]);
   }
@@ -170,6 +172,9 @@ export class LineTool implements Tool {
   private onKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Shift') {
       this.isShiftPressed = true;
+    }
+    if (e.key === 'Escape') {
+      this.cancelLine();
     }
   };
 
