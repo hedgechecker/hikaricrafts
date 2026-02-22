@@ -1,15 +1,19 @@
-import * as THREE from "three";
+import * as THREE from 'three';
+import type { DataStorage } from '../../core/DataStorage';
+import { generateId } from '../../utils/id';
 
 export class PointManager {
   private scene: THREE.Scene;
-  private points: THREE.Group[] = [];
+  private storage: DataStorage;
+  private points = new Map<string, THREE.Group>();
   private baseSize = 1.0;
   private hoverScale = 2.0;
 
   private hovered: THREE.Group | null = null;
 
-  constructor(scene: THREE.Scene) {
+  constructor(scene: THREE.Scene, storage: DataStorage) {
     this.scene = scene;
+    this.storage = storage;
   }
 
   addPoint(position: THREE.Vector3) {
@@ -41,8 +45,8 @@ export class PointManager {
 
     const outline = new THREE.LineSegments(edges, outlineMaterial);
 
-    circle.name = "visual";
-    outline.name = "outline";
+    circle.name = 'visual';
+    outline.name = 'outline';
 
     const hitGeometry = new THREE.CircleGeometry(hitRadius, 32);
 
@@ -53,7 +57,7 @@ export class PointManager {
     });
 
     const hitbox = new THREE.Mesh(hitGeometry, hitMaterial);
-    hitbox.name = "hitbox";
+    hitbox.name = 'hitbox';
 
     circle.scale.set(0, 0, 1);
     outline.scale.set(0, 0, 1);
@@ -62,9 +66,11 @@ export class PointManager {
     group.add(outline);
     group.add(hitbox);
 
-
     this.scene.add(group);
-    this.points.push(group);
+
+    const id = generateId();
+    this.points.set(id, group);
+    this.storage.addPoint({ x: position.x, y: position.y }, id);
     return group;
   }
 
@@ -81,7 +87,6 @@ export class PointManager {
     if (this.hovered) {
       this.hovered.userData.isHovered = true;
     }
-
   }
 
   getHovered() {
@@ -92,16 +97,15 @@ export class PointManager {
     const scaleMultiplier = this.hoverScale;
     const size = this.baseSize / zoom;
     const scaledSize = size * scaleMultiplier;
-    this.points.forEach(group => {
+    this.points.forEach((group) => {
       const isHovered = group.userData.isHovered;
-      group.children.forEach(child => {
-        if(isHovered && child.name != "hitbox"){
+      group.children.forEach((child) => {
+        if (isHovered && child.name != 'hitbox') {
           child.scale.set(scaledSize, scaledSize, 1);
-        }else{
+        } else {
           child.scale.set(size, size, 1);
         }
       });
-
     });
   }
 
@@ -110,28 +114,27 @@ export class PointManager {
   }
 
   getHitboxes(): THREE.Object3D[] {
-    return this.points.map(group =>
-      group.getObjectByName("hitbox")!
-    );
+    let arr: THREE.Object3D<THREE.Object3DEventMap>[] = [];
+    this.points.forEach((point) => {
+      arr.push(point.getObjectByName('hitbox')!);
+    });
+
+    return arr;
   }
 
-  getSnapCandidate(
-    position: THREE.Vector3,
-    threshold: number
-  ): THREE.Group | null {
+  getSnapCandidate(position: THREE.Vector3, threshold: number): THREE.Group | null {
     let closest: THREE.Group | null = null;
     let minDist = Infinity;
-  
-    for (const group of this.points) {
+
+    for (const group of this.points.values()) {
       const dist = group.position.distanceTo(position);
-    
+
       if (dist < threshold && dist < minDist) {
         closest = group;
         minDist = dist;
       }
     }
-  
+
     return closest;
   }
-
 }

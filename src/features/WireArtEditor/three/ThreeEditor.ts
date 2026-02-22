@@ -30,7 +30,7 @@ export class ThreeEditor {
     this.sceneManager = new SceneManager(container);
     this.storage = new DataStorage();
 
-    this.pointManager = new PointManager(this.sceneManager.scene);
+    this.pointManager = new PointManager(this.sceneManager.scene, this.storage);
     this.lineManager = new LineManager(this.sceneManager.scene);
 
     this.lineTool = new LineTool(

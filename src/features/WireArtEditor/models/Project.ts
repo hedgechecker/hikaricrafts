@@ -5,18 +5,16 @@ export interface Project {
 
   backgroundImage?: string;
 
-  points: PointData[];
-  lines: LineData[];
+  points: Map<string, PointData>;
+  lines: Map<string, LineData>;
 }
 
 export interface PointData {
-  id: string;
   x: number;
   y: number;
 }
 
 export interface LineData {
-  id: string;
   startPointId: string;
   endPointId: string;
 }

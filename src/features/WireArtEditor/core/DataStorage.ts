@@ -9,8 +9,8 @@ export class DataStorage {
       id: generateId(),
       name: 'Untitled Project',
       version: 0,
-      points: [],
-      lines: [],
+      points: new Map<string, PointData>(),
+      lines: new Map<string, LineData>(),
     };
   }
 
@@ -36,9 +36,13 @@ export class DataStorage {
     return this.project.backgroundImage;
   }
 
-  addPoint(point: PointData) {}
+  addPoint(point: PointData, id: string) {
+    this.project.points.set(id, point);
+  }
 
-  addLine(line: LineData) {}
+  addLine(line: LineData, id: string) {
+    this.project.lines.set(id, line);
+  }
 
   setBackground(url: string) {
     this.project.backgroundImage = url;
