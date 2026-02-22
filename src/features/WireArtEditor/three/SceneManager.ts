@@ -9,6 +9,7 @@ export class SceneManager {
 
   private container: HTMLDivElement;
   private animationId?: number;
+  private imageMesh?: THREE.Mesh;
 
   constructor(container: HTMLDivElement) {
     this.container = container;
@@ -82,5 +83,33 @@ export class SceneManager {
   }
   getCameraController() {
     return this.cameraController;
+  }
+
+  setBackgroundImage(url: string) {
+    const loader = new THREE.TextureLoader();
+    loader.load(url, (texture) => {
+      if (this.imageMesh) {
+        this.scene.remove(this.imageMesh);
+      }
+
+      const imageAspect = texture.image.width / texture.image.height;
+
+      const height = 10;
+      const width = height * imageAspect;
+
+      const geometry = new THREE.PlaneGeometry(width, height);
+      const material = new THREE.MeshBasicMaterial({
+        map: texture,
+      });
+
+      this.imageMesh = new THREE.Mesh(geometry, material);
+      this.scene.add(this.imageMesh);
+    });
+  }
+
+  clear() {
+    if (this.imageMesh) {
+      this.scene.remove(this.imageMesh);
+    }
   }
 }

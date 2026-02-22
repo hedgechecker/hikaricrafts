@@ -1,22 +1,22 @@
-import { useState } from "react";
-import Toolbar from "./Toolbar";
-import ThreeCanvas from "./ThreeCanvas";
-import styles from "./styles/EditorLayout.module.css";
-import SideBar from "./Sidebar";
-import type { ThreeEditor } from "../three/ThreeEditor";
-
+import { useState } from 'react';
+import Toolbar from './Toolbar';
+import ThreeCanvas from './ThreeCanvas';
+import styles from './styles/EditorLayout.module.css';
+import SideBar from './Sidebar';
+import { EditorEngine } from '../core/EditorEngine';
 
 export default function EditorLayout() {
-  const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
-  const [editor, setEditor] = useState<ThreeEditor | null>(null);
+  const [engine] = useState(() => new EditorEngine());
 
   return (
     <div className={styles.wrapper}>
-      <Toolbar onImageSelected={setBackgroundImage} onSelectTool={(tool) => editor?.setActiveTool(tool)} />
+      <Toolbar
+        onImageSelected={(img) => engine.setBackgroundImage(img)}
+        onSelectTool={(tool) => engine.setActiveTool(tool)}
+      />
       <div className={styles.center}>
         <SideBar></SideBar>
-        <ThreeCanvas onEditorReady={setEditor} imageUrl={backgroundImage} />
-
+        <ThreeCanvas engine={engine} />
       </div>
     </div>
   );

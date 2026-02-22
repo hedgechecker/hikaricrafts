@@ -1,44 +1,24 @@
-import { useEffect, useRef } from "react";
-import { ThreeEditor } from "../three/ThreeEditor"
-import styles from "./styles/ThreeCanvas.module.css";
-
+import { useEffect, useRef } from 'react';
+import styles from './styles/ThreeCanvas.module.css';
+import type { EditorEngine } from '../core/EditorEngine';
 
 interface Props {
-  imageUrl: string | null;
-  onEditorReady?: (editor: ThreeEditor) => void;
+  engine: EditorEngine;
 }
 
-export default function ThreeCanvas({ imageUrl, onEditorReady }: Props) {
+export default function ThreeCanvas({ engine }: Props) {
   const mountRef = useRef<HTMLDivElement | null>(null);
-  const editorRef = useRef<ThreeEditor | null>(null);
 
   useEffect(() => {
-  if (!mountRef.current) return;
+    if (!mountRef.current) return;
 
-  // Prevent duplicate canvas
-  mountRef.current.innerHTML = "";
+    // Initialize engine with container
+    engine.initialize(mountRef.current);
 
-  const editor = new ThreeEditor(mountRef.current);
-  editorRef.current = editor;
-  onEditorReady?.(editor);
-  //For testing Purpose
-  imageUrl = "./test-image.webp";
-  return () => {
-    editor.dispose();
-    editorRef.current = null;
-  };
-}, []);
+    return () => {
+      engine.dispose();
+    };
+  }, [engine]);
 
-  useEffect(() => {
-    if (imageUrl) {
-      editorRef.current?.setBackgroundImage(imageUrl);
-    }
-  }, [imageUrl]);
-
-  return (
-    <div
-      ref={mountRef}
-      className={styles.container}
-    />
-  );
+  return <div ref={mountRef} className={styles.container} />;
 }
