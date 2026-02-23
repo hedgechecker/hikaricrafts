@@ -1,98 +1,119 @@
-import * as THREE from "three";
-import type { Tool } from "./Tool";
-import { PointManager } from "../objects/PointManager";
-import type { CameraController } from "../core/CameraController";
-import { CursorManager } from "../objects/CursorManager";
+import * as THREE from 'three';
+import type { Tool } from './Tool';
+import { CursorManager } from '../objects/CursorManager';
+import type { CameraController } from '../core/CameraController';
+import type { ThreeEditor } from '../ThreeEditor';
+import { MovePointCommand } from '../../commands/MovePointCommand';
+import { MergePointsCommand } from '../../commands/MergePointsCommand';
 
 export class MoveTool implements Tool {
-  private camera: THREE.Camera;
-  private domElement: HTMLElement;
-  private pointManager: PointManager;
-  private cursorManager: CursorManager;
-  private CameraController: CameraController;
-
   private raycaster = new THREE.Raycaster();
   private mouse = new THREE.Vector2();
   private plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
 
-  private selectedPoint: THREE.Group | null = null;
+  private selectedPoint: string | null = null;
+  private startPosition: THREE.Vector3 | null = null;
+  private currentPosition: THREE.Vector3 = new THREE.Vector3(0,0,0);
+
+  private camera: THREE.Camera;
+  private domElement: HTMLElement;
+  private cursorManager: CursorManager;
+  private cameraController: CameraController;
+  private editor: ThreeEditor;
 
   constructor(
     camera: THREE.Camera,
     domElement: HTMLElement,
-    pointManager: PointManager,
     cursorManager: CursorManager,
-    CameraController: CameraController
+    cameraController: CameraController,
+    editor: ThreeEditor,
   ) {
     this.camera = camera;
     this.domElement = domElement;
-    this.pointManager = pointManager;
     this.cursorManager = cursorManager;
-    this.CameraController = CameraController;
+    this.cameraController = cameraController;
+    this.editor = editor;
   }
 
   private updateMouse(event: MouseEvent) {
     const rect = this.domElement.getBoundingClientRect();
 
-    this.mouse.x =
-      ((event.clientX - rect.left) / rect.width) * 2 - 1;
-
-    this.mouse.y =
-      -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
   }
 
   onMouseDown() {
-    const point = this.pointManager.getHovered();
-    if(!point) return;
-    this.selectedPoint = point;
-    this.CameraController.setPanEnabled(false);
-    this.cursorManager.setCursor("grabbing");
+    const hovered = this.editor.getHoveredPoints();
+    if (hovered.length == 0) return;
+
+    this.selectedPoint = hovered[0];
+    if(!this.startPosition) this.startPosition = new THREE.Vector3(0,0,0);
+    this.startPosition.copy(this.editor.getPointWorldPosition(this.selectedPoint) as THREE.Vector3);
+    this.editor.setSelected([this.selectedPoint]);
+
+    this.cameraController.setPanEnabled(false);
+    this.cursorManager.setCursor('grabbing');
   }
 
   onMouseMove(event: MouseEvent) {
+    this.editor.handleHover(event);
     if (!this.selectedPoint) {
-      const rect = this.domElement.getBoundingClientRect();
-
-      this.mouse.x =
-        ((event.clientX - rect.left) / rect.width) * 2 - 1;
-
-      this.mouse.y =
-        -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-      this.raycaster.setFromCamera(this.mouse, this.camera);
-
-      const intersects = this.raycaster.intersectObjects(
-        this.pointManager.getHitboxes(),
-        false
-      );
-
-      if (intersects.length > 0) {
-        const hitObject = intersects[0].object;
-        const group = hitObject.parent as THREE.Group;
-        this.pointManager.setHovered(group);
-        this.cursorManager.setCursor("pointer");
-      } else {
-        this.pointManager.setHovered(null);
-        this.cursorManager.setCursor("default");
-      }
       return;
     }
 
     this.updateMouse(event);
-
     this.raycaster.setFromCamera(this.mouse, this.camera);
 
     const intersection = new THREE.Vector3();
-    this.raycaster.ray.intersectPlane(this.plane, intersection);
+    const hit = this.raycaster.ray.intersectPlane(this.plane, intersection);
 
-    this.selectedPoint.position.copy(intersection);
+    if (!hit) return;
+    this.currentPosition.copy(intersection);
+    this.editor.previewMovePoint(this.selectedPoint, this.currentPosition);
   }
 
   onMouseUp() {
-    if (this.selectedPoint) {
-      this.CameraController.setPanEnabled(true);
+    this.editor.clearPreview();
+    if (!this.selectedPoint || !this.startPosition || !this.currentPosition) {
+      console.log("missin")
+      console.log(this.selectedPoint)
+      console.log(this.startPosition)
+      console.log(this.currentPosition);
+      this.selectedPoint = null;
+      this.editor.setSelected([]);
+      return;
     }
+    var endPosition = this.currentPosition;
+
+    if (!this.currentPosition.equals(this.startPosition)) {
+      const hovered = this.editor.getHoveredPoints()[0];
+      if (hovered && hovered != this.selectedPoint) {
+        this.editor.executeCommand(new MergePointsCommand(this.selectedPoint, hovered));
+        this.editor.setHovered([hovered]);
+      } else {
+        this.editor.executeCommand(
+          new MovePointCommand(
+            this.selectedPoint,
+            {
+              x: this.startPosition.x,
+              y: this.startPosition.y,
+              z: this.startPosition.z,
+            },
+            {
+              x: endPosition.x,
+              y: endPosition.y,
+              z: endPosition.z,
+            },
+          ),
+        );
+        this.editor.setHovered([this.selectedPoint]);
+      }
+    }
+
+    this.cameraController.setPanEnabled(true);
     this.selectedPoint = null;
-    this.cursorManager.setCursor("default");
+    this.startPosition = null;
+    this.editor.setSelected([]);
+    this.cursorManager.setCursor('default');
   }
 }

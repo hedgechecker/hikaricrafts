@@ -1,46 +1,50 @@
 import * as THREE from 'three';
 import type { Tool } from './Tool';
-import { PointManager } from '../objects/PointManager';
-import { LineManager } from '../objects/LineManager';
+import type { ThreeEditor } from '../ThreeEditor';
+import { AddPointCommand } from '../../commands/AddPointCommand ';
+import { AddLineCommand } from '../../commands/AddLineCommand';
+import { generateId } from '../../utils/id';
+import { Line2 } from 'three/examples/jsm/lines/Line2.js';
+import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
+import { LineGeometry } from 'three/examples/jsm/Addons.js';
 
 export class LineTool implements Tool {
-  private scene: THREE.Scene;
-  private camera: THREE.Camera;
-  private domElement: HTMLElement;
-  private pointManager: PointManager;
-  private lineManager: LineManager;
-
   private raycaster = new THREE.Raycaster();
   private mouse = new THREE.Vector2();
   private plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
 
-  private lastPoint: THREE.Group | null = null;
-  private previewLine: THREE.Line | null = null;
-  private snapTarget: THREE.Group | null = null;
-  private snapDistance = 0.3; // world units
+  private lastPointId: string | null = null;
+  private previewLine: Line2 | null = null;
+  private snapTargetId: string | null = null;
+
+  private snapDistance = 0.3;
   private isShiftPressed = false;
+
+  private scene: THREE.Scene;
+  private camera: THREE.Camera;
+  private domElement: HTMLElement;
+  private editor: ThreeEditor;
 
   constructor(
     scene: THREE.Scene,
     camera: THREE.Camera,
     domElement: HTMLElement,
-    pointManager: PointManager,
-    lineManager: LineManager,
+    editor: ThreeEditor,
   ) {
     this.scene = scene;
     this.camera = camera;
     this.domElement = domElement;
-    this.pointManager = pointManager;
-    this.lineManager = lineManager;
+    this.editor = editor;
     window.addEventListener('keydown', this.onKeyDown);
     window.addEventListener('keyup', this.onKeyUp);
   }
+
+  // --------------------------------------------------
 
   private getWorldPosition(event: MouseEvent): THREE.Vector3 {
     const rect = this.domElement.getBoundingClientRect();
 
     this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-
     this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
     this.raycaster.setFromCamera(this.mouse, this.camera);
@@ -50,6 +54,8 @@ export class LineTool implements Tool {
 
     return intersection;
   }
+
+  // --------------------------------------------------
 
   onMouseDown(event: MouseEvent) {
     if (event.button === 2) {
@@ -62,51 +68,99 @@ export class LineTool implements Tool {
     event.preventDefault();
     event.stopPropagation();
 
-    let worldPos;
-    if (this.isShiftPressed && this.lastPoint) {
-      worldPos = this.snapAngle(this.lastPoint.position, this.getWorldPosition(event));
+    let worldPos = this.getWorldPosition(event);
+
+    if (this.isShiftPressed && this.lastPointId) {
+      const last = this.editor.getPointWorldPosition(this.lastPointId);
+      if (last) worldPos = this.snapAngle(last, worldPos);
+    }
+
+    let currentPointId: string;
+
+    // Snap to existing point
+    if (this.snapTargetId) {
+      currentPointId = this.snapTargetId;
     } else {
-      worldPos = this.getWorldPosition(event);
+      currentPointId = generateId();
+
+      this.editor.executeCommand(
+        new AddPointCommand({
+          id: currentPointId,
+          x: worldPos.x,
+          y: worldPos.y,
+          z: worldPos.z,
+        }),
+      );
     }
 
-    let newPoint: THREE.Group;
-
-    if (this.snapTarget) {
-      newPoint = this.snapTarget;
-    } else {
-      newPoint = this.pointManager.addPoint(worldPos);
+    // Create line if we already had a previous point
+    if (this.lastPointId && currentPointId !== this.lastPointId) {
+      this.editor.executeCommand(
+        new AddLineCommand(generateId(), this.lastPointId, currentPointId),
+      );
     }
 
-    if (this.lastPoint && newPoint !== this.lastPoint) {
-      this.lineManager.addLine(this.lastPoint, newPoint);
-    }
+    this.lastPointId = currentPointId;
 
-    this.lastPoint = newPoint;
-
-    if (!this.previewLine) {
-      this.createPreviewLine();
-    }
+    if (!this.previewLine) this.createPreviewLine();
   }
 
-  private createPreviewLine() {
-    const geometry = new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(),
-      new THREE.Vector3(),
-    ]);
+  // --------------------------------------------------
 
-    const material = new THREE.LineBasicMaterial({
+  onMouseMove(event: MouseEvent) {
+    this.editor.handleHover(event);
+    const worldPos = this.getWorldPosition(event);
+
+    const zoom = (this.camera as THREE.OrthographicCamera).zoom;
+    const threshold = this.snapDistance / zoom;
+
+    const snapCandidates = this.editor.getSnapCandidates(worldPos, threshold);
+
+    let endPosition = worldPos;
+
+    if (snapCandidates.length > 0 && snapCandidates[0] !== this.lastPointId) {
+      this.snapTargetId = snapCandidates[0];
+      const pos = this.editor.getPointWorldPosition(snapCandidates[0]);
+      if (pos) endPosition = pos;
+    } else {
+      this.snapTargetId = null;
+      this.editor.clearHover();
+
+      if (this.isShiftPressed && this.lastPointId) {
+        const last = this.editor.getPointWorldPosition(this.lastPointId);
+        if (last) endPosition = this.snapAngle(last, worldPos);
+      }
+    }
+
+    if (!this.lastPointId || !this.previewLine) return;
+
+    const start = this.editor.getPointWorldPosition(this.lastPointId);
+    if (!start) return;
+    this.previewLine.geometry.setFromPoints([start.clone(), endPosition.clone()]);
+  }
+
+  // --------------------------------------------------
+
+  private createPreviewLine() {
+    const geometry = new LineGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
+
+    const material = new LineMaterial({
       color: 0x000000,
       transparent: true,
       opacity: 0.5,
+      linewidth: 2,
     });
 
-    this.previewLine = new THREE.Line(geometry, material);
+    material.resolution.set(this.domElement.clientWidth, this.domElement.clientHeight);
+
+    this.previewLine = new Line2(geometry, material);
+    this.previewLine.computeLineDistances();
     this.scene.add(this.previewLine);
   }
 
   private cancelLine() {
-    this.lastPoint = null;
-    this.snapTarget = null;
+    this.lastPointId = null;
+    this.snapTargetId = null;
 
     if (this.previewLine) {
       this.scene.remove(this.previewLine);
@@ -116,75 +170,31 @@ export class LineTool implements Tool {
     }
   }
 
-  onMouseMove(event: MouseEvent) {
-    const worldPos = this.getWorldPosition(event);
-
-    // Adjust snap distance based on zoom
-    const zoom = (this.camera as THREE.OrthographicCamera).zoom;
-    const threshold = this.snapDistance / zoom;
-
-    const snapCandidate = this.pointManager.getSnapCandidate(worldPos, threshold);
-
-    let endPosition = worldPos;
-
-    //Snap to existing point
-    if (snapCandidate && this.lastPoint == null) {
-      this.snapTarget = snapCandidate;
-      this.pointManager.setHovered(snapCandidate);
-    } else if (snapCandidate && snapCandidate !== this.lastPoint) {
-      this.snapTarget = snapCandidate;
-      endPosition = snapCandidate.position;
-
-      this.pointManager.setHovered(snapCandidate);
-    } else {
-      this.snapTarget = null;
-      this.pointManager.setHovered(null);
-
-      //Angle snapping (only if not snapping to point)
-      if (this.isShiftPressed && this.lastPoint) {
-        endPosition = this.snapAngle(this.lastPoint.position, worldPos);
-      }
-    }
-    if (!this.lastPoint || !this.previewLine) return;
-
-    this.previewLine.geometry.setFromPoints([this.lastPoint.position.clone(), endPosition.clone()]);
-  }
-  onMouseUp() {}
-
-  private snapAngle(start: THREE.Vector3, target: THREE.Vector3): THREE.Vector3 {
+  private snapAngle(start: THREE.Vector3, target: THREE.Vector3) {
     const dir = target.clone().sub(start);
-
     const angle = Math.atan2(dir.y, dir.x);
     const distance = dir.length();
 
-    const snapIncrement = Math.PI / 8; // 22.5°
+    const snapIncrement = Math.PI / 8;
     const snappedAngle = Math.round(angle / snapIncrement) * snapIncrement;
 
-    const snapped = new THREE.Vector3(
-      Math.cos(snappedAngle) * distance,
-      Math.sin(snappedAngle) * distance,
-      0,
-    );
-
-    return start.clone().add(snapped);
+    return start
+      .clone()
+      .add(
+        new THREE.Vector3(Math.cos(snappedAngle) * distance, Math.sin(snappedAngle) * distance, 0),
+      );
   }
 
   private onKeyDown = (e: KeyboardEvent) => {
-    if (e.key === 'Shift') {
-      this.isShiftPressed = true;
-    }
-    if (e.key === 'Escape') {
-      this.cancelLine();
-    }
+    if (e.key === 'Shift') this.isShiftPressed = true;
+    if (e.key === 'Escape') this.cancelLine();
   };
 
   private onKeyUp = (e: KeyboardEvent) => {
-    if (e.key === 'Shift') {
-      this.isShiftPressed = false;
-    }
+    if (e.key === 'Shift') this.isShiftPressed = false;
   };
 
-  dispose(): void {
+  dispose() {
     this.cancelLine();
     window.removeEventListener('keydown', this.onKeyDown);
     window.removeEventListener('keyup', this.onKeyUp);

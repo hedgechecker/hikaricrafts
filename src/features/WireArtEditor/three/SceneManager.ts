@@ -10,6 +10,7 @@ export class SceneManager {
   private container: HTMLDivElement;
   private animationId?: number;
   private imageMesh?: THREE.Mesh;
+  private url = '';
 
   constructor(container: HTMLDivElement) {
     this.container = container;
@@ -30,6 +31,7 @@ export class SceneManager {
       -1000,
       1000,
     );
+    this.camera.updateProjectionMatrix();
 
     this.camera.position.z = 10;
 
@@ -85,7 +87,8 @@ export class SceneManager {
     return this.cameraController;
   }
 
-  setBackgroundImage(url: string) {
+  setBackground(url: string) {
+    this.url = url;
     const loader = new THREE.TextureLoader();
     loader.load(url, (texture) => {
       if (this.imageMesh) {
@@ -103,13 +106,13 @@ export class SceneManager {
       });
 
       this.imageMesh = new THREE.Mesh(geometry, material);
+      this.imageMesh.position.setZ(-5);
       this.scene.add(this.imageMesh);
     });
   }
 
-  clear() {
-    if (this.imageMesh) {
-      this.scene.remove(this.imageMesh);
-    }
+  getBackground() {
+    return this.url;
   }
+
 }

@@ -1,45 +1,42 @@
 import * as THREE from 'three';
 import type { Tool } from './Tool';
-import { PointManager } from '../objects/PointManager';
-import type { CursorManager } from '../objects/CursorManager';
+import type { ThreeEditor } from '../ThreeEditor';
+import { AddPointCommand } from '../../commands/AddPointCommand ';
+import { generateId } from '../../utils/id';
 
 export class PointTool implements Tool {
-  private camera: THREE.Camera;
-  private domElement: HTMLElement;
   private raycaster = new THREE.Raycaster();
   private mouse = new THREE.Vector2();
   private plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
-  private pointManager: PointManager;
-  private cursorManager: CursorManager;
-  private position: number[] = [];
+
+  private downPosition: [number, number] = [0, 0];
   private placementBlocked = false;
+
+  private camera: THREE.Camera;
+  private domElement: HTMLElement;
+  private editor: ThreeEditor;
 
   constructor(
     camera: THREE.Camera,
     domElement: HTMLElement,
-    pointManager: PointManager,
-    cursorManager: CursorManager,
+    editor: ThreeEditor,
   ) {
     this.camera = camera;
     this.domElement = domElement;
-    this.pointManager = pointManager;
-    this.cursorManager = cursorManager;
+    this.editor = editor;
   }
 
   onMouseDown(event: MouseEvent): void {
-    this.position[0] = event.clientX;
-    this.position[1] = event.clientY;
+    this.downPosition = [event.clientX, event.clientY];
   }
 
   onMouseUp(event: MouseEvent): void {
-    if (
-      Math.abs(this.position[0] - event.clientX) > 0.5 ||
-      Math.abs(this.position[1] - event.clientY) > 0.5 ||
-      this.pointManager.getHovered() != null ||
-      this.placementBlocked
-    ) {
-      return;
-    }
+    const moved =
+      Math.abs(this.downPosition[0] - event.clientX) > 0.5 ||
+      Math.abs(this.downPosition[1] - event.clientY) > 0.5;
+
+    if (moved || this.placementBlocked || this.editor.getHoveredPoint()) return;
+
     const rect = this.domElement.getBoundingClientRect();
 
     this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
@@ -48,31 +45,24 @@ export class PointTool implements Tool {
     this.raycaster.setFromCamera(this.mouse, this.camera);
 
     const intersection = new THREE.Vector3();
-    this.raycaster.ray.intersectPlane(this.plane, intersection);
+    const hit = this.raycaster.ray.intersectPlane(this.plane, intersection);
 
-    this.pointManager.addPoint(intersection);
+    if (!hit) return;
+
+    this.editor.executeCommand(
+      new AddPointCommand({
+        id: generateId(),
+        x: intersection.x,
+        y: intersection.y,
+        z: intersection.z,
+      }),
+    );
+
     this.placementBlocked = true;
   }
 
   onMouseMove(event: MouseEvent) {
     this.placementBlocked = false;
-    const rect = this.domElement.getBoundingClientRect();
-
-    this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-    this.raycaster.setFromCamera(this.mouse, this.camera);
-    const intersects = this.raycaster.intersectObjects(this.pointManager.getHitboxes(), false);
-
-    if (intersects.length > 0) {
-      const hitObject = intersects[0].object;
-      const group = hitObject.parent as THREE.Group;
-      this.pointManager.setHovered(group);
-      this.cursorManager.setCursor('pointer');
-    } else {
-      this.pointManager.setHovered(null);
-      this.cursorManager.setCursor('default');
-    }
-    return;
+    this.editor.handleHover(event);
   }
 }

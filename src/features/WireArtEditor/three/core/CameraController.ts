@@ -43,7 +43,7 @@ export class CameraController {
     const direction = event.deltaY > 0 ? 1 / zoomFactor : zoomFactor;
 
     this.camera.zoom *= direction;
-    this.camera.zoom = THREE.MathUtils.clamp(this.camera.zoom, 0.2, 20);
+    this.camera.zoom = THREE.MathUtils.clamp(this.camera.zoom, 0.05, 10);
     this.camera.updateProjectionMatrix();
 
     // Convert mouse to world AFTER zoom
@@ -60,12 +60,8 @@ export class CameraController {
     return vector;
   }
 
-  // =======================
-  // SIMPLE LEFT-MOUSE PAN
-  // =======================
-
   private onMouseDown = (event: MouseEvent) => {
-    if (event.button !== 0) return; // left mouse button only
+    if (event.button == 0) return; // middle mouse button only
 
     this.isPanning = true;
     this.lastMouse.set(event.clientX, event.clientY);

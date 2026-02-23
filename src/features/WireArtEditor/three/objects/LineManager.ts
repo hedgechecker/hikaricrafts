@@ -1,20 +1,24 @@
-import * as THREE from "three";
+import * as THREE from 'three';
+import { PointManager } from './PointManager';
 
-interface LineData {
-  start: THREE.Group;
-  end: THREE.Group;
+interface LineRenderData {
+  startId: string;
+  endId: string;
   mesh: THREE.Line;
 }
 
 export class LineManager {
+  private lines = new Map<string, LineRenderData>();
   private scene: THREE.Scene;
-  private lines: LineData[] = [];
-
-  constructor(scene: THREE.Scene) {
+  private pointManager: PointManager;
+  constructor(scene: THREE.Scene, pointManager: PointManager) {
     this.scene = scene;
+    this.pointManager = pointManager;
   }
 
-  addLine(startPoint: THREE.Group, endPoint: THREE.Group) {
+  // --------------------------------------------------
+
+  addLine(startId: string, endId: string, id: string) {
     const geometry = new THREE.BufferGeometry();
     const material = new THREE.LineBasicMaterial({
       color: 0x000000,
@@ -23,30 +27,57 @@ export class LineManager {
     });
 
     const line = new THREE.Line(geometry, material);
-
     this.scene.add(line);
 
-    this.lines.push({
-      start: startPoint,
-      end: endPoint,
+    this.lines.set(id, {
+      startId,
+      endId,
       mesh: line,
     });
 
-    this.updateLineGeometry(this.lines[this.lines.length - 1]);
+    this.updateLineGeometry(id);
   }
 
+  // --------------------------------------------------
+
+  removeLine(id: string) {
+    const data = this.lines.get(id);
+    if (!data) return;
+
+    this.scene.remove(data.mesh);
+    data.mesh.geometry.dispose();
+    (data.mesh.material as THREE.Material).dispose();
+
+    this.lines.delete(id);
+  }
+
+  // --------------------------------------------------
+
   update() {
-    for (const lineData of this.lines) {
-      this.updateLineGeometry(lineData);
+    for (const [id] of this.lines) {
+      this.updateLineGeometry(id);
     }
   }
 
-  private updateLineGeometry(lineData: LineData) {
-    const startPos = lineData.start.position;
-    const endPos = lineData.end.position;
+  // --------------------------------------------------
 
-    const points = [startPos.clone(), endPos.clone()];
+  clear() {
+    for (const [id] of this.lines) {
+      this.removeLine(id);
+    }
+  }
 
-    lineData.mesh.geometry.setFromPoints(points);
+  // --------------------------------------------------
+
+  private updateLineGeometry(id: string) {
+    const data = this.lines.get(id);
+    if (!data) return;
+
+    const startPos = this.pointManager.getWorldPositionById(data.startId);
+    const endPos = this.pointManager.getWorldPositionById(data.endId);
+
+    if (!startPos || !endPos) return;
+
+    data.mesh.geometry.setFromPoints([startPos.clone(), endPos.clone()]);
   }
 }
