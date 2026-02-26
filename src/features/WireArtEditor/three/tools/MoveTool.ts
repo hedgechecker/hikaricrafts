@@ -13,7 +13,7 @@ export class MoveTool implements Tool {
 
   private selectedPoint: string | null = null;
   private startPosition: THREE.Vector3 | null = null;
-  private currentPosition: THREE.Vector3 = new THREE.Vector3(0,0,0);
+  private currentPosition: THREE.Vector3 | null = null;
 
   private camera: THREE.Camera;
   private domElement: HTMLElement;
@@ -43,11 +43,11 @@ export class MoveTool implements Tool {
   }
 
   onMouseDown() {
-    const hovered = this.editor.getHoveredPoints();
-    if (hovered.length == 0) return;
+    const hovered = this.editor.getHoveredPoint();
+    if (!hovered) return;
 
-    this.selectedPoint = hovered[0];
-    if(!this.startPosition) this.startPosition = new THREE.Vector3(0,0,0);
+    this.selectedPoint = hovered;
+    if (!this.startPosition) this.startPosition = new THREE.Vector3(0, 0, 0);
     this.startPosition.copy(this.editor.getPointWorldPosition(this.selectedPoint) as THREE.Vector3);
     this.editor.setSelected([this.selectedPoint]);
 
@@ -68,6 +68,7 @@ export class MoveTool implements Tool {
     const hit = this.raycaster.ray.intersectPlane(this.plane, intersection);
 
     if (!hit) return;
+    if (!this.currentPosition) this.currentPosition = new THREE.Vector3(0, 0, 0);
     this.currentPosition.copy(intersection);
     this.editor.previewMovePoint(this.selectedPoint, this.currentPosition);
   }
@@ -75,22 +76,27 @@ export class MoveTool implements Tool {
   onMouseUp() {
     this.editor.clearPreview();
     if (!this.selectedPoint || !this.startPosition || !this.currentPosition) {
-      console.log("missin")
-      console.log(this.selectedPoint)
-      console.log(this.startPosition)
-      console.log(this.currentPosition);
+      console.log('missin');
+      this.cameraController.setPanEnabled(true);
       this.selectedPoint = null;
+      this.startPosition = null;
+      this.currentPosition = null;
       this.editor.setSelected([]);
+      this.cursorManager.setCursor('default');
       return;
     }
     var endPosition = this.currentPosition;
 
     if (!this.currentPosition.equals(this.startPosition)) {
-      const hovered = this.editor.getHoveredPoints()[0];
+      const hovered = this.editor.getHoveredPoint();
       if (hovered && hovered != this.selectedPoint) {
         this.editor.executeCommand(new MergePointsCommand(this.selectedPoint, hovered));
-        this.editor.setHovered([hovered]);
+        this.editor.setHovered(hovered);
       } else {
+        const point = this.editor.getHoveredGridPoint();
+        if (point) {
+          endPosition.copy(point);
+        }
         this.editor.executeCommand(
           new MovePointCommand(
             this.selectedPoint,
@@ -106,13 +112,14 @@ export class MoveTool implements Tool {
             },
           ),
         );
-        this.editor.setHovered([this.selectedPoint]);
+        this.editor.setHovered(this.selectedPoint);
       }
     }
 
     this.cameraController.setPanEnabled(true);
     this.selectedPoint = null;
     this.startPosition = null;
+    this.currentPosition = null;
     this.editor.setSelected([]);
     this.cursorManager.setCursor('default');
   }

@@ -16,11 +16,7 @@ export class PointTool implements Tool {
   private domElement: HTMLElement;
   private editor: ThreeEditor;
 
-  constructor(
-    camera: THREE.Camera,
-    domElement: HTMLElement,
-    editor: ThreeEditor,
-  ) {
+  constructor(camera: THREE.Camera, domElement: HTMLElement, editor: ThreeEditor) {
     this.camera = camera;
     this.domElement = domElement;
     this.editor = editor;
@@ -44,8 +40,13 @@ export class PointTool implements Tool {
 
     this.raycaster.setFromCamera(this.mouse, this.camera);
 
-    const intersection = new THREE.Vector3();
+    let intersection = new THREE.Vector3();
     const hit = this.raycaster.ray.intersectPlane(this.plane, intersection);
+
+    const point = this.editor.getHoveredGridPoint();
+    if (point) {
+      intersection = point;
+    }
 
     if (!hit) return;
 

@@ -1,8 +1,11 @@
+import type { Settings } from "./Settings";
+
 export interface Project {
   id: string;
   name: string;
   version: number;
 
+  settings?: Settings;
   background?: string;
 
   points: PointData[];

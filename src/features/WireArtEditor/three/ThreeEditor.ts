@@ -8,16 +8,25 @@ import type { Tool } from './tools/Tool';
 import { CursorManager } from './objects/CursorManager';
 import { LineManager } from './objects/LineManager';
 import { DataStorage } from '../core/DataStorage';
-import type { Vector3 } from 'three';
+import { Vector3 } from 'three';
 import * as THREE from 'three';
 
 import { DataModel } from '../models/DataModel';
 import { CommandManager } from '../core/CommandManager';
 import type { Command } from '../models/Command';
 import { DeletePointCommand } from '../commands/DeletePointCommand';
+import { DeleteLineCommand } from '../commands/DeleteLineCommand';
+import type { Settings } from '../models/Settings';
 
 export type ToolType = 'point' | 'move' | 'line';
-
+//grid size
+//project Title | Version
+//Savetofile fromFile
+//Scale Image
+//line connect to line
+//settings line thickness | show points | show grid | show lines
+//line length and angle display
+//set line length and angle
 export class ThreeEditor {
   private sceneManager: SceneManager;
   private pointManager: PointManager;
@@ -25,6 +34,12 @@ export class ThreeEditor {
   private cursorManager: CursorManager;
   private lineManager: LineManager;
   private storage: DataStorage;
+  settings: Settings = {
+    showPoints: true,
+    showLines: true,
+    showGrid: true,
+    snapToGrid: true,
+  };
 
   private pointTool: PointTool;
   private moveTool: MoveTool;
@@ -33,7 +48,9 @@ export class ThreeEditor {
   private model: DataModel;
   private history: CommandManager;
   private raycaster = new THREE.Raycaster();
+
   private mouse = new THREE.Vector2();
+  private animationFrameId: number | null = null;
 
   constructor(container: HTMLDivElement) {
     this.model = new DataModel();
@@ -65,53 +82,86 @@ export class ThreeEditor {
       this.sceneManager.renderer.domElement,
       this,
     );
+    this.raycaster.params.Line2 = { threshold: 2 };
+
     this.toolManager.setTool(this.moveTool);
     window.addEventListener('keydown', this.onKeyDown);
-
-    this.start();
     this.load('X');
   }
 
   private syncSceneFromModel() {
-    this.pointManager.clear();
-    this.lineManager.clear();
+    console.log('Synced');
+    this.syncPoints();
+    this.syncLines();
+  }
 
-    this.model.points.forEach((point) => {
-      this.pointManager.addPoint({ x: point.x, y: point.y, z: point.z } as Vector3, point.id);
-    });
+  private syncPoints() {
+    const existing = new Set(this.pointManager.getAllIds());
 
-    this.model.lines.forEach((line) => {
-      this.lineManager.addLine(line.startPointId, line.endPointId, line.id);
-    });
+    for (const point of this.model.points.values()) {
+      if (!this.pointManager.hasPoint(point.id)) {
+        // ADD
+        this.pointManager.addPoint(new Vector3(point.x, point.y, point.z), point.id);
+      } else {
+        // UPDATE
+        this.pointManager.setPosition(point.id, new Vector3(point.x, point.y, point.z));
+      }
+
+      existing.delete(point.id);
+    }
+
+    // REMOVE deleted
+    for (const id of existing) {
+      this.pointManager.removePoint(id);
+    }
+  }
+
+  private syncLines() {
+    const existing = new Set(this.lineManager.getAllIds());
+
+    for (const line of this.model.lines.values()) {
+      if (!this.lineManager.hasLine(line.id)) {
+        // ADD
+        this.lineManager.addLine(line.startPointId, line.endPointId, line.id);
+      } else {
+        // UPDATE endpoints if needed
+        this.lineManager.updateConnection(line.id, line.startPointId, line.endPointId);
+      }
+
+      existing.delete(line.id);
+    }
+
+    // REMOVE deleted
+    for (const id of existing) {
+      this.lineManager.removeLine(id);
+    }
   }
 
   load(projectName: string) {
-    const data = this.storage.loadFromLocal(projectName);
+    const project = this.storage.loadFromLocal(projectName);
 
-    // Clear current runtime model
     this.model.points.clear();
     this.model.lines.clear();
 
-    if (!data) {
+    if (!project) {
       this.syncSceneFromModel();
       return;
     }
 
-    // Restore model state
-    for (const point of data.points) {
+    for (const point of project.points) {
       this.model.points.set(point.id, { ...point });
     }
-
-    for (const line of data.lines) {
+    for (const line of project.lines) {
       this.model.lines.set(line.id, { ...line });
     }
 
-    // Restore background
-    if (data.background) {
-      this.sceneManager.setBackground(data.background);
+    if (project.background) {
+      this.sceneManager.setBackground(project.background);
+    }
+    if (project.settings) {
+      this.settings = project.settings;
     }
 
-    // Sync rendering layer
     this.syncSceneFromModel();
   }
 
@@ -123,6 +173,7 @@ export class ThreeEditor {
       id: '0',
       name: projectName,
       version: 0,
+      settings: this.settings,
     });
   }
 
@@ -133,13 +184,19 @@ export class ThreeEditor {
   }
 
   start() {
+    let lastZoom = 0;
     const animate = () => {
       const { renderer, scene, camera } = this.sceneManager;
       renderer.render(scene, camera);
-      // Keep points constant sizepoints
-      this.pointManager.updateScale(camera.zoom);
-      this.lineManager.update();
-      requestAnimationFrame(animate);
+
+      if (camera.zoom != lastZoom) {
+        this.pointManager.updateScale(camera.zoom);
+        this.lineManager.updateScale(camera.zoom);
+        this.sceneManager.update();
+        lastZoom = camera.zoom;
+      }
+
+      this.animationFrameId = requestAnimationFrame(animate);
     };
     animate();
   }
@@ -164,14 +221,17 @@ export class ThreeEditor {
       this.toolManager.setTool(this.lineTool);
     }
   }
-  setHovered(id: string[]) {
+  setHovered(id: string | null) {
     this.pointManager.setHovered(id);
   }
   setSelected(id: string[]) {
     this.pointManager.setSelected(id);
   }
-  getHoveredPoints(): string[] {
+  getHoveredPoint(): string | null {
     return this.pointManager.getHovered();
+  }
+  getHoveredGridPoint(): THREE.Vector3 | null {
+    return this.sceneManager.getHovered();
   }
   getSnapCandidates(worldPos: THREE.Vector3, threshold: number): string[] {
     return this.pointManager.getSnapCandidateIds(worldPos, threshold);
@@ -179,8 +239,11 @@ export class ThreeEditor {
   getPointWorldPosition(id: string): THREE.Vector3 | null {
     return this.pointManager.getWorldPositionById(id);
   }
+  public getConnectedPoints(pointId: string): string[] {
+    return this.lineManager.getConnectedPoints(pointId);
+  }
   public clearHover() {
-    this.pointManager.setHovered([]);
+    this.pointManager.setHovered(null);
   }
 
   private onKeyDown = (e: KeyboardEvent) => {
@@ -200,8 +263,10 @@ export class ThreeEditor {
     }
 
     if (e.key === 'Delete' || e.key === 'Backspace') {
-      const hovered = this.pointManager.getHovered();
-      if (hovered.length > 0) this.deletePoint(hovered[0]);
+      const hoveredPoint = this.pointManager.getHovered();
+      if (hoveredPoint) this.deletePoint(hoveredPoint);
+      const hoveredLine = this.lineManager.getHovered();
+      if (hoveredLine) this.deleteLine(hoveredLine);
     }
   };
 
@@ -210,47 +275,85 @@ export class ThreeEditor {
     this.syncSceneFromModel();
   }
 
+  public deleteLine(lineId: string) {
+    this.executeCommand(new DeleteLineCommand(lineId));
+    this.syncSceneFromModel();
+  }
+
   public previewMovePoint(id: string, position: THREE.Vector3) {
-    this.pointManager.setVisualPosition(id, position);
-    this.lineManager.update(); // update line geometry from visual positions
+    this.pointManager.setPosition(id, position);
+    this.lineManager.update();
   }
 
   public clearPreview() {
     this.syncSceneFromModel(); // restore authoritative model state
   }
 
-  public handleHover(event: MouseEvent) {
-    const rect = this.sceneManager.renderer.domElement.getBoundingClientRect();
+  public hasLineBetween(a: string, b: string): boolean {
+    return this.lineManager.hasLineBetween(a, b);
+  }
 
+  public handleHover(event: MouseEvent) {
+    this.cursorManager.setCursor('default');
+
+    const rect = this.sceneManager.renderer.domElement.getBoundingClientRect();
     this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
     this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
     this.raycaster.setFromCamera(this.mouse, this.sceneManager.camera);
 
     const intersects = this.raycaster.intersectObjects(this.pointManager.getHitboxes(), false);
-    const selectedId = this.pointManager.getSelected()[0] ?? null;
+    const hoveredPointId = this.pointManager.getFirstHoverablePoint(intersects);
 
-    let hoveredGroup: string | null = null;
-
-    for (const inter of intersects) {
-      const id = inter.object.parent?.userData.id as string;
-
-      if (id === selectedId) continue;
-
-      hoveredGroup = id;
-      break;
-    }
-
-    if (hoveredGroup) {
-      this.pointManager.setHovered([hoveredGroup]);
+    if (hoveredPointId) {
+      this.pointManager.setHovered(hoveredPointId);
+      this.lineManager.setHovered(null);
+      this.sceneManager.setHovered(null);
       this.cursorManager.setCursor('pointer');
-    } else {
-      this.pointManager.setHovered([]);
-      this.cursorManager.setCursor('default');
+      return;
     }
+
+    const lineHits = this.raycaster.intersectObjects(this.lineManager.getHitboxes(), false);
+    let hoveredLineId = this.lineManager.getFirstHoverableLine(
+      lineHits,
+      this.pointManager.getSelected()[0],
+    );
+
+    if (hoveredLineId) {
+      this.pointManager.setHovered(null);
+      this.lineManager.setHovered(hoveredLineId);
+      this.sceneManager.setHovered(null);
+      this.cursorManager.setCursor('pointer');
+      return;
+    }
+
+    if (this.settings.snapToGrid) {
+      const planeZ = 0;
+      const ray = this.raycaster.ray;
+
+      const t = (planeZ - ray.origin.z) / ray.direction.z;
+      const worldPos = new THREE.Vector3().copy(ray.direction).multiplyScalar(t).add(ray.origin);
+
+      const snappedPos = this.sceneManager.snapToGrid(worldPos);
+
+      if (snappedPos) {
+        this.pointManager.setHovered(null);
+        this.lineManager.setHovered(null);
+        this.sceneManager.setHovered(snappedPos);
+        this.cursorManager.setCursor('crosshair');
+        return;
+      }
+    }
+
+    this.pointManager.setHovered(null);
+    this.lineManager.setHovered(null);
+    this.sceneManager.setHovered(null);
+    this.cursorManager.setCursor('default');
   }
 
   dispose() {
+    if (this.animationFrameId !== null) {
+      cancelAnimationFrame(this.animationFrameId);
+    }
     window.removeEventListener('keydown', this.onKeyDown);
     this.toolManager.dispose();
     this.sceneManager.dispose();

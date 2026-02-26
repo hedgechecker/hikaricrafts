@@ -10,6 +10,7 @@ export class EditorEngine {
     if (this.threeEditor) return; // prevent double mount
 
     this.threeEditor = new ThreeEditor(container);
+    this.threeEditor.start();
   }
 
   setActiveTool(type: ToolType) {

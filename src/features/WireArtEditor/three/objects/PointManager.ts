@@ -3,10 +3,12 @@ import * as THREE from 'three';
 export class PointManager {
   private scene: THREE.Scene;
   private points = new Map<string, THREE.Group>();
-  private baseSize = 1.0;
-  private hoverScale = 2.0;
 
-  private hovered: string[] = [];
+  private readonly baseThickness = 1.0;
+  private readonly hoverThickness = 2.0;
+  private zoom: number = 1;
+
+  private hovered: string | null = null;
   private selected: string[] = [];
 
   constructor(scene: THREE.Scene) {
@@ -55,10 +57,10 @@ export class PointManager {
 
     const hitbox = new THREE.Mesh(hitGeometry, hitMaterial);
     hitbox.name = 'hitbox';
-
-    circle.scale.set(0, 0, 1);
-    outline.scale.set(0, 0, 1);
-    hitbox.scale.set(0, 0, 1);
+    const size = this.baseThickness / this.zoom;
+    circle.scale.set(size, size, 1);
+    outline.scale.set(size, size, 1);
+    hitbox.scale.set(size, size, 1);
     group.add(circle);
     group.add(outline);
     group.add(hitbox);
@@ -71,31 +73,23 @@ export class PointManager {
     return group;
   }
 
-  setHovered(ids: string[]) {
-    var points: THREE.Group<THREE.Object3DEventMap>[] = [];
-    ids.forEach((id) => {
-      const point = this.points.get(id) ?? null;
-      if (point) points.push(point);
-    });
-
-    if (this.hovered.length > 0) {
-      this.hovered.forEach((id) => {
-        const point = this.points.get(id);
-        if (point != undefined) {
-          point.userData.isHovered = false;
-        }
-      });
+  setHovered(id: string | null) {
+    if (this.hovered) {
+      const point = this.points.get(this.hovered);
+      if (point != undefined) {
+        point.userData.isHovered = false;
+      }
     }
-    this.hovered = ids;
+    this.hovered = id;
 
-    if (this.hovered.length > 0) {
-      this.hovered.forEach((id) => {
-        const point = this.points.get(id);
-        if (point != undefined) {
-          point.userData.isHovered = true;
-        }
-      });
+    if (this.hovered) {
+      const point = this.points.get(this.hovered);
+      if (point != undefined) {
+        point.userData.isHovered = true;
+      }
     }
+
+    this.updateScale(this.zoom);
   }
 
   setSelected(ids: string[]) {
@@ -125,13 +119,6 @@ export class PointManager {
     }
   }
 
-  public setVisualPosition(id: string, position: THREE.Vector3) {
-    const group = this.points.get(id);
-    if (!group) return;
-
-    group.position.copy(position);
-  }
-
   getHovered() {
     return this.hovered;
   }
@@ -139,16 +126,44 @@ export class PointManager {
     return this.selected;
   }
 
+  hasPoint(id: string) {
+    return this.points.has(id);
+  }
+
+  getAllIds(): string[] {
+    return Array.from(this.points.keys());
+  }
+
+  setPosition(id: string, pos: THREE.Vector3) {
+    const p = this.points.get(id);
+    if (!p) return;
+    p.position.copy(pos);
+  }
+
+  removePoint(id: string) {
+    const p = this.points.get(id);
+    if (!p) return;
+
+    this.scene.remove(p);
+    p.children.forEach((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.geometry.dispose();
+        child.material.dispose();
+      }
+    });
+
+    this.points.delete(id);
+  }
+
   updateScale(zoom: number) {
-    const scaleMultiplier = this.hoverScale;
-    const size = this.baseSize / zoom;
-    const scaledSize = size * scaleMultiplier;
+    this.zoom = zoom;
+    const size = this.baseThickness / zoom;
     this.points.forEach((group) => {
       const isHovered = group.userData.isHovered;
       const isSelected = group.userData.isSelected;
       group.children.forEach((child) => {
         if ((isHovered || isSelected) && child.name != 'hitbox') {
-          child.scale.set(scaledSize, scaledSize, 1);
+          child.scale.set(size * this.hoverThickness, size * this.hoverThickness, 1);
         } else {
           child.scale.set(size, size, 1);
         }
@@ -205,6 +220,18 @@ export class PointManager {
   }
   getWorldPositionById(id: string): THREE.Vector3 | null {
     return this.points.get(id)?.position ?? null;
+  }
+
+  public getFirstHoverablePoint(intersects: THREE.Intersection[]): string | null {
+    for (const hit of intersects) {
+      const id = hit.object.parent?.userData.id;
+      if (!id) continue;
+
+      if (this.selected.length > 0 && id == this.selected[0]) continue;
+
+      return id;
+    }
+    return null;
   }
 
   clear() {

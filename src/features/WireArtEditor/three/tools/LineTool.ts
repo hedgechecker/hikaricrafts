@@ -69,10 +69,13 @@ export class LineTool implements Tool {
     event.stopPropagation();
 
     let worldPos = this.getWorldPosition(event);
+    const point = this.editor.getHoveredGridPoint();
 
     if (this.isShiftPressed && this.lastPointId) {
       const last = this.editor.getPointWorldPosition(this.lastPointId);
       if (last) worldPos = this.snapAngle(last, worldPos);
+    } else if (point) {
+      worldPos = point;
     }
 
     let currentPointId: string;
@@ -94,7 +97,11 @@ export class LineTool implements Tool {
     }
 
     // Create line if we already had a previous point
-    if (this.lastPointId && currentPointId !== this.lastPointId) {
+    if (
+      this.lastPointId &&
+      currentPointId !== this.lastPointId &&
+      !this.editor.hasLineBetween(this.lastPointId, currentPointId)
+    ) {
       this.editor.executeCommand(
         new AddLineCommand(generateId(), this.lastPointId, currentPointId),
       );
@@ -110,6 +117,8 @@ export class LineTool implements Tool {
   onMouseMove(event: MouseEvent) {
     this.editor.handleHover(event);
     const worldPos = this.getWorldPosition(event);
+
+    console.log(this.isShiftPressed)
 
     const zoom = (this.camera as THREE.OrthographicCamera).zoom;
     const threshold = this.snapDistance / zoom;
@@ -172,17 +181,65 @@ export class LineTool implements Tool {
 
   private snapAngle(start: THREE.Vector3, target: THREE.Vector3) {
     const dir = target.clone().sub(start);
-    const angle = Math.atan2(dir.y, dir.x);
     const distance = dir.length();
 
-    const snapIncrement = Math.PI / 8;
-    const snappedAngle = Math.round(angle / snapIncrement) * snapIncrement;
+    let baseAngle = Math.atan2(dir.y, dir.x);
 
+    const candidateAngles: number[] = [];
+
+    // -------------------------
+    // 1. Global snapping (45°)
+    // -------------------------
+    const increment = Math.PI / 4;
+    candidateAngles.push(Math.round(baseAngle / increment) * increment);
+
+    // -------------------------
+    // 2. Relative snapping
+    // -------------------------
+    if (this.lastPointId) {
+      const connectedPoints = this.editor.getConnectedPoints(this.lastPointId);
+
+      for (const point of connectedPoints) {
+        const otherPos = this.editor.getPointWorldPosition(point);
+
+        if (!otherPos) continue;
+
+        const lineDir = otherPos.clone().sub(start);
+        const lineAngle = Math.atan2(lineDir.y, lineDir.x);
+
+        // parallel
+        candidateAngles.push(lineAngle);
+        candidateAngles.push(lineAngle + Math.PI);
+
+        // perpendicular
+        candidateAngles.push(lineAngle + Math.PI / 2);
+        candidateAngles.push(lineAngle - Math.PI / 2);
+      }
+    }
+
+    // -------------------------
+    // 3. Pick closest angle
+    // -------------------------
+    let bestAngle = candidateAngles[0];
+    let smallestDiff = Infinity;
+
+    for (const candidate of candidateAngles) {
+      const diff = Math.abs(
+        THREE.MathUtils.euclideanModulo(baseAngle - candidate + Math.PI, Math.PI * 2) - Math.PI,
+      );
+
+      if (diff < smallestDiff) {
+        smallestDiff = diff;
+        bestAngle = candidate;
+      }
+    }
+
+    // -------------------------
+    // 4. Apply snap
+    // -------------------------
     return start
       .clone()
-      .add(
-        new THREE.Vector3(Math.cos(snappedAngle) * distance, Math.sin(snappedAngle) * distance, 0),
-      );
+      .add(new THREE.Vector3(Math.cos(bestAngle) * distance, Math.sin(bestAngle) * distance, 0));
   }
 
   private onKeyDown = (e: KeyboardEvent) => {
@@ -196,7 +253,5 @@ export class LineTool implements Tool {
 
   dispose() {
     this.cancelLine();
-    window.removeEventListener('keydown', this.onKeyDown);
-    window.removeEventListener('keyup', this.onKeyUp);
   }
 }
