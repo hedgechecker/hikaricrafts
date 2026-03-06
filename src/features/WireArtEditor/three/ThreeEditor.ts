@@ -16,11 +16,13 @@ import { CommandManager } from '../core/CommandManager';
 import type { Command } from '../models/Command';
 import { DeletePointCommand } from '../commands/DeletePointCommand';
 import { DeleteLineCommand } from '../commands/DeleteLineCommand';
+import { SVGExporter } from '../core/SVGExporter';
 
 export type ToolType = 'point' | 'move' | 'line';
-//Savetofile fromFile
+//Import SVG?
+//multiple Images?
+//User interaction nicht angemeldet usw
 //Scale Image
-//line connect to line
 //settings line thickness | show points | show grid | show lines
 //line length and angle display
 //set line length and angle
@@ -43,6 +45,7 @@ export class ThreeEditor {
 
   private mouse = new THREE.Vector2();
   private animationFrameId: number | null = null;
+  private lastSaveTime = 0;
 
   constructor(container: HTMLDivElement) {
     this.model = new DataModel();
@@ -129,7 +132,7 @@ export class ThreeEditor {
     }
   }
 
-  async loadGlobal(id: number){
+  async loadGlobal(id: number) {
     this.load(await this.storage.loadGlobal(id));
   }
 
@@ -156,6 +159,17 @@ export class ThreeEditor {
     this.syncSceneFromModel();
   }
 
+  public save() {
+    const now = Date.now();
+    if (now - this.lastSaveTime < 5000) {
+      return;
+    }
+    this.lastSaveTime = now;
+    this.project.version = this.project.version + 1;
+    console.log(this.project.version);
+    this.saveLocal();
+    this.saveGlobal();
+  }
   private saveLocal() {
     this.storage.saveToLocal({
       ...this.project,
@@ -226,6 +240,9 @@ export class ThreeEditor {
   getHoveredPoint(): string | null {
     return this.pointManager.getHovered();
   }
+  getHoveredLine() {
+    return this.lineManager.getHovered();
+  }
   getHoveredGridPoint(): THREE.Vector3 | null {
     return this.sceneManager.getHovered();
   }
@@ -241,6 +258,9 @@ export class ThreeEditor {
   public clearHover() {
     this.pointManager.setHovered(null);
   }
+  exportSVG() {
+    SVGExporter.simpleExport(this.model, this.project);
+  }
 
   private onKeyDown = async (e: KeyboardEvent) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
@@ -255,8 +275,7 @@ export class ThreeEditor {
 
     if ((e.ctrlKey || e.metaKey) && e.key === 's') {
       e.preventDefault();
-      this.saveLocal();
-      this.saveGlobal();
+      this.save();
     }
 
     if ((e.ctrlKey || e.metaKey) && e.key === 'u') {
@@ -267,7 +286,7 @@ export class ThreeEditor {
     if (e.key === 'Delete' || e.key === 'Backspace') {
       const hoveredPoint = this.pointManager.getHovered();
       if (hoveredPoint) this.deletePoint(hoveredPoint);
-      const hoveredLine = this.lineManager.getHovered();
+      const hoveredLine = this.lineManager.getHoveredId();
       if (hoveredLine) this.deleteLine(hoveredLine);
     }
   };

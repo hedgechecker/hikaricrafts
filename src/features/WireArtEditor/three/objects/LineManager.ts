@@ -4,7 +4,9 @@ import { PointManager } from './PointManager';
 interface LineRenderData {
   startId: string;
   endId: string;
-  mesh: THREE.Mesh;
+  mesh: THREE.Group;
+  isHovered: boolean;
+  isSelected: boolean;
 }
 
 export class LineManager {
@@ -23,23 +25,36 @@ export class LineManager {
   }
 
   addLine(startId: string, endId: string, id: string) {
-    // Unit box: length = 1 (X axis), thickness = 1 (Y), depth = 1 (Z)
+    const group = new THREE.Group();
+    group.userData.id = id;
     const geometry = new THREE.BoxGeometry(1, 1, 1);
     const material = new THREE.MeshBasicMaterial({
       color: 0x000000,
       transparent: true,
       opacity: 0.8,
     });
+    const lineMesh = new THREE.Mesh(geometry, material);
+    lineMesh.name = 'visual';
 
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.userData.id = id;
+    const hitGeometry = new THREE.BoxGeometry(1,10,1);
+    const hitMaterial = new THREE.MeshBasicMaterial({
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+    });
+    const hitboxMesh = new THREE.Mesh(hitGeometry, hitMaterial);
+    hitboxMesh.name = 'hitbox';
 
-    this.scene.add(mesh);
+    group.add(lineMesh);
+    group.add(hitboxMesh);
+    this.scene.add(group);
 
     this.lines.set(id, {
-      startId,
-      endId,
-      mesh,
+      startId: startId,
+      endId: endId,
+      mesh: group,
+      isHovered: false,
+      isSelected: false,
     });
 
     this.updateLineGeometry(id);
@@ -50,7 +65,7 @@ export class LineManager {
     if (this.hovered) {
       const line = this.lines.get(this.hovered);
       if (line != undefined) {
-        line.mesh.userData.isHovered = false;
+        line.isHovered = false;
       }
     }
     this.hovered = id;
@@ -58,14 +73,18 @@ export class LineManager {
     if (this.hovered) {
       const line = this.lines.get(this.hovered);
       if (line != undefined) {
-        line.mesh.userData.isHovered = true;
+        line.isHovered = true;
       }
     }
     this.updateScale(this.zoom);
   }
-
   getHitboxes(): THREE.Object3D[] {
-    return Array.from(this.lines.values()).map((l) => l.mesh);
+    let arr: THREE.Object3D<THREE.Object3DEventMap>[] = [];
+    this.lines.forEach((line) => {
+      arr.push(line.mesh.getObjectByName('hitbox')!);
+    });
+
+    return arr;
   }
 
   public getConnectedPoints(pointId: string): string[] {
@@ -73,7 +92,7 @@ export class LineManager {
     for (const [, line] of this.lines) {
       if (line.startId === pointId) {
         connected.push(line.endId);
-      }else if(line.endId === pointId){
+      } else if (line.endId === pointId) {
         connected.push(line.startId);
       }
     }
@@ -92,9 +111,8 @@ export class LineManager {
     excludedPointId: string | null,
   ): string | null {
     for (const hit of intersects) {
-      const id = hit.object.userData.id;
+      const id = hit.object.parent?.userData.id;
       if (!id) continue;
-
       if (excludedPointId && this.isConnectedToPoint(id, excludedPointId)) continue;
 
       return id;
@@ -103,6 +121,13 @@ export class LineManager {
   }
 
   getHovered() {
+    if (!this.hovered) return null;
+    const data = this.lines.get(this.hovered);
+    if (!data) return null;
+    return { id: this.hovered, ...data };
+  }
+
+  getHoveredId(): string | null {
     return this.hovered;
   }
 
@@ -111,8 +136,12 @@ export class LineManager {
     if (!data) return;
 
     this.scene.remove(data.mesh);
-    data.mesh.geometry.dispose();
-    (data.mesh.material as THREE.Material).dispose();
+    data.mesh.children.forEach((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.geometry.dispose();
+        child.material.dispose();
+      }
+    });
 
     this.lines.delete(id);
   }

@@ -13,6 +13,8 @@ export default function EditorLayout() {
       <Toolbar
         onImageSelected={(img) => engine.setBackgroundImage(img)}
         onSelectTool={(tool) => engine.setActiveTool(tool)}
+        onSave={() => engine.save()}
+        onExport={() => engine.exportSVG()}
       />
       <div className={styles.center}>
         <SideBar engine={engine} />

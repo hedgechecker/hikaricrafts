@@ -7,6 +7,9 @@ import { generateId } from '../../utils/id';
 import { Line2 } from 'three/examples/jsm/lines/Line2.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import { LineGeometry } from 'three/examples/jsm/Addons.js';
+import { projectPointToSegment } from '../../utils/math';
+import { CompositeCommand } from '../../commands/CompositeCommand';
+import { DeleteLineCommand } from '../../commands/DeleteLineCommand';
 
 export class LineTool implements Tool {
   private raycaster = new THREE.Raycaster();
@@ -39,8 +42,6 @@ export class LineTool implements Tool {
     window.addEventListener('keyup', this.onKeyUp);
   }
 
-  // --------------------------------------------------
-
   private getWorldPosition(event: MouseEvent): THREE.Vector3 {
     const rect = this.domElement.getBoundingClientRect();
 
@@ -54,8 +55,6 @@ export class LineTool implements Tool {
 
     return intersection;
   }
-
-  // --------------------------------------------------
 
   onMouseDown(event: MouseEvent) {
     if (event.button === 2) {
@@ -80,10 +79,42 @@ export class LineTool implements Tool {
 
     let currentPointId: string;
 
+    const hoveredLine = this.editor.getHoveredLine();
     // Snap to existing point
-    if (this.snapTargetId) {
+    if (this.snapTargetId) {// when hovering an existing Point
       currentPointId = this.snapTargetId;
-    } else {
+    } else if(hoveredLine){//Add a new Point on an existing line
+      const aPos = this.editor.getPointWorldPosition(hoveredLine.startId);
+      const bPos = this.editor.getPointWorldPosition(hoveredLine.endId);
+      if (!aPos || !bPos) return;
+
+      const a = aPos.clone();
+      const b = bPos.clone();
+      worldPos = projectPointToSegment(worldPos, a, b);
+
+      const newPointId = generateId();
+
+      const newPoint = {
+        id: newPointId,
+        x: worldPos.x,
+        y: worldPos.y,
+        z: worldPos.z,
+      };
+
+      // prevent splitting exactly at endpoints
+      if (worldPos.distanceTo(a) < 0.001 || worldPos.distanceTo(b) < 0.001) {
+        return;
+      }
+
+      const splitCommand = new CompositeCommand([
+        new AddPointCommand(newPoint),
+        new DeleteLineCommand(hoveredLine.id),
+        new AddLineCommand(generateId(), hoveredLine.startId, newPointId),
+        new AddLineCommand(generateId(), newPointId, hoveredLine.endId),
+      ]);
+      currentPointId = newPoint.id;
+      this.editor.executeCommand(splitCommand);
+    }else {//when clicking somewhere, where nothing snaps to it
       currentPointId = generateId();
 
       this.editor.executeCommand(
@@ -108,7 +139,6 @@ export class LineTool implements Tool {
     }
 
     this.lastPointId = currentPointId;
-
     if (!this.previewLine) this.createPreviewLine();
   }
 

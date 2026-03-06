@@ -3,6 +3,10 @@ import type { Tool } from './Tool';
 import type { ThreeEditor } from '../ThreeEditor';
 import { AddPointCommand } from '../../commands/AddPointCommand ';
 import { generateId } from '../../utils/id';
+import { AddLineCommand } from '../../commands/AddLineCommand';
+import { DeleteLineCommand } from '../../commands/DeleteLineCommand';
+import { CompositeCommand } from '../../commands/CompositeCommand';
+import { projectPointToSegment } from '../../utils/math';
 
 export class PointTool implements Tool {
   private raycaster = new THREE.Raycaster();
@@ -42,13 +46,51 @@ export class PointTool implements Tool {
 
     let intersection = new THREE.Vector3();
     const hit = this.raycaster.ray.intersectPlane(this.plane, intersection);
+    if (!hit) return;
+
+    const hoveredLine = this.editor.getHoveredLine();
+    if (hoveredLine) {
+      const aPos = this.editor.getPointWorldPosition(hoveredLine.startId);
+      const bPos = this.editor.getPointWorldPosition(hoveredLine.endId);
+      if (!aPos || !bPos) return;
+
+      const a = aPos.clone();
+      const b = bPos.clone();
+
+      // ---- PROJECT CLICK ONTO LINE ----
+      intersection = projectPointToSegment(intersection, a, b);
+
+      const newPointId = generateId();
+
+      const newPoint = {
+        id: newPointId,
+        x: intersection.x,
+        y: intersection.y,
+        z: intersection.z,
+      };
+
+      // prevent splitting exactly at endpoints
+      if (intersection.distanceTo(a) < 0.001 || intersection.distanceTo(b) < 0.001) {
+        return;
+      }
+
+      const splitCommand = new CompositeCommand([
+        new AddPointCommand(newPoint),
+        new DeleteLineCommand(hoveredLine.id),
+        new AddLineCommand(generateId(), hoveredLine.startId, newPointId),
+        new AddLineCommand(generateId(), newPointId, hoveredLine.endId),
+      ]);
+
+      this.editor.executeCommand(splitCommand);
+
+      this.placementBlocked = true;
+      return;
+    }
 
     const point = this.editor.getHoveredGridPoint();
     if (point) {
       intersection = point;
     }
-
-    if (!hit) return;
 
     this.editor.executeCommand(
       new AddPointCommand({
@@ -66,4 +108,6 @@ export class PointTool implements Tool {
     this.placementBlocked = false;
     this.editor.handleHover(event);
   }
+
+  
 }

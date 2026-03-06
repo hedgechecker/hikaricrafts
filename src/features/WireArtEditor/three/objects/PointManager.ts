@@ -1,8 +1,14 @@
 import * as THREE from 'three';
 
+interface PointRenderData {
+  mesh: THREE.Group;
+  isHovered: boolean;
+  isSelected: boolean;
+}
+
 export class PointManager {
   private scene: THREE.Scene;
-  private points = new Map<string, THREE.Group>();
+  private points = new Map<string, PointRenderData>();
 
   private readonly baseThickness = 1.0;
   private readonly hoverThickness = 2.0;
@@ -68,8 +74,7 @@ export class PointManager {
 
     this.scene.add(group);
 
-    this.points.set(id, group);
-    // this.storage.addPoint({ x: position.x, y: position.y }, id);
+    this.points.set(id, {mesh: group, isSelected: false, isHovered:false});
     return group;
   }
 
@@ -77,7 +82,7 @@ export class PointManager {
     if (this.hovered) {
       const point = this.points.get(this.hovered);
       if (point != undefined) {
-        point.userData.isHovered = false;
+        point.isHovered = false;
       }
     }
     this.hovered = id;
@@ -85,7 +90,7 @@ export class PointManager {
     if (this.hovered) {
       const point = this.points.get(this.hovered);
       if (point != undefined) {
-        point.userData.isHovered = true;
+        point.isHovered = true;
       }
     }
 
@@ -93,17 +98,11 @@ export class PointManager {
   }
 
   setSelected(ids: string[]) {
-    var points: THREE.Group<THREE.Object3DEventMap>[] = [];
-    ids.forEach((id) => {
-      const point = this.points.get(id) ?? null;
-      if (point) points.push(point);
-    });
-
     if (this.selected.length > 0) {
       this.selected.forEach((id) => {
         const point = this.points.get(id);
         if (point != undefined) {
-          point.userData.isSelected = false;
+          point.isSelected = false;
         }
       });
     }
@@ -113,7 +112,7 @@ export class PointManager {
       this.selected.forEach((id) => {
         const point = this.points.get(id);
         if (point != undefined) {
-          point.userData.isSelected = true;
+          point.isSelected = true;
         }
       });
     }
@@ -137,15 +136,15 @@ export class PointManager {
   setPosition(id: string, pos: THREE.Vector3) {
     const p = this.points.get(id);
     if (!p) return;
-    p.position.copy(pos);
+    p.mesh.position.copy(pos);
   }
 
   removePoint(id: string) {
     const p = this.points.get(id);
     if (!p) return;
 
-    this.scene.remove(p);
-    p.children.forEach((child) => {
+    this.scene.remove(p.mesh);
+    p.mesh.children.forEach((child) => {
       if (child instanceof THREE.Mesh) {
         child.geometry.dispose();
         child.material.dispose();
@@ -158,10 +157,10 @@ export class PointManager {
   updateScale(zoom: number) {
     this.zoom = zoom;
     const size = this.baseThickness / zoom;
-    this.points.forEach((group) => {
-      const isHovered = group.userData.isHovered;
-      const isSelected = group.userData.isSelected;
-      group.children.forEach((child) => {
+    this.points.forEach((point) => {
+      const isHovered = point.isHovered;
+      const isSelected = point.isSelected;
+      point.mesh.children.forEach((child) => {
         if ((isHovered || isSelected) && child.name != 'hitbox') {
           child.scale.set(size * this.hoverThickness, size * this.hoverThickness, 1);
         } else {
@@ -178,7 +177,7 @@ export class PointManager {
   getHitboxes(): THREE.Object3D[] {
     let arr: THREE.Object3D<THREE.Object3DEventMap>[] = [];
     this.points.forEach((point) => {
-      arr.push(point.getObjectByName('hitbox')!);
+      arr.push(point.mesh.getObjectByName('hitbox')!);
     });
 
     return arr;
@@ -186,40 +185,29 @@ export class PointManager {
 
   getSnapCandidates(position: THREE.Vector3, threshold: number): THREE.Group[] {
     let closest: THREE.Group[] = [];
-    let minDist = Infinity;
+    this.points.forEach((point) => {
+      const dist = point.mesh.position.distanceTo(position);
 
-    for (const group of this.points.values()) {
-      const dist = group.position.distanceTo(position);
-
-      if (dist < threshold && dist < minDist) {
-        closest.push(group);
-        minDist = dist;
+      if (dist < threshold) {
+        closest.push(point.mesh);
       }
-    }
+    });
 
     return closest;
   }
   getSnapCandidateIds(position: THREE.Vector3, threshold: number): string[] {
-    let closest: THREE.Group[] = [];
-    let minDist = Infinity;
+    let closest: string[] = [];
+    this.points.forEach((point, id) => {
+      const dist = point.mesh.position.distanceTo(position);
 
-    for (const group of this.points.values()) {
-      const dist = group.position.distanceTo(position);
-
-      if (dist < threshold && dist < minDist) {
-        closest.push(group);
-        minDist = dist;
+      if (dist < threshold) {
+        closest.push(id);
       }
-    }
-
-    let ids: string[] = [];
-    closest.forEach((closer) => {
-      ids.push(closer?.userData.id);
     });
-    return ids;
+    return closest;
   }
   getWorldPositionById(id: string): THREE.Vector3 | null {
-    return this.points.get(id)?.position ?? null;
+    return this.points.get(id)?.mesh.position ?? null;
   }
 
   public getFirstHoverablePoint(intersects: THREE.Intersection[]): string | null {
@@ -236,8 +224,8 @@ export class PointManager {
 
   clear() {
     this.points.forEach((point) => {
-      this.scene.remove(point);
+      this.scene.remove(point.mesh);
     });
-    this.points = new Map<string, THREE.Group>();
+    this.points.clear();
   }
 }

@@ -24,6 +24,14 @@ export class EditorEngine {
     this.threeEditor?.loadGlobal(id);
   }
 
+  save(){
+    this.threeEditor?.save();
+  }
+
+  exportSVG(){
+    return this.threeEditor?.exportSVG();
+  }
+
   openNewProjekt(){
     this.threeEditor?.load(null);
   }
