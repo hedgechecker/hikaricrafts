@@ -10,18 +10,17 @@ import { LineManager } from './objects/LineManager';
 import { DataStorage } from '../core/DataStorage';
 import { Vector3 } from 'three';
 import * as THREE from 'three';
-
 import { DataModel, type Project } from '../models/DataModel';
 import { CommandManager } from '../core/CommandManager';
 import type { Command } from '../models/Command';
 import { DeletePointCommand } from '../commands/DeletePointCommand';
 import { DeleteLineCommand } from '../commands/DeleteLineCommand';
 import { SVGExporter } from '../core/SVGExporter';
+import type { Settings } from '../models/Settings';
 
 export type ToolType = 'point' | 'move' | 'line';
 //Import SVG?
 //multiple Images?
-//User interaction nicht angemeldet usw
 //Scale Image
 //settings line thickness | show points | show grid | show lines
 //line length and angle display
@@ -45,7 +44,7 @@ export class ThreeEditor {
 
   private mouse = new THREE.Vector2();
   private animationFrameId: number | null = null;
-  private lastSaveTime = 0;
+  public hasChanges = false;
 
   constructor(container: HTMLDivElement) {
     this.model = new DataModel();
@@ -139,11 +138,13 @@ export class ThreeEditor {
   load(data: Project | null) {
     this.model.points.clear();
     this.model.lines.clear();
+    this.hasChanges = false;
 
     if (!data) {
       this.project = { points: [], lines: [], id: null, name: '', version: 0 };
       this.sceneManager.setBackground(this.project.background);
       this.syncSceneFromModel();
+      this.storage.deleteLocal();
       return;
     }
     this.project = data;
@@ -155,18 +156,16 @@ export class ThreeEditor {
       this.model.lines.set(line.id, { ...line });
     }
     this.sceneManager.setBackground(this.project.background);
-
+    this.saveLocal();
     this.syncSceneFromModel();
   }
 
   public save() {
-    const now = Date.now();
-    if (now - this.lastSaveTime < 5000) {
+    if (!this.hasChanges) {
       return;
     }
-    this.lastSaveTime = now;
+    this.hasChanges = false;
     this.project.version = this.project.version + 1;
-    console.log(this.project.version);
     this.saveLocal();
     this.saveGlobal();
   }
@@ -187,6 +186,7 @@ export class ThreeEditor {
   }
 
   public executeCommand(command: Command) {
+    this.hasChanges = true;
     console.log(command);
     this.history.execute(command, this.model);
     this.syncSceneFromModel();
@@ -237,6 +237,9 @@ export class ThreeEditor {
   setSelected(id: string[]) {
     this.pointManager.setSelected(id);
   }
+  setSettings(settings: Settings){
+    this.project.settings = settings;
+  }
   getHoveredPoint(): string | null {
     return this.pointManager.getHovered();
   }
@@ -254,6 +257,9 @@ export class ThreeEditor {
   }
   public getConnectedPoints(pointId: string): string[] {
     return this.lineManager.getConnectedPoints(pointId);
+  }
+  getProject(){
+    return this.project;
   }
   public clearHover() {
     this.pointManager.setHovered(null);
@@ -273,10 +279,10 @@ export class ThreeEditor {
       if (this.history.redo(this.model)) this.syncSceneFromModel();
     }
 
-    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-      e.preventDefault();
-      this.save();
-    }
+    // if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    //   e.preventDefault();
+    //   this.save();
+    // }
 
     if ((e.ctrlKey || e.metaKey) && e.key === 'u') {
       e.preventDefault();

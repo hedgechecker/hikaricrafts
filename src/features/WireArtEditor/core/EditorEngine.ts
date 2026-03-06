@@ -1,3 +1,4 @@
+import type { Settings } from '../models/Settings.ts';
 import { ThreeEditor, type ToolType } from '../three/ThreeEditor.ts';
 
 export class EditorEngine {
@@ -20,6 +21,10 @@ export class EditorEngine {
     this.threeEditor?.setBackgroundImage(url);
   }
 
+  getProject(){
+    return this.threeEditor?.getProject();
+  }
+
   loadGlobal(id: number){
     this.threeEditor?.loadGlobal(id);
   }
@@ -32,8 +37,16 @@ export class EditorEngine {
     return this.threeEditor?.exportSVG();
   }
 
-  openNewProjekt(){
+  openNewProject(){
     this.threeEditor?.load(null);
+  }
+
+  hasChanges(){
+    return this.threeEditor?.hasChanges;
+  }
+
+  updateSettings(settings: Settings){
+    this.threeEditor?.setSettings(settings);
   }
 
   dispose() {

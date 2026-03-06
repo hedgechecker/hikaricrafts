@@ -12,11 +12,14 @@ export class DataStorage {
 
     return JSON.parse(raw) as Project;
   }
+  deleteLocal() {
+    localStorage.removeItem('X');
+  }
 
   async saveGlobal(project: Project) {
     const token = localStorage.getItem('token');
     if (!token) {
-      window.alert('Das Projekt wird nur Lokal gespeichert, bitte anmelden');
+      console.log("User not Logged In: No Global Storage")
       return;
     }
 
@@ -25,12 +28,12 @@ export class DataStorage {
       return;
     }
 
-    if(project.name.length < 1){
-      window.alert("Projekt bennen");
+    if (project.name.length < 1) {
+      window.alert('Projekt bennen');
     }
 
     console.log('Creating new project');
-    
+
     const data = {
       points: project.points,
       lines: project.lines,
@@ -81,6 +84,7 @@ export class DataStorage {
         name: project.name,
         data,
         isPublic: project.isPublic ?? false,
+        version: project.version,
       }),
     });
 
@@ -94,7 +98,7 @@ export class DataStorage {
     console.log('Project updated:', updatedProject);
   }
 
-  async loadGlobal(id: number) : Promise<Project | null> {
+  async loadGlobal(id: number): Promise<Project | null> {
     const token = localStorage.getItem('token');
 
     const response = await fetch(`${BASE_URL}/wireArtProjects/${id}`, {

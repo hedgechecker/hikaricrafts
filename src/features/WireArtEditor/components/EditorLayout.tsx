@@ -10,12 +10,7 @@ export default function EditorLayout() {
 
   return (
     <div className={styles.wrapper}>
-      <Toolbar
-        onImageSelected={(img) => engine.setBackgroundImage(img)}
-        onSelectTool={(tool) => engine.setActiveTool(tool)}
-        onSave={() => engine.save()}
-        onExport={() => engine.exportSVG()}
-      />
+      <Toolbar engine={engine} />
       <div className={styles.center}>
         <SideBar engine={engine} />
         <ThreeCanvas engine={engine} />

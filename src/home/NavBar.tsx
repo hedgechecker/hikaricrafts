@@ -9,6 +9,7 @@ interface NavBarProps {
 export default function NavBar({ selected }: NavBarProps) {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
 
   const handleDropdown = (name: string) => {
     setOpenDropdown(openDropdown === name ? null : name);
@@ -19,27 +20,26 @@ export default function NavBar({ selected }: NavBarProps) {
     setOpenDropdown(null);
   };
 
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    localStorage.removeItem('token');
+    closeMobile();
+  };
+
   return (
     <>
       {/* BACKDROP */}
-      {mobileOpen && (
-        <div className={styles.backdrop} onClick={closeMobile} />
-      )}
+      {mobileOpen && <div className={styles.backdrop} onClick={closeMobile} />}
 
       <nav className={styles.bar}>
-        <Link
-            to="/"
-            onClick={closeMobile}
-            className={`${styles.logo}`}
-          >
-            HikariCraft
-          </Link>
-        <img src={shoppingBox} className={styles.cart}/>
-
+        <Link to="/" onClick={closeMobile} className={`${styles.logo}`}>
+          HikariCraft
+        </Link>
+        <img src={shoppingBox} className={styles.cart} />
 
         {/* HAMBURGER BUTTON */}
         <button
-          className={`${styles.hamburger} ${mobileOpen ? styles.open : ""}`}
+          className={`${styles.hamburger} ${mobileOpen ? styles.open : ''}`}
           onClick={() => setMobileOpen(!mobileOpen)}
         >
           <span />
@@ -48,38 +48,42 @@ export default function NavBar({ selected }: NavBarProps) {
         </button>
 
         {/* MAIN NAV */}
-        <div
-          className={`${styles.links} ${mobileOpen ? styles.showMobile : ""}`}
-        >
+        <div className={`${styles.links} ${mobileOpen ? styles.showMobile : ''}`}>
           {/* Etuis Dropdown */}
           <div
-            className={`${styles.elem} ${
-              selected === 1 ? styles.selected : ""
-            } ${styles.dropdown}`}
-            onClick={() => handleDropdown("etuis")}
+            className={`${styles.elem} ${selected === 1 ? styles.selected : ''} ${styles.dropdown}`}
+            onClick={() => handleDropdown('etuis')}
           >
             Etuis ▾
-            {openDropdown === "etuis" && (
+            {openDropdown === 'etuis' && (
               <div className={styles.dropdownContent}>
-                <Link to="/oboereedsetui" onClick={closeMobile}>Rohretui für Oboe</Link>
-                <Link to="/klarinettreedsetui" onClick={closeMobile}>Klarinettenblättchen Etui</Link>
-                <Link to="/saxophonreedsetui" onClick={closeMobile}>Saxophonblättchen Etui</Link>
+                <Link to="/oboereedsetui" onClick={closeMobile}>
+                  Rohretui für Oboe
+                </Link>
+                <Link to="/klarinettreedsetui" onClick={closeMobile}>
+                  Klarinettenblättchen Etui
+                </Link>
+                <Link to="/saxophonreedsetui" onClick={closeMobile}>
+                  Saxophonblättchen Etui
+                </Link>
               </div>
             )}
           </div>
 
           {/* Koffer Dropdown */}
           <div
-            className={`${styles.elem} ${
-              selected === 2 ? styles.selected : ""
-            } ${styles.dropdown}`}
-            onClick={() => handleDropdown("koffer")}
+            className={`${styles.elem} ${selected === 2 ? styles.selected : ''} ${styles.dropdown}`}
+            onClick={() => handleDropdown('koffer')}
           >
             Koffer ▾
-            {openDropdown === "koffer" && (
+            {openDropdown === 'koffer' && (
               <div className={styles.dropdownContent}>
-                <Link to="/piccoloCase" onClick={closeMobile}>Piccolo Koffer</Link>
-                <Link to="/fluteCase" onClick={closeMobile}>Querflöten Koffer</Link>
+                <Link to="/piccoloCase" onClick={closeMobile}>
+                  Piccolo Koffer
+                </Link>
+                <Link to="/fluteCase" onClick={closeMobile}>
+                  Querflöten Koffer
+                </Link>
               </div>
             )}
           </div>
@@ -87,7 +91,7 @@ export default function NavBar({ selected }: NavBarProps) {
           <Link
             to="/kumiko"
             onClick={closeMobile}
-            className={`${styles.elem} ${selected === 5 ? styles.selected : ""}`}
+            className={`${styles.elem} ${selected === 5 ? styles.selected : ''}`}
           >
             Kumiko(experimentell)
           </Link>
@@ -95,18 +99,24 @@ export default function NavBar({ selected }: NavBarProps) {
           <a
             href="/kontakt"
             onClick={closeMobile}
-            className={`${styles.elem} ${selected === 4 ? styles.selected : ""}`}
+            className={`${styles.elem} ${selected === 4 ? styles.selected : ''}`}
           >
             Kontakt
           </a>
 
-          <Link
-            to="/login"
-            onClick={closeMobile}
-            className={`${styles.elem} ${selected === 5 ? styles.selected : ""}`}
-          >
-            Login
-          </Link>
+          {isLoggedIn ? (
+            <div onClick={handleLogout} className={styles.elem}>
+              Logout
+            </div>
+          ) : (
+            <Link
+              to="/login"
+              onClick={closeMobile}
+              className={`${styles.elem} ${selected === 5 ? styles.selected : ''}`}
+            >
+              Login
+            </Link>
+          )}
         </div>
       </nav>
     </>

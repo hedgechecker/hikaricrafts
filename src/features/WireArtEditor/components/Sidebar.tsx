@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import styles from './styles/SideBar.module.css';
 import type { EditorEngine } from '../core/EditorEngine';
 import ToolButton from './ToolButton';
+import { useDialog } from '../../global/useDialog';
+import { useNavigate } from 'react-router-dom';
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -19,8 +21,11 @@ export default function SideBar({ engine }: Props) {
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingName, setEditingName] = useState('');
+  const [isLoggedId, setIsLoggedIn] = useState<boolean>(!!localStorage.getItem('token'));
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setselectedProject] = useState<number | null>(null);
+  const { showDialog, dialogComponent } = useDialog();
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadProjects();
@@ -31,9 +36,10 @@ export default function SideBar({ engine }: Props) {
       setOpenMenuId(null);
       setEditingId(null);
     }
-
     document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
   }, []);
 
   async function loadProjects() {
@@ -49,7 +55,16 @@ export default function SideBar({ engine }: Props) {
     setProjects(data);
   }
 
-  function handleClick(id: number) {
+  async function handleClick(id: number) {
+    if (engine.hasChanges()) {
+      const result = await showDialog({
+        type: 'confirm',
+        message: 'Das Projekt hat ungespeicherte Änderungen, wollen sie diese Verwerfen?',
+      });
+      if (!result) {
+        return;
+      }
+    }
     setselectedProject(id);
     engine.loadGlobal(id);
   }
@@ -77,7 +92,13 @@ export default function SideBar({ engine }: Props) {
   }
 
   async function handleDelete(project: Project) {
-    if (!confirm(`Projekt "${project.name}" wirklich löschen?`)) return;
+    const result = await showDialog({
+      type: 'confirm',
+      message: 'Wollen Sie sicher dieses Projekt unwiderruflich löschen?',
+    });
+    if (!result) {
+      return;
+    }
 
     const token = localStorage.getItem('token');
 
@@ -93,16 +114,41 @@ export default function SideBar({ engine }: Props) {
     setOpenMenuId(null);
   }
 
+  const handleNewProject = async () => {
+    const token = localStorage.getItem('token');
+    setIsLoggedIn(!!token);
+    if (!token) {
+      const result = await showDialog({
+        type: 'confirm',
+        message:
+          'Sie sind nicht angemeldet, alle aktuellen Änderungen werden verworfen, sicher neues Projekt erstellen? ',
+      });
+      if (!result) {
+        return;
+      }
+    } else if (engine.hasChanges()) {
+      const result = await showDialog({
+        type: 'confirm',
+        message: 'Das Projekt hat ungespeicherte Änderungen, wollen sie diese Verwerfen?',
+      });
+      if (!result) {
+        return;
+      }
+    }
+    setselectedProject(null);
+    engine.openNewProject();
+  };
+
   return (
     <div className={styles.wrapper}>
+      {dialogComponent}
       <ToolButton
         label="Neues Projekt erstellen"
         image="/icons/add.png"
-        onClick={() => {
-          engine.openNewProjekt();
-        }}
+        onClick={handleNewProject}
       ></ToolButton>
-      <h3>Eigene Projekte</h3>
+      {isLoggedId && <h3>Eigene Projekte</h3>}
+      {!isLoggedId && <ToolButton label="Anmelden" onClick={() => navigate('/login')}></ToolButton>}
       {projects
         .filter((p) => !p.isPublic)
         .map((project) => (

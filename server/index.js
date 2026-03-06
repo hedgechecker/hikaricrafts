@@ -408,7 +408,7 @@ app.get('/wireArtProjects/:id', optionalAuth, async (req, res) => {
 
 app.put('/wireArtProjects/:id', authRequired, async (req, res) => {
   const projectId = Number(req.params.id);
-  const { name, data, isPublic } = req.body;
+  const { name, data, isPublic,version } = req.body;
 
   const project = await prisma.wireArtProject.findUnique({
     where: { id: projectId },
@@ -428,6 +428,7 @@ app.put('/wireArtProjects/:id', authRequired, async (req, res) => {
       name,
       data,
       isPublic,
+      version,
     },
   });
 
