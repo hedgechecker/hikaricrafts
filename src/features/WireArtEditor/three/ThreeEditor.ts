@@ -11,16 +11,13 @@ import { DataStorage } from '../core/DataStorage';
 import { Vector3 } from 'three';
 import * as THREE from 'three';
 
-import { DataModel } from '../models/DataModel';
+import { DataModel, type Project } from '../models/DataModel';
 import { CommandManager } from '../core/CommandManager';
 import type { Command } from '../models/Command';
 import { DeletePointCommand } from '../commands/DeletePointCommand';
 import { DeleteLineCommand } from '../commands/DeleteLineCommand';
-import type { Settings } from '../models/Settings';
 
 export type ToolType = 'point' | 'move' | 'line';
-//grid size
-//project Title | Version
 //Savetofile fromFile
 //Scale Image
 //line connect to line
@@ -34,18 +31,13 @@ export class ThreeEditor {
   private cursorManager: CursorManager;
   private lineManager: LineManager;
   private storage: DataStorage;
-  settings: Settings = {
-    showPoints: true,
-    showLines: true,
-    showGrid: true,
-    snapToGrid: true,
-  };
 
   private pointTool: PointTool;
   private moveTool: MoveTool;
   private lineTool: LineTool;
 
   private model: DataModel;
+  private project: Project;
   private history: CommandManager;
   private raycaster = new THREE.Raycaster();
 
@@ -58,6 +50,7 @@ export class ThreeEditor {
     this.cursorManager = new CursorManager(container);
     this.sceneManager = new SceneManager(container);
     this.storage = new DataStorage();
+    this.project = { points: [], lines: [], id: null, name: '', version: 0 };
 
     this.pointManager = new PointManager(this.sceneManager.scene);
     this.lineManager = new LineManager(this.sceneManager.scene, this.pointManager);
@@ -86,11 +79,10 @@ export class ThreeEditor {
 
     this.toolManager.setTool(this.moveTool);
     window.addEventListener('keydown', this.onKeyDown);
-    this.load('X');
+    this.load(this.storage.loadFromLocal());
   }
 
   private syncSceneFromModel() {
-    console.log('Synced');
     this.syncPoints();
     this.syncLines();
   }
@@ -137,43 +129,46 @@ export class ThreeEditor {
     }
   }
 
-  load(projectName: string) {
-    const project = this.storage.loadFromLocal(projectName);
+  async loadGlobal(id: number){
+    this.load(await this.storage.loadGlobal(id));
+  }
 
+  load(data: Project | null) {
     this.model.points.clear();
     this.model.lines.clear();
 
-    if (!project) {
+    if (!data) {
+      this.project = { points: [], lines: [], id: null, name: '', version: 0 };
+      this.sceneManager.setBackground(this.project.background);
       this.syncSceneFromModel();
       return;
     }
+    this.project = data;
 
-    for (const point of project.points) {
+    for (const point of this.project.points) {
       this.model.points.set(point.id, { ...point });
     }
-    for (const line of project.lines) {
+    for (const line of this.project.lines) {
       this.model.lines.set(line.id, { ...line });
     }
-
-    if (project.background) {
-      this.sceneManager.setBackground(project.background);
-    }
-    if (project.settings) {
-      this.settings = project.settings;
-    }
+    this.sceneManager.setBackground(this.project.background);
 
     this.syncSceneFromModel();
   }
 
-  private save(projectName: string) {
-    this.storage.saveToLocal(projectName, {
+  private saveLocal() {
+    this.storage.saveToLocal({
+      ...this.project,
       points: Array.from(this.model.points.values()),
       lines: Array.from(this.model.lines.values()),
-      background: this.sceneManager.getBackground?.(),
-      id: '0',
-      name: projectName,
-      version: 0,
-      settings: this.settings,
+    });
+  }
+
+  private async saveGlobal() {
+    this.storage.saveGlobal({
+      ...this.project,
+      points: Array.from(this.model.points.values()),
+      lines: Array.from(this.model.lines.values()),
     });
   }
 
@@ -202,6 +197,7 @@ export class ThreeEditor {
   }
 
   setBackgroundImage(url: string) {
+    this.project.background = url;
     this.sceneManager.setBackground(url);
   }
 
@@ -246,7 +242,7 @@ export class ThreeEditor {
     this.pointManager.setHovered(null);
   }
 
-  private onKeyDown = (e: KeyboardEvent) => {
+  private onKeyDown = async (e: KeyboardEvent) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
       e.preventDefault();
       if (this.history.undo(this.model)) this.syncSceneFromModel();
@@ -259,7 +255,13 @@ export class ThreeEditor {
 
     if ((e.ctrlKey || e.metaKey) && e.key === 's') {
       e.preventDefault();
-      this.save('X');
+      this.saveLocal();
+      this.saveGlobal();
+    }
+
+    if ((e.ctrlKey || e.metaKey) && e.key === 'u') {
+      e.preventDefault();
+      this.load(await this.storage.loadGlobal(1));
     }
 
     if (e.key === 'Delete' || e.key === 'Backspace') {
@@ -326,7 +328,7 @@ export class ThreeEditor {
       return;
     }
 
-    if (this.settings.snapToGrid) {
+    if (!this.project.settings || this.project.settings.snapToGrid) {
       const planeZ = 0;
       const ray = this.raycaster.ray;
 

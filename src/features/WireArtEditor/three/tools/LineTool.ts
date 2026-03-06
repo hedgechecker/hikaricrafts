@@ -118,8 +118,6 @@ export class LineTool implements Tool {
     this.editor.handleHover(event);
     const worldPos = this.getWorldPosition(event);
 
-    console.log(this.isShiftPressed)
-
     const zoom = (this.camera as THREE.OrthographicCamera).zoom;
     const threshold = this.snapDistance / zoom;
 

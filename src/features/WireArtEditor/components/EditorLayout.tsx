@@ -15,7 +15,7 @@ export default function EditorLayout() {
         onSelectTool={(tool) => engine.setActiveTool(tool)}
       />
       <div className={styles.center}>
-        <SideBar></SideBar>
+        <SideBar engine={engine} />
         <ThreeCanvas engine={engine} />
       </div>
     </div>

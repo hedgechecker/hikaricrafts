@@ -20,6 +20,14 @@ export class EditorEngine {
     this.threeEditor?.setBackgroundImage(url);
   }
 
+  loadGlobal(id: number){
+    this.threeEditor?.loadGlobal(id);
+  }
+
+  openNewProjekt(){
+    this.threeEditor?.load(null);
+  }
+
   dispose() {
     this.threeEditor?.dispose();
     this.threeEditor = undefined;

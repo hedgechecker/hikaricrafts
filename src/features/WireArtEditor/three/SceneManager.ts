@@ -1,17 +1,18 @@
 import * as THREE from 'three';
 import { CameraController } from './core/CameraController';
-
 export class SceneManager {
   scene: THREE.Scene;
   camera: THREE.OrthographicCamera;
   renderer: THREE.WebGLRenderer;
   cameraController: CameraController;
 
+  private overlay!: HTMLDivElement;
+  private gridLabel!: HTMLDivElement;
   private container: HTMLDivElement;
   private animationId?: number;
   private imageMesh?: THREE.Mesh;
   private url = '';
-  private grid = this.createCustomGrid(1);
+  private grid = this.createCustomGrid(20);
   private size: number = 200;
   private hovered: THREE.Vector3 | null = null;
 
@@ -22,7 +23,6 @@ export class SceneManager {
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0xfaf7f2);
-    this.scene.add(this.grid);
     const aspect = width / height;
     const frustumSize = 10;
 
@@ -61,7 +61,22 @@ export class SceneManager {
     overlay.style.pointerEvents = 'none';
     overlay.style.zIndex = '10';
 
-    container.appendChild(overlay);
+    // ---- GRID SIZE LABEL ----
+    const gridLabel = document.createElement('div');
+    gridLabel.style.position = 'absolute';
+    gridLabel.style.bottom = '10px';
+    gridLabel.style.left = '10px';
+    gridLabel.style.padding = '4px 8px';
+    gridLabel.style.background = 'rgba(0,0,0,0.6)';
+    gridLabel.style.color = '#fff';
+    gridLabel.style.fontFamily = 'monospace';
+    gridLabel.style.fontSize = '12px';
+    gridLabel.style.borderRadius = '4px';
+
+    overlay.appendChild(gridLabel);
+
+    this.gridLabel = gridLabel;
+    this.overlay = overlay;
 
     return overlay;
   }
@@ -85,6 +100,7 @@ export class SceneManager {
   update() {
     this.camera.updateProjectionMatrix();
     this.updateGrid();
+    this.updateOverlay();
   }
 
   updateGrid() {
@@ -100,30 +116,44 @@ export class SceneManager {
     }
   }
 
+  updateOverlay() {
+    const step = this.getGridStep()*10;
+
+    const cameraPos = this.camera.position;
+
+    this.gridLabel.innerText =
+      `Grid: ${step.toFixed(4)} mm\n` +
+      `Zoom: ${this.camera.zoom.toFixed(2)}\n` +
+      `Center: (${cameraPos.x.toFixed(2)}, ${cameraPos.y.toFixed(2)})`;
+  }
+
   getSubdivisionDivisions(cameraZoom: number) {
-    if (cameraZoom > 5) return 2500;
-    if (cameraZoom > 0.9) return 500;
-    if (cameraZoom > 0.3) return 100;
-    return 20;
+    if (cameraZoom > 5) return 2000; //1mm
+    if (cameraZoom > 1.6) return 400; //5mm
+    if (cameraZoom > 0.8) return 200; //10mm
+    if (cameraZoom > 0.2) return 80; //25mm
+    if (cameraZoom > 0.1) return 40; //50mm
+    return 20; //100mm
   }
 
   snapToGrid(worldPos: THREE.Vector3) {
-    const halfSize = this.size / 2;
     const step = this.size / this.getSubdivisionDivisions(this.camera.zoom);
 
-    const snappedX = Math.round((worldPos.x + halfSize) / step) * step - halfSize;
-    const snappedY = Math.round((worldPos.y + halfSize) / step) * step - halfSize;
+    const snappedX = Math.round(worldPos.x / step) * step;
+    const snappedY = Math.round(worldPos.y / step) * step;
 
     const point = new THREE.Vector3(snappedX, snappedY, 0);
+
     if (worldPos.distanceTo(point) < step / 6) {
       return point;
     }
+
     return null;
   }
 
-  createCustomGrid(divisions: number, size = 200) {
-    const halfSize = size / 2;
-    const step = size / divisions;
+  createCustomGrid(divisions: number) {
+    const halfSize = this.size / 2;
+    const step = this.size / divisions;
 
     const vertices = [];
     const colors = [];
@@ -167,7 +197,9 @@ export class SceneManager {
   dispose() {
     if (this.animationId) cancelAnimationFrame(this.animationId);
 
+    this.scene.remove(this.grid);
     this.renderer.dispose();
+    this.container.removeChild(this.overlay);
 
     // Remove canvas from DOM safely
     if (this.renderer.domElement.parentNode) {
@@ -177,17 +209,29 @@ export class SceneManager {
     window.removeEventListener('resize', this.onResize);
   }
 
-  setHovered(point: THREE.Vector3 | null) {
-    this.hovered = point;
-  }
   getCameraController() {
     return this.cameraController;
   }
   getHovered() {
     return this.hovered;
   }
+  getGridStep(): number {
+    const divisions = this.getSubdivisionDivisions(this.camera.zoom);
+    return this.size / divisions;
+  }
 
-  setBackground(url: string) {
+  setHovered(point: THREE.Vector3 | null) {
+    this.hovered = point;
+  }
+
+  setBackground(url: string| undefined) {
+    if(!url){
+      if(this.imageMesh){
+        this.scene.remove(this.imageMesh);
+        this.imageMesh = undefined;
+      }
+      return;
+    }
     this.url = url;
     const loader = new THREE.TextureLoader();
     loader.load(url, (texture) => {

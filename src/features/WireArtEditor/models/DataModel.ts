@@ -1,9 +1,10 @@
 import type { Settings } from "./Settings";
 
 export interface Project {
-  id: string;
+  id: string|null;
   name: string;
   version: number;
+  isPublic?: boolean;
 
   settings?: Settings;
   background?: string;
