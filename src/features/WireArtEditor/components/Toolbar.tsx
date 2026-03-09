@@ -7,33 +7,25 @@ import { useNavigate } from 'react-router-dom';
 import { useDialog } from '../../global/useDialog';
 import type { Settings } from '../models/Settings';
 import type { EditorEngine } from '../core/EditorEngine';
+import { useEditorStore } from '../core/EditorStore';
 
 interface Props {
-  engine:EditorEngine;
+  engine: EditorEngine;
 }
 
-export default function Toolbar({engine }: Props) {
+export default function Toolbar({ engine }: Props) {
   const navigate = useNavigate();
   const [active, setActive] = useState<ToolType>('move');
   const [saved, setSaved] = useState(false);
   const { showDialog, dialogComponent } = useDialog();
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [settings, setSettings] = useState<Settings>({
-    showPoints: true,
-    showLines: true,
-    showGrid: true,
-    showImage: true,
-    snapToGrid: true,
-    lineColor: '#000000',
-    pointColor: '#ff0000',
-  });
+  const { settings } = useEditorStore(engine.getStore());
 
   function updateSetting<K extends keyof Settings>(key: K, value: Settings[K]) {
-    const newSettings = { ...settings, [key]: value };
-    setSettings(newSettings);
+    const newSettings: Settings = { ...settings, [key]: value } as Settings;
     engine.updateSettings(newSettings);
   }
-  
+
   const handleClick = (tool: ToolType) => {
     setActive(tool);
     engine.setActiveTool(tool);
@@ -65,15 +57,10 @@ export default function Toolbar({engine }: Props) {
     function onKeyDown(e: KeyboardEvent) {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
-        
+
         handleSave();
       }
     }
-
-     const projectSettings = engine.getProject()?.settings;
-     if (projectSettings) {
-       setSettings(projectSettings);
-     }
     document.addEventListener('keydown', onKeyDown);
     return () => {
       document.removeEventListener('keydown', onKeyDown);
@@ -137,7 +124,7 @@ export default function Toolbar({engine }: Props) {
             <label>
               <input
                 type="checkbox"
-                checked={settings.showPoints}
+                checked={settings?.showPoints}
                 onChange={(e) => updateSetting('showPoints', e.target.checked)}
               />
               Punkte anzeigen
@@ -146,16 +133,7 @@ export default function Toolbar({engine }: Props) {
             <label>
               <input
                 type="checkbox"
-                checked={settings.showGrid}
-                onChange={(e) => updateSetting('showGrid', e.target.checked)}
-              />
-              Gitter anzeigen
-            </label>
-
-            <label>
-              <input
-                type="checkbox"
-                checked={settings.showImage}
+                checked={settings?.showImage}
                 onChange={(e) => updateSetting('showImage', e.target.checked)}
               />
               Hintergrundbild anzeigen
@@ -164,7 +142,16 @@ export default function Toolbar({engine }: Props) {
             <label>
               <input
                 type="checkbox"
-                checked={settings.snapToGrid}
+                checked={settings?.showGrid}
+                onChange={(e) => updateSetting('showGrid', e.target.checked)}
+              />
+              Gitter anzeigen
+            </label>
+              
+            <label>
+              <input
+                type="checkbox"
+                checked={settings?.snapToGrid}
                 onChange={(e) => updateSetting('snapToGrid', e.target.checked)}
               />
               Punkte am Gitter ausrichten
@@ -174,7 +161,7 @@ export default function Toolbar({engine }: Props) {
               Linienfarbe
               <input
                 type="color"
-                value={settings.lineColor}
+                value={settings?.lineColor}
                 onChange={(e) => updateSetting('lineColor', e.target.value)}
               />
             </label>
@@ -183,16 +170,18 @@ export default function Toolbar({engine }: Props) {
               Punktfarbe
               <input
                 type="color"
-                value={settings.pointColor}
+                value={settings?.pointColor}
                 onChange={(e) => updateSetting('pointColor', e.target.value)}
               />
             </label>
           </div>
         )}
       </div>
-      <ImageUploader onImageSelected={(img) => {
-        engine.setBackgroundImage(img);
-      }} />
+      <ImageUploader
+        onImageSelected={(img) => {
+          engine.setBackgroundImage(img);
+        }}
+      />
     </div>
   );
 }

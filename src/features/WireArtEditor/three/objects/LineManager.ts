@@ -18,6 +18,7 @@ export class LineManager {
   private zoom: number = 1;
   private readonly baseThickness = 0.02;
   private readonly hoverThickness = 0.05;
+  private color: THREE.Color = new THREE.Color(0x000000);
 
   constructor(scene: THREE.Scene, pointManager: PointManager) {
     this.scene = scene;
@@ -29,14 +30,14 @@ export class LineManager {
     group.userData.id = id;
     const geometry = new THREE.BoxGeometry(1, 1, 1);
     const material = new THREE.MeshBasicMaterial({
-      color: 0x000000,
+      color: this.color,
       transparent: true,
       opacity: 0.8,
     });
     const lineMesh = new THREE.Mesh(geometry, material);
     lineMesh.name = 'visual';
 
-    const hitGeometry = new THREE.BoxGeometry(1,10,1);
+    const hitGeometry = new THREE.BoxGeometry(1, 10, 1);
     const hitMaterial = new THREE.MeshBasicMaterial({
       transparent: true,
       opacity: 0,
@@ -241,5 +242,22 @@ export class LineManager {
         this.hovered === id ? this.hoverThickness / zoom : this.baseThickness / zoom;
       line.mesh.scale.set(length, thickness, thickness);
     }
+  }
+
+  setLineColor(color: string) {
+    const newColor = new THREE.Color(color);
+
+    if (this.color && this.color.equals(newColor)) return;
+
+    this.color = newColor;
+
+    this.lines.forEach((line) => {
+      const visual = line.mesh.getObjectByName('visual');
+      if (visual && (visual as THREE.Mesh).material) {
+        ((visual as THREE.Mesh).material as THREE.Material & { color: THREE.Color }).color.copy(
+          this.color,
+        );
+      }
+    });
   }
 }

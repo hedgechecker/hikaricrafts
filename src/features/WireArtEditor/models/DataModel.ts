@@ -6,7 +6,7 @@ export interface Project {
   version: number;
   isPublic?: boolean;
 
-  settings?: Settings;
+  settings: Settings;
   background?: string;
 
   points: PointData[];

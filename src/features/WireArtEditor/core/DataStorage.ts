@@ -2,6 +2,25 @@ import type { Project } from '../models/DataModel';
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 export class DataStorage {
+  getEmptyProject() {
+    return {
+      points: [],
+      lines: [],
+      id: null,
+      name: '',
+      version: 0,
+      settings: {
+        showPoints: true,
+        showLines: true,
+        showGrid: true,
+        showImage: true,
+        snapToGrid: true,
+        lineColor: '#999999',
+        pointColor: '#999999',
+      },
+    } as Project;
+  }
+
   saveToLocal(data: Project) {
     localStorage.setItem('X', JSON.stringify(data));
   }
@@ -19,7 +38,7 @@ export class DataStorage {
   async saveGlobal(project: Project) {
     const token = localStorage.getItem('token');
     if (!token) {
-      console.log("User not Logged In: No Global Storage")
+      console.log('User not Logged In: No Global Storage');
       return;
     }
 

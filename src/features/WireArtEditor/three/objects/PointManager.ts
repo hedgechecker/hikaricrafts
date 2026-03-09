@@ -13,6 +13,8 @@ export class PointManager {
   private readonly baseThickness = 1.0;
   private readonly hoverThickness = 2.0;
   private zoom: number = 1;
+  private pointsVisible = true;
+  private color: THREE.Color = new THREE.Color(0x999999);
 
   private hovered: string | null = null;
   private selected: string[] = [];
@@ -35,7 +37,7 @@ export class PointManager {
     const geometry = new THREE.CircleGeometry(baseRadius, 32);
 
     const material = new THREE.MeshBasicMaterial({
-      color: 0x999999,
+      color: this.color,
       transparent: true,
       opacity: 0.4, // semi-transparent center
     });
@@ -45,7 +47,7 @@ export class PointManager {
     // Outline
     const edges = new THREE.EdgesGeometry(geometry);
     const outlineMaterial = new THREE.LineBasicMaterial({
-      color: 0x111111,
+      color: this.color,
     });
 
     const outline = new THREE.LineSegments(edges, outlineMaterial);
@@ -72,9 +74,9 @@ export class PointManager {
     group.add(hitbox);
     group.userData.id = id;
 
-    this.scene.add(group);
+    if (this.pointsVisible) this.scene.add(group);
 
-    this.points.set(id, {mesh: group, isSelected: false, isHovered:false});
+    this.points.set(id, { mesh: group, isSelected: false, isHovered: false });
     return group;
   }
 
@@ -220,6 +222,45 @@ export class PointManager {
       return id;
     }
     return null;
+  }
+
+  setPointsVisible(visible: boolean) {
+    if (visible == this.pointsVisible) return;
+    if (visible) {
+      this.points.forEach((point) => {
+        this.scene.add(point.mesh);
+      });
+    } else {
+      this.points.forEach((point) => {
+        this.scene.remove(point.mesh);
+      });
+    }
+    this.pointsVisible = visible;
+  }
+
+  setPointColor(color: string) {
+    const newColor = new THREE.Color(color);
+
+    if (this.color && this.color.equals(newColor)) return;
+
+    this.color = newColor;
+
+    this.points.forEach((point) => {
+      const visual = point.mesh.getObjectByName('visual');
+      const outline = point.mesh.getObjectByName('outline');
+
+      if (visual && (visual as THREE.Mesh).material) {
+        ((visual as THREE.Mesh).material as THREE.Material & { color: THREE.Color }).color.copy(
+          this.color,
+        );
+      } 
+
+      if (outline && (outline as THREE.Mesh).material) {
+        ((outline as THREE.Mesh).material as THREE.Material & { color: THREE.Color }).color.copy(
+          this.color,
+        );
+      }
+    });
   }
 
   clear() {

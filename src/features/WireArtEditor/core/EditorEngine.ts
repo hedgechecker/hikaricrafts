@@ -1,17 +1,22 @@
 import type { Settings } from '../models/Settings.ts';
 import { ThreeEditor, type ToolType } from '../three/ThreeEditor.ts';
+import { EditorStore } from './EditorStore.ts';
 
 export class EditorEngine {
   private threeEditor?: ThreeEditor;
+  store = new EditorStore();
 
-  constructor() {
-  }
+  constructor() {}
 
   initialize(container: HTMLDivElement) {
     if (this.threeEditor) return; // prevent double mount
 
     this.threeEditor = new ThreeEditor(container);
     this.threeEditor.start();
+    const project = this.threeEditor?.getProject();
+    if (project) {
+      this.store.setProject(project);
+    }
   }
 
   setActiveTool(type: ToolType) {
@@ -21,32 +26,40 @@ export class EditorEngine {
     this.threeEditor?.setBackgroundImage(url);
   }
 
-  getProject(){
-    return this.threeEditor?.getProject();
+
+  getStore() {
+    return this.store;
   }
 
-  loadGlobal(id: number){
-    this.threeEditor?.loadGlobal(id);
+  async loadGlobal(id: number) {
+    await this.threeEditor?.loadGlobal(id);
+    const project = this.threeEditor?.getProject();
+    if (project) {
+      this.store.setProject(project);
+    }
   }
 
-  save(){
+  save() {
     this.threeEditor?.save();
   }
 
-  exportSVG(){
+  exportSVG() {
     return this.threeEditor?.exportSVG();
   }
 
-  openNewProject(){
+  openNewProject() {
     this.threeEditor?.load(null);
   }
 
-  hasChanges(){
+  hasChanges() {
     return this.threeEditor?.hasChanges;
   }
 
-  updateSettings(settings: Settings){
-    this.threeEditor?.setSettings(settings);
+  updateSettings(settings: Settings) {
+    this.store.updateSettings(settings);
+    if(!this.threeEditor)return;
+    this.threeEditor.setSettings(settings);
+    this.threeEditor.hasChanges = true;
   }
 
   dispose() {

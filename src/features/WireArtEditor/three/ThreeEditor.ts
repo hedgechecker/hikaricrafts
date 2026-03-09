@@ -22,9 +22,6 @@ export type ToolType = 'point' | 'move' | 'line';
 //Import SVG?
 //multiple Images?
 //Scale Image
-//settings line thickness | show points | show grid | show lines
-//line length and angle display
-//set line length and angle
 export class ThreeEditor {
   private sceneManager: SceneManager;
   private pointManager: PointManager;
@@ -41,6 +38,7 @@ export class ThreeEditor {
   private project: Project;
   private history: CommandManager;
   private raycaster = new THREE.Raycaster();
+  private plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
 
   private mouse = new THREE.Vector2();
   private animationFrameId: number | null = null;
@@ -52,7 +50,7 @@ export class ThreeEditor {
     this.cursorManager = new CursorManager(container);
     this.sceneManager = new SceneManager(container);
     this.storage = new DataStorage();
-    this.project = { points: [], lines: [], id: null, name: '', version: 0 };
+    this.project = this.storage.getEmptyProject();
 
     this.pointManager = new PointManager(this.sceneManager.scene);
     this.lineManager = new LineManager(this.sceneManager.scene, this.pointManager);
@@ -141,12 +139,15 @@ export class ThreeEditor {
     this.hasChanges = false;
 
     if (!data) {
-      this.project = { points: [], lines: [], id: null, name: '', version: 0 };
-      this.sceneManager.setBackground(this.project.background);
+      const project = this.storage.getEmptyProject();
+      this.setSettings(project.settings);
+      this.sceneManager.setBackground(project.background);
       this.syncSceneFromModel();
       this.storage.deleteLocal();
+      this.project = project;
       return;
     }
+    this.setSettings(data.settings);
     this.project = data;
 
     for (const point of this.project.points) {
@@ -197,7 +198,6 @@ export class ThreeEditor {
     const animate = () => {
       const { renderer, scene, camera } = this.sceneManager;
       renderer.render(scene, camera);
-
       if (camera.zoom != lastZoom) {
         this.pointManager.updateScale(camera.zoom);
         this.lineManager.updateScale(camera.zoom);
@@ -237,7 +237,32 @@ export class ThreeEditor {
   setSelected(id: string[]) {
     this.pointManager.setSelected(id);
   }
-  setSettings(settings: Settings){
+  setSettings(settings: Settings) {
+    if (this.project.settings) {
+      const oldSettings = this.project.settings;
+
+      (Object.keys(settings) as (keyof Settings)[]).forEach((key) => {
+        if (settings[key] !== oldSettings[key]) {
+          switch (key) {
+            case 'showGrid':
+              this.sceneManager.setGridVisible(settings.showGrid);
+              break;
+            case 'showImage':
+              this.sceneManager.setImageVisible(settings.showImage);
+              break;
+            case 'showPoints':
+              this.pointManager.setPointsVisible(settings.showPoints);
+              break;
+            case 'pointColor':
+              this.pointManager.setPointColor(settings.pointColor);
+              break;
+            case 'lineColor':
+              this.lineManager.setLineColor(settings.lineColor);
+              break;
+          }
+        }
+      });
+    }
     this.project.settings = settings;
   }
   getHoveredPoint(): string | null {
@@ -255,10 +280,23 @@ export class ThreeEditor {
   getPointWorldPosition(id: string): THREE.Vector3 | null {
     return this.pointManager.getWorldPositionById(id);
   }
+  getWorldPosition(event: MouseEvent): THREE.Vector3 {
+    const rect = this.sceneManager.renderer.domElement.getBoundingClientRect();
+    let mouse = new THREE.Vector2();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    this.raycaster.setFromCamera(mouse, this.sceneManager.camera);
+
+    const intersection = new THREE.Vector3();
+    this.raycaster.ray.intersectPlane(this.plane, intersection);
+
+    return intersection;
+  }
   public getConnectedPoints(pointId: string): string[] {
     return this.lineManager.getConnectedPoints(pointId);
   }
-  getProject(){
+  getProject() {
     return this.project;
   }
   public clearHover() {
