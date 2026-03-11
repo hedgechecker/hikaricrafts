@@ -1,8 +1,13 @@
 import type { Command } from '../models/Command';
 import type { DataModel, PointData } from '../models/DataModel';
-
+/**
+ * Command that adds a Point to the DataModel.
+ *
+ * Constraints: none
+ */
 export class AddPointCommand implements Command {
   private point: PointData;
+  
   constructor(point: PointData) {
     this.point = point;
   }

@@ -1,15 +1,14 @@
 import type { Command } from '../models/Command';
-import type { DataModel } from '../models/DataModel';
+import type { DataModel, LineData, PointData } from '../models/DataModel';
 
-interface LineBackup {
-  id: string;
-  startPointId: string;
-  endPointId: string;
-}
-
+/**
+ * Command that removes a Point and all connected Lines from the DataModel.
+ *
+ * Does nothing if given Id is invalid
+ */
 export class DeletePointCommand implements Command {
-  private deletedLines: LineBackup[] = [];
-  private deletedPoint: { id: string; x: number; y: number; z: number } | null = null;
+  private deletedLines: LineData[] = [];
+  private deletedPoint: PointData | null = null;
   private pointId: string;
 
   constructor(pointId: string) {
@@ -20,34 +19,27 @@ export class DeletePointCommand implements Command {
     const point = model.points.get(this.pointId);
     if (!point) return;
 
-    // Backup point
-    this.deletedPoint = { ...point };
+    this.deletedPoint = {...point};
 
     // Backup connected lines
     for (const line of model.lines.values()) {
       if (line.startPointId === this.pointId || line.endPointId === this.pointId) {
-        this.deletedLines.push({ id: line.id, startPointId: line.startPointId, endPointId: line.endPointId });
+        this.deletedLines.push({...line});
       }
     }
 
-    // Remove connected lines
     for (const line of this.deletedLines) {
       model.lines.delete(line.id);
     }
-
-    // Remove point
     model.points.delete(this.pointId);
   }
 
   undo(model: DataModel) {
     if (!this.deletedPoint) return;
 
-    // Restore point
-    model.points.set(this.deletedPoint.id, { ...this.deletedPoint });
-
-    // Restore lines
+    model.points.set(this.deletedPoint.id, this.deletedPoint);
     for (const line of this.deletedLines) {
-      model.lines.set(line.id, { ...line });
+      model.lines.set(line.id, line);
     }
   }
 }

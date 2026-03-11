@@ -5,7 +5,7 @@ import type { BackgroundImage } from '../objects/BackgroundImage';
 import type { Tool } from './Tool';
 import type { ThreeEditor } from '../ThreeEditor';
 import type { CursorManager } from '../objects/CursorManager';
-import { MoveImageCommand } from '../../commands/MoveImageCommand';
+import { UpdateImageCommand } from '../../commands/UpdateImageCommand';
 import type { SceneManager } from '../SceneManager';
 import type { ImageData } from '../../models/DataModel';
 
@@ -46,7 +46,7 @@ export class TransformTool implements Tool {
     if (event.button != 0) return; //only move on left click
     this.handleHover(event);
     this.selectedId = this.sceneManager.getHoveredImage();
-    console.log(this.selectedId)
+    console.log(this.selectedId);
     if (!this.selectedId) {
       this.sceneManager.gizmo.group.visible = false;
       return;
@@ -56,7 +56,6 @@ export class TransformTool implements Tool {
 
     this.updateMouse(event);
     this.raycaster.setFromCamera(this.mouse, this.sceneManager.camera);
-
 
     this.startData = {
       ...this.selectedImage.data,
@@ -81,7 +80,6 @@ export class TransformTool implements Tool {
       this.dragMode = 'move';
       this.dragging = true;
 
-      
       this.dragOffset.copy(pos).sub(this.selectedImage.mesh.position);
     }
   };
@@ -117,7 +115,7 @@ export class TransformTool implements Tool {
   };
 
   onMouseUp = () => {
-    if (!this.selectedId || !this.startData|| this.startData == this.currentData) {
+    if (!this.selectedId || !this.startData || this.startData == this.currentData) {
       console.log('missin');
       this.selectedId = null;
       this.dragging = false;
@@ -127,23 +125,7 @@ export class TransformTool implements Tool {
       return;
     }
 
-    this.editor.executeCommand(
-      new MoveImageCommand(
-        this.selectedId,
-        {
-          x: this.startData.x,
-          y: this.startData.y,
-          rotation: this.startData.rotation,
-          height: this.startData.height,
-        },
-        {
-          x: this.currentData.x,
-          y: this.currentData.y,
-          rotation: this.currentData.rotation,
-          height: this.currentData.height,
-        },
-      ),
-    );
+    this.editor.executeCommand(new UpdateImageCommand(this.currentData));
     this.selectedId = null;
     this.dragging = false;
     this.dragMode = 'none';

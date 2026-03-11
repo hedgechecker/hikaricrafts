@@ -7,7 +7,7 @@ import { generateId } from '../../utils/id';
 import { Line2 } from 'three/examples/jsm/lines/Line2.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import { LineGeometry } from 'three/examples/jsm/Addons.js';
-import {  projectPointToSegment, snapAngle } from '../../utils/math';
+import { projectPointToSegment, snapAngle } from '../../utils/math';
 import { CompositeCommand } from '../../commands/CompositeCommand';
 import { DeleteLineCommand } from '../../commands/DeleteLineCommand';
 import { InputOverlay } from './InputOverlay';
@@ -99,7 +99,11 @@ export class LineTool implements Tool {
       !this.editor.hasLineBetween(this.lastPointId, currentPointId)
     ) {
       this.editor.executeCommand(
-        new AddLineCommand(generateId(), this.lastPointId, currentPointId),
+        new AddLineCommand({
+          id: generateId(),
+          startPointId: this.lastPointId,
+          endPointId: currentPointId,
+        }),
       );
     }
 
@@ -178,8 +182,8 @@ export class LineTool implements Tool {
     const splitCommand = new CompositeCommand([
       new AddPointCommand(newPoint),
       new DeleteLineCommand(id),
-      new AddLineCommand(generateId(), startId, newPointId),
-      new AddLineCommand(generateId(), newPointId, endId),
+      new AddLineCommand({ id: generateId(), startPointId: startId, endPointId: newPointId }),
+      new AddLineCommand({ id: generateId(), startPointId: newPointId, endPointId: endId }),
     ]);
     this.editor.executeCommand(splitCommand);
     return newPointId as string;
@@ -232,17 +236,17 @@ export class LineTool implements Tool {
     let finalDir = dir.clone();
 
     // update input when NOT typing
-    if (this.inputOverlay.manualLength === null ) {
+    if (this.inputOverlay.manualLength === null) {
       this.inputOverlay.setLength(mouseDistance * 10);
       this.snapPosition = null;
-    }if (this.inputOverlay.manualAngle === null) {
+    }
+    if (this.inputOverlay.manualAngle === null) {
       const angleRad = Math.atan2(dir.y, dir.x);
       const angleDeg = THREE.MathUtils.radToDeg(angleRad);
       this.inputOverlay.setAngle((angleDeg + 360) % 360);
       this.snapPosition = null;
     }
 
-    
     // enforce manual angle
     if (this.inputOverlay.manualAngle) {
       const angleRad = THREE.MathUtils.degToRad(this.inputOverlay.manualAngle);
@@ -251,7 +255,7 @@ export class LineTool implements Tool {
     // enforce manual length
     if (this.inputOverlay.manualLength) {
       finalEnd = start.clone().add(finalDir.multiplyScalar(this.inputOverlay.manualLength));
-    }else{
+    } else {
       finalEnd = start.clone().add(finalDir.multiplyScalar(mouseDistance));
     }
 

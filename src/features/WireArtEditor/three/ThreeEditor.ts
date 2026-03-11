@@ -149,7 +149,6 @@ export class ThreeEditor {
     for (const image of this.model.images.values()) {
       if (!this.sceneManager.hasImage(image.id)) {
         this.sceneManager.addImage(image);
-        console.log('added' + image.id);
       } else {
         this.sceneManager.updateImage(image);
       }

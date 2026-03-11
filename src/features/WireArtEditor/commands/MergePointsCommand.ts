@@ -1,23 +1,14 @@
 import type { Command } from '../models/Command';
-import type { DataModel } from '../models/DataModel';
-
-interface LineBackup {
-  id: string;
-  startPointId: string;
-  endPointId: string;
-}
-
-interface PointBackup {
-  id: string;
-  x: number;
-  y: number;
-  z: number;
-}
-
+import type { DataModel, LineData, PointData } from '../models/DataModel';
+/**
+ * Command that merges a given Point to another Point, duplicate Lines get Removed
+ *
+ * Does nothing if given Ids are the same or Invalid
+ */
 export class MergePointsCommand implements Command {
-  private deletedPoint: PointBackup | null = null;
-  private originalLines: LineBackup[] = [];
-  private createdLines: LineBackup[] = [];
+  private deletedPoint: PointData | null = null;
+  private originalLines: LineData[] = [];
+  private createdLines: LineData[] = [];
   private sourceId: string;
   private targetId: string;
 
@@ -72,11 +63,8 @@ export class MergePointsCommand implements Command {
 
   undo(model: DataModel) {
     if (!this.deletedPoint) return;
-
-    // Restore source point
     model.points.set(this.deletedPoint.id, { ...this.deletedPoint });
 
-    // Restore original lines
     for (const line of this.originalLines) {
       model.lines.set(line.id, { ...line });
     }

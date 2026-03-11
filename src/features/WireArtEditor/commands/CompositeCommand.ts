@@ -1,19 +1,25 @@
-export class CompositeCommand {
-  private commands: any[];
+import type { Command } from "../models/Command";
+import type { DataModel } from "../models/DataModel";
 
-  constructor(commands: any[]) {
+/**
+ * Bundles multiple Commands into one to be executed and undone in a single action
+ */
+export class CompositeCommand {
+  private commands: Command[];
+
+  constructor(commands: Command[]) {
     this.commands = commands;
   }
 
-  execute(editor: any) {
+  execute(model: DataModel) {
     for (const cmd of this.commands) {
-      cmd.execute(editor);
+      cmd.execute(model);
     }
   }
 
-  undo(editor: any) {
+  undo(model: DataModel) {
     for (let i = this.commands.length - 1; i >= 0; i--) {
-      this.commands[i].undo(editor);
+      this.commands[i].undo(model);
     }
   }
 }

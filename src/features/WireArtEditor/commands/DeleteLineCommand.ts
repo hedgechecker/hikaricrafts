@@ -1,14 +1,13 @@
 import type { Command } from '../models/Command';
-import type { DataModel } from '../models/DataModel';
+import type { DataModel, LineData } from '../models/DataModel';
 
-interface LineBackup {
-  id: string;
-  startPointId: string;
-  endPointId: string;
-}
-
+/**
+ * Command that removes a Line from the DataModel.
+ *
+ * Does nothing if given Id is invalid
+ */
 export class DeleteLineCommand implements Command {
-  private deletedLine: LineBackup | null = null;
+  private deletedLine: LineData | null = null;
   private lineId: string;
 
   constructor(lineId: string) {
@@ -19,21 +18,13 @@ export class DeleteLineCommand implements Command {
     const line = model.lines.get(this.lineId);
     if (!line) return;
 
-    // Backup line
-    this.deletedLine = {
-      id: line.id,
-      startPointId: line.startPointId,
-      endPointId: line.endPointId,
-    };
-
-    // Remove line
+    this.deletedLine = {...line};
     model.lines.delete(this.lineId);
   }
 
   undo(model: DataModel) {
     if (!this.deletedLine) return;
 
-    // Restore line
-    model.lines.set(this.deletedLine.id, { ...this.deletedLine });
+    model.lines.set(this.deletedLine.id, this.deletedLine);
   }
 }

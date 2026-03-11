@@ -3,7 +3,7 @@ import type { Tool } from './Tool';
 import { CursorManager } from '../objects/CursorManager';
 import type { CameraController } from '../core/CameraController';
 import type { ThreeEditor } from '../ThreeEditor';
-import { MovePointCommand } from '../../commands/MovePointCommand';
+import { UpdatePointCommand } from '../../commands/UpdatePointCommand';
 import { MergePointsCommand } from '../../commands/MergePointsCommand';
 
 export class MoveTool implements Tool {
@@ -98,19 +98,12 @@ export class MoveTool implements Tool {
           endPosition.copy(point);
         }
         this.editor.executeCommand(
-          new MovePointCommand(
-            this.selectedPoint,
-            {
-              x: this.startPosition.x,
-              y: this.startPosition.y,
-              z: this.startPosition.z,
-            },
-            {
-              x: endPosition.x,
-              y: endPosition.y,
-              z: endPosition.z,
-            },
-          ),
+          new UpdatePointCommand({
+            id: this.selectedPoint,
+            x: endPosition.x,
+            y: endPosition.y,
+            z: endPosition.z,
+          }),
         );
         this.editor.setHovered(this.selectedPoint);
       }

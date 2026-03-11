@@ -79,11 +79,11 @@ export function snapAngle(
 export function parseMathInput(value: string): number | null {
   if (!value) return null;
 
-  // treat comma like decimal point
   let normalized = value.replace(/,/g, '.').trim();
   normalized = normalized.replaceAll('m', '');
   normalized = normalized.replace('°', '');
   console.log(normalized)
+  
   // allow only numbers and math operators
   if (!/^[0-9+\-*/().\s]+$/.test(normalized)) {
     return null;
