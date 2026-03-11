@@ -6,6 +6,7 @@ export class DataStorage {
     return {
       points: [],
       lines: [],
+      images: [],
       id: null,
       name: '',
       version: 0,
@@ -56,7 +57,7 @@ export class DataStorage {
     const data = {
       points: project.points,
       lines: project.lines,
-      background: project.background,
+      images: project.images,
       settings: project.settings,
     };
 
@@ -89,7 +90,7 @@ export class DataStorage {
     const data = {
       points: project.points,
       lines: project.lines,
-      background: project.background,
+      images: project.images,
       settings: project.settings,
     };
 
@@ -142,7 +143,7 @@ export class DataStorage {
       isPublic: project.isPublic,
       points: data.points,
       lines: data.lines,
-      background: data.background,
+      images: data.images,
       settings: data.settings,
     };
   }

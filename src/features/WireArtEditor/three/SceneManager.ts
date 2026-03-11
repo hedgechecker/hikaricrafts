@@ -1,20 +1,26 @@
 import * as THREE from 'three';
 import { CameraController } from './core/CameraController';
 import { BackgroundImage } from './objects/BackgroundImage';
+import { TransformGizmo } from './objects/TransformGizmo';
+import type { ImageData } from '../models/DataModel';
+
 export class SceneManager {
   scene: THREE.Scene;
   camera: THREE.OrthographicCamera;
   renderer: THREE.WebGLRenderer;
   cameraController: CameraController;
+  private images = new Map<string, BackgroundImage>();
+  private hoveredImage: string | null = null;
+
+  gizmo!: TransformGizmo;
 
   private overlay!: HTMLDivElement;
   private gridLabel!: HTMLDivElement;
   private container: HTMLDivElement;
   private animationId?: number;
-  private backgroundImage: BackgroundImage;
   private grid = this.createCustomGrid(20);
   private size: number = 200;
-  private hovered: THREE.Vector3 | null = null;
+  private hoveredGrid: THREE.Vector3 | null = null;
   private gridVisible: boolean = true;
   private imageVisible: boolean = true;
 
@@ -44,7 +50,10 @@ export class SceneManager {
     this.renderer.setSize(width, height);
     this.cameraController = new CameraController(this.camera, this.renderer.domElement);
 
-    this.backgroundImage = new BackgroundImage(this.scene, this.camera, this.renderer.domElement);
+    this.gizmo = new TransformGizmo();
+    this.scene.add(this.gizmo.group);
+    this.gizmo.group.visible = false;
+
     container.appendChild(this.renderer.domElement);
     container.appendChild(this.createOverlay(container));
 
@@ -104,6 +113,14 @@ export class SceneManager {
     this.camera.updateProjectionMatrix();
     if (this.gridVisible) this.updateGrid();
     this.updateOverlay();
+
+    const size = 1.0 / this.camera.zoom;
+
+    this.gizmo.handles.forEach((handle) => {
+      handle.children.forEach((child) => {
+        child.scale.set(size, size, size);
+      });
+    });
   }
 
   updateGrid() {
@@ -215,16 +232,63 @@ export class SceneManager {
   getCameraController() {
     return this.cameraController;
   }
-  getHovered() {
-    return this.hovered;
+  getHoveredGrid() {
+    return this.hoveredGrid;
+  }
+  getHoveredImage() {
+    if (!this.hoveredImage) return null;
+    return this.hoveredImage;
   }
   getGridStep(): number {
     const divisions = this.getSubdivisionDivisions(this.camera.zoom);
     return this.size / divisions;
   }
+  getImage(id: string) {
+    const img = this.images.get(id);
+    if (!img) return null;
+    return img;
+  }
 
-  setHovered(point: THREE.Vector3 | null) {
-    this.hovered = point;
+  getImageHitboxes() {
+    if(!this.imageVisible)return [];
+    let meshes: THREE.Mesh[] = [];
+    this.images.forEach((image) => {
+      meshes.push(image.mesh);
+    });
+    return meshes;
+  }
+
+  public getFirstHoverableImage(intersects: THREE.Intersection[]): string | null {
+    for (const hit of intersects) {
+      const id = hit.object.userData.id;
+      if (!id) continue;
+      return id;
+    }
+    return null;
+  }
+
+  setHoveredGrid(point: THREE.Vector3 | null) {
+    this.hoveredGrid = point;
+  }
+
+  setHoveredImage(id: string | null) {
+    if (this.hoveredImage == id) return;
+    if (this.hoveredImage) {
+      this.gizmo.group.visible = false;
+      const image = this.images.get(this.hoveredImage);
+      if (image != undefined) {
+        image.isHovered = false;
+      }
+    }
+    this.hoveredImage = id;
+
+    if (this.hoveredImage) {
+      const image = this.images.get(this.hoveredImage);
+      if (image != undefined) {
+        image.isHovered = true;
+        this.gizmo.update(image);
+      }
+    }
   }
 
   setGridVisible(visible: boolean) {
@@ -240,16 +304,53 @@ export class SceneManager {
 
   setImageVisible(visible: boolean) {
     if (visible == this.imageVisible) return;
+    this.images.forEach((image) => {
+      this.imageVisible ? this.scene.remove(image.mesh) : this.scene.add(image.mesh);
+    });
     this.imageVisible = visible;
-    this.backgroundImage.setVisible(visible);
+    this.gizmo.group.visible = visible;
   }
 
-  // scaleBackground() {
-  //   if (!this.imageMesh) return;
-  //   this.imageMesh.geometry.scale(1.001, 1, 1);
-  // }
+  setPosition(id: string, data: ImageData) {
+    const img = this.images.get(id);
+    if (!img) return;
+    img.mesh.position.set(data.x, data.y, 0);
+    img.mesh.position.set(data.x, data.y, 0);
+    img.setHeight(data.height);
+  }
 
-  setBackground(url: string | undefined) {
-    this.backgroundImage.setBackground(url);
+  addImage(image: ImageData) {
+    const loader = new THREE.TextureLoader();
+
+    loader.load(image.url, (texture) => {
+      const data = new BackgroundImage(texture, image);
+      this.images.set(image.id, data);
+      if(this.imageVisible)this.scene.add(data.mesh);
+    });
+  }
+  getAllIds(): string[] {
+    return Array.from(this.images.keys());
+  }
+  hasImage(id: string) {
+    return this.images.has(id);
+  }
+  updateImage(data: ImageData) {
+    const image = this.images.get(data.id);
+    if (!image) return;
+    this.setPosition(data.id, data);
+  }
+  removeImage(id: string) {
+    const image = this.images.get(id);
+    if (!image) return;
+
+    this.scene.remove(image.mesh);
+    image.mesh.children.forEach((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.geometry.dispose();
+        child.material.dispose();
+      }
+    });
+
+    this.images.delete(id);
   }
 }

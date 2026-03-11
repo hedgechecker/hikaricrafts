@@ -10,18 +10,29 @@ import { LineManager } from './objects/LineManager';
 import { DataStorage } from '../core/DataStorage';
 import { Vector3 } from 'three';
 import * as THREE from 'three';
-import { DataModel, type Project } from '../models/DataModel';
+import { DataModel, type ImageData, type Project } from '../models/DataModel';
 import { CommandManager } from '../core/CommandManager';
 import type { Command } from '../models/Command';
 import { DeletePointCommand } from '../commands/DeletePointCommand';
 import { DeleteLineCommand } from '../commands/DeleteLineCommand';
 import { SVGExporter } from '../core/SVGExporter';
 import type { Settings } from '../models/Settings';
+import { TransformTool } from './tools/TransformTool';
+import { AddImageCommand } from '../commands/AddImageCommand';
+import { generateId } from '../utils/id';
+import { DeleteImageCommand } from '../commands/DeleteImageCommand';
 
 export type ToolType = 'point' | 'move' | 'line';
 //Import SVG?
 //multiple Images?
-//Scale Image
+//Scale / move Image
+
+//check points 0/1 connections
+//get all polygons
+//check convex hull
+//check minsize
+//check minSideHeight
+//check lineIntersections
 export class ThreeEditor {
   private sceneManager: SceneManager;
   private pointManager: PointManager;
@@ -32,6 +43,7 @@ export class ThreeEditor {
 
   private pointTool: PointTool;
   private moveTool: MoveTool;
+  private transformTool: TransformTool;
   private lineTool: LineTool;
 
   private model: DataModel;
@@ -69,6 +81,7 @@ export class ThreeEditor {
       this.sceneManager.getCameraController(),
       this,
     );
+    this.transformTool = new TransformTool(this.cursorManager, this, this.sceneManager);
     this.lineTool = new LineTool(
       this.sceneManager.scene,
       this.sceneManager.camera,
@@ -77,7 +90,7 @@ export class ThreeEditor {
     );
     this.raycaster.params.Line2 = { threshold: 2 };
 
-    this.toolManager.setTool(this.moveTool);
+    this.toolManager.setTool(this.transformTool);
     window.addEventListener('keydown', this.onKeyDown);
     this.load(this.storage.loadFromLocal());
   }
@@ -85,6 +98,7 @@ export class ThreeEditor {
   private syncSceneFromModel() {
     this.syncPoints();
     this.syncLines();
+    this.syncImages();
   }
 
   private syncPoints() {
@@ -129,6 +143,24 @@ export class ThreeEditor {
     }
   }
 
+  private syncImages() {
+    const existing = new Set(this.sceneManager.getAllIds());
+
+    for (const image of this.model.images.values()) {
+      if (!this.sceneManager.hasImage(image.id)) {
+        this.sceneManager.addImage(image);
+        console.log('added' + image.id);
+      } else {
+        this.sceneManager.updateImage(image);
+      }
+      existing.delete(image.id);
+    }
+
+    for (const id of existing) {
+      this.sceneManager.removeImage(id);
+    }
+  }
+
   async loadGlobal(id: number) {
     this.load(await this.storage.loadGlobal(id));
   }
@@ -136,12 +168,12 @@ export class ThreeEditor {
   load(data: Project | null) {
     this.model.points.clear();
     this.model.lines.clear();
+    this.model.images.clear();
     this.hasChanges = false;
 
     if (!data) {
       const project = this.storage.getEmptyProject();
       this.setSettings(project.settings);
-      this.sceneManager.setBackground(project.background);
       this.syncSceneFromModel();
       this.storage.deleteLocal();
       this.project = project;
@@ -156,7 +188,10 @@ export class ThreeEditor {
     for (const line of this.project.lines) {
       this.model.lines.set(line.id, { ...line });
     }
-    this.sceneManager.setBackground(this.project.background);
+    if (this.project.images)
+      for (const image of this.project.images) {
+        this.model.images.set(image.id, { ...image });
+      }
     this.saveLocal();
     this.syncSceneFromModel();
   }
@@ -175,6 +210,7 @@ export class ThreeEditor {
       ...this.project,
       points: Array.from(this.model.points.values()),
       lines: Array.from(this.model.lines.values()),
+      images: Array.from(this.model.images.values()),
     });
   }
 
@@ -183,6 +219,7 @@ export class ThreeEditor {
       ...this.project,
       points: Array.from(this.model.points.values()),
       lines: Array.from(this.model.lines.values()),
+      images: Array.from(this.model.images.values()),
     });
   }
 
@@ -210,9 +247,10 @@ export class ThreeEditor {
     animate();
   }
 
-  setBackgroundImage(url: string) {
-    this.project.background = url;
-    this.sceneManager.setBackground(url);
+  addBackgroundImage(url: string) {
+    this.executeCommand(
+      new AddImageCommand({ id: generateId(), url: url, x: 0, y: 0, rotation: 0, height: 10 }),
+    );
   }
 
   setTool(tool: Tool | null) {
@@ -223,7 +261,6 @@ export class ThreeEditor {
     if (type === 'point') {
       this.toolManager.setTool(this.pointTool);
     }
-
     if (type === 'move') {
       this.toolManager.setTool(this.moveTool);
     }
@@ -272,7 +309,7 @@ export class ThreeEditor {
     return this.lineManager.getHovered();
   }
   getHoveredGridPoint(): THREE.Vector3 | null {
-    return this.sceneManager.getHovered();
+    return this.sceneManager.getHoveredGrid();
   }
   getSnapCandidates(worldPos: THREE.Vector3, threshold: number): string[] {
     return this.pointManager.getSnapCandidateIds(worldPos, threshold);
@@ -307,47 +344,59 @@ export class ThreeEditor {
   }
 
   private onKeyDown = async (e: KeyboardEvent) => {
+    if (e.key === 'i') {
+      e.preventDefault();
+      this.toolManager.setTool(this.transformTool);
+    }
+    if (e.key === 'o') {
+      e.preventDefault();
+      this.toolManager.setTool(null);
+    }
+
     if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
       e.preventDefault();
+
       if (this.history.undo(this.model)) this.syncSceneFromModel();
     }
 
     if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
       e.preventDefault();
+
       if (this.history.redo(this.model)) this.syncSceneFromModel();
     }
 
-    // if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-    //   e.preventDefault();
-    //   this.save();
-    // }
-
     if ((e.ctrlKey || e.metaKey) && e.key === 'u') {
       e.preventDefault();
+
       this.load(await this.storage.loadGlobal(1));
     }
 
     if (e.key === 'Delete' || e.key === 'Backspace') {
       const hoveredPoint = this.pointManager.getHovered();
-      if (hoveredPoint) this.deletePoint(hoveredPoint);
+      if (hoveredPoint) {
+        this.executeCommand(new DeletePointCommand(hoveredPoint));
+        this.syncSceneFromModel();
+      }
       const hoveredLine = this.lineManager.getHoveredId();
-      if (hoveredLine) this.deleteLine(hoveredLine);
+      if (hoveredLine) {
+        this.executeCommand(new DeleteLineCommand(hoveredLine));
+        this.syncSceneFromModel();
+      }
+      const hoveredImage = this.sceneManager.getHoveredImage();
+      if (hoveredImage) {
+        this.executeCommand(new DeleteImageCommand(hoveredImage));
+        this.syncSceneFromModel();
+      }
     }
   };
-
-  public deletePoint(pointId: string) {
-    this.executeCommand(new DeletePointCommand(pointId));
-    this.syncSceneFromModel();
-  }
-
-  public deleteLine(lineId: string) {
-    this.executeCommand(new DeleteLineCommand(lineId));
-    this.syncSceneFromModel();
-  }
 
   public previewMovePoint(id: string, position: THREE.Vector3) {
     this.pointManager.setPosition(id, position);
     this.lineManager.update();
+  }
+
+  public previewMoveImage(id: string, position: ImageData) {
+    this.sceneManager.setPosition(id, position);
   }
 
   public clearPreview() {
@@ -372,7 +421,7 @@ export class ThreeEditor {
     if (hoveredPointId) {
       this.pointManager.setHovered(hoveredPointId);
       this.lineManager.setHovered(null);
-      this.sceneManager.setHovered(null);
+      this.sceneManager.setHoveredGrid(null);
       this.cursorManager.setCursor('pointer');
       return;
     }
@@ -386,7 +435,7 @@ export class ThreeEditor {
     if (hoveredLineId) {
       this.pointManager.setHovered(null);
       this.lineManager.setHovered(hoveredLineId);
-      this.sceneManager.setHovered(null);
+      this.sceneManager.setHoveredGrid(null);
       this.cursorManager.setCursor('pointer');
       return;
     }
@@ -403,7 +452,7 @@ export class ThreeEditor {
       if (snappedPos) {
         this.pointManager.setHovered(null);
         this.lineManager.setHovered(null);
-        this.sceneManager.setHovered(snappedPos);
+        this.sceneManager.setHoveredGrid(snappedPos);
         this.cursorManager.setCursor('crosshair');
         return;
       }
@@ -411,7 +460,7 @@ export class ThreeEditor {
 
     this.pointManager.setHovered(null);
     this.lineManager.setHovered(null);
-    this.sceneManager.setHovered(null);
+    this.sceneManager.setHoveredGrid(null);
     this.cursorManager.setCursor('default');
   }
 

@@ -147,7 +147,7 @@ export default function Toolbar({ engine }: Props) {
               />
               Gitter anzeigen
             </label>
-              
+
             <label>
               <input
                 type="checkbox"

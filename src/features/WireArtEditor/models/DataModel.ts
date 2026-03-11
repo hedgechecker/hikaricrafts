@@ -1,16 +1,16 @@
-import type { Settings } from "./Settings";
+import type { Settings } from './Settings';
 
 export interface Project {
-  id: string|null;
+  id: string | null;
   name: string;
   version: number;
   isPublic?: boolean;
 
   settings: Settings;
-  background?: string;
 
   points: PointData[];
   lines: LineData[];
+  images: ImageData[];
 }
 
 export interface PointData {
@@ -26,7 +26,17 @@ export interface LineData {
   endPointId: string;
 }
 
+export interface ImageData {
+  id: string;
+  url: string;
+  x: number;
+  y: number;
+  rotation: number;
+  height: number;
+}
+
 export class DataModel {
   points = new Map<string, PointData>();
   lines = new Map<string, LineData>();
+  images = new Map<string, ImageData>();
 }

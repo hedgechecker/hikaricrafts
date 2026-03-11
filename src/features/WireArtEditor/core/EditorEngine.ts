@@ -23,9 +23,8 @@ export class EditorEngine {
     this.threeEditor?.setActiveTool(type);
   }
   setBackgroundImage(url: string) {
-    this.threeEditor?.setBackgroundImage(url);
+    this.threeEditor?.addBackgroundImage(url);
   }
-
 
   getStore() {
     return this.store;
@@ -57,7 +56,7 @@ export class EditorEngine {
 
   updateSettings(settings: Settings) {
     this.store.updateSettings(settings);
-    if(!this.threeEditor)return;
+    if (!this.threeEditor) return;
     this.threeEditor.setSettings(settings);
     this.threeEditor.hasChanges = true;
   }
