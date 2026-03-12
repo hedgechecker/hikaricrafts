@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 import type { Tool } from './Tool';
 import { CursorManager } from '../objects/CursorManager';
-import type { CameraController } from '../core/CameraController';
-import type { ThreeEditor } from '../ThreeEditor';
-import { UpdatePointCommand } from '../../commands/UpdatePointCommand';
-import { MergePointsCommand } from '../../commands/MergePointsCommand';
+import type { CameraController } from '../objects/CameraController';
+import { UpdatePointCommand } from '../commands/UpdatePointCommand';
+import { MergePointsCommand } from '../commands/MergePointsCommand';
+import type { ThreeEditor } from '../core/ThreeEditor';
 
 export class MoveTool implements Tool {
   private raycaster = new THREE.Raycaster();

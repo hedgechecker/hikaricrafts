@@ -1,7 +1,8 @@
 import type { Command } from '../models/Command';
-import type { DataModel, ImageData } from '../models/DataModel';
+import type { SceneModel } from '../models/SceneModel';
+import type { ImageData } from '../models/Image';
 /**
- * Command that adds an Image to the DataModel.
+ * Command that adds an Image to the SceneModel.
  *
  * Constraints: none
  */
@@ -12,11 +13,11 @@ export class AddImageCommand implements Command {
     this.image = image;
   }
 
-  execute(model: DataModel) {
+  execute(model: SceneModel) {
     model.images.set(this.image.id, this.image);
   }
 
-  undo(model: DataModel) {
+  undo(model: SceneModel) {
     model.images.delete(this.image.id);
   }
 }

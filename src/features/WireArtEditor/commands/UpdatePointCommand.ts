@@ -1,5 +1,6 @@
 import type { Command } from '../models/Command';
-import type { DataModel, PointData } from '../models/DataModel';
+import type { PointData } from '../models/Point';
+import type { SceneModel } from '../models/SceneModel';
 
 /**
  * Command that updates an existing Point
@@ -14,18 +15,18 @@ export class UpdatePointCommand implements Command {
     this.after = after;
   }
 
-  execute(model: DataModel) {
+  execute(model: SceneModel) {
     const p = model.points.get(this.after.id);
     if (!p) return;
-    this.before = {...p};
+    this.before = { ...p };
 
     p.x = this.after.x;
     p.y = this.after.y;
     p.z = this.after.z;
   }
 
-  undo(model: DataModel) {
-    if(!this.before)return;
+  undo(model: SceneModel) {
+    if (!this.before) return;
     const p = model.points.get(this.after.id);
     if (!p) return;
 

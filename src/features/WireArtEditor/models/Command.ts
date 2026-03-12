@@ -1,6 +1,6 @@
-import type { DataModel } from './DataModel';
+import type { SceneModel } from './SceneModel';
 
 export interface Command {
-  execute(model: DataModel): void;
-  undo(model: DataModel): void;
+  execute(model: SceneModel): void;
+  undo(model: SceneModel): void;
 }

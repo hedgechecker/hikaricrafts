@@ -1,12 +1,13 @@
 import type { Command } from '../models/Command';
-import type { DataModel, LineData } from '../models/DataModel';
+import type { SceneModel } from '../models/SceneModel';
+import type { LineData } from '../models/Line';
 
 /**
- * Command that adds a line between two points in the DataModel.
+ * Command that adds a line between two points in the SceneModel.
  *
  * Constraints:
  * - A line cannot connect a point to itself.
- * - Duplicate lines are not allowed 
+ * - Duplicate lines are not allowed
  * - A->B is treated the same as B->A
  */
 export class AddLineCommand implements Command {
@@ -16,7 +17,7 @@ export class AddLineCommand implements Command {
     this.data = data;
   }
 
-  execute(model: DataModel) {
+  execute(model: SceneModel) {
     // Prevent self-referential lines
     if (this.data.startPointId === this.data.endPointId) {
       return;
@@ -27,7 +28,10 @@ export class AddLineCommand implements Command {
     for (const [, line] of model.lines) {
       const s = line.startPointId;
       const e = line.endPointId;
-      if ((s === this.data.startPointId && e === this.data.endPointId) || (s === this.data.endPointId && e === this.data.startPointId)) {
+      if (
+        (s === this.data.startPointId && e === this.data.endPointId) ||
+        (s === this.data.endPointId && e === this.data.startPointId)
+      ) {
         return;
       }
     }
@@ -35,7 +39,7 @@ export class AddLineCommand implements Command {
     model.lines.set(this.data.id, this.data);
   }
 
-  undo(model: DataModel) {
+  undo(model: SceneModel) {
     model.lines.delete(this.data.id);
   }
 }

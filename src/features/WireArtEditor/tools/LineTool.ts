@@ -1,16 +1,16 @@
 import * as THREE from 'three';
 import type { Tool } from './Tool';
-import type { ThreeEditor } from '../ThreeEditor';
-import { AddPointCommand } from '../../commands/AddPointCommand ';
-import { AddLineCommand } from '../../commands/AddLineCommand';
-import { generateId } from '../../utils/id';
+import { AddPointCommand } from '../commands/AddPointCommand';
+import { AddLineCommand } from '../commands/AddLineCommand';
+import { generateId } from '../utils/id';
 import { Line2 } from 'three/examples/jsm/lines/Line2.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import { LineGeometry } from 'three/examples/jsm/Addons.js';
-import { projectPointToSegment, snapAngle } from '../../utils/math';
-import { CompositeCommand } from '../../commands/CompositeCommand';
-import { DeleteLineCommand } from '../../commands/DeleteLineCommand';
+import { projectPointToSegment, snapAngle } from '../utils/math';
+import { CompositeCommand } from '../commands/CompositeCommand';
+import { DeleteLineCommand } from '../commands/DeleteLineCommand';
 import { InputOverlay } from './InputOverlay';
+import type { ThreeEditor } from '../core/ThreeEditor';
 
 export class LineTool implements Tool {
   private lastPointId: string | null = null;

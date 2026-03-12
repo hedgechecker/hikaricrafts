@@ -1,31 +1,31 @@
-import { SceneManager } from './SceneManager';
-import { PointManager } from './objects/PointManager';
-import { PointTool } from './tools/PointTool';
-import { MoveTool } from './tools/MoveTool';
-import { LineTool } from './tools/LineTool';
-import { ToolManager } from './tools/ToolManager';
-import type { Tool } from './tools/Tool';
-import { CursorManager } from './objects/CursorManager';
-import { LineManager } from './objects/LineManager';
+import { SceneManager } from '../objects/SceneManager';
+import { PointManager } from '../objects/PointManager';
+import { PointTool } from '../tools/PointTool';
+import { MoveTool } from '../tools/MoveTool';
+import { LineTool } from '../tools/LineTool';
+import { TransformTool } from '../tools/TransformTool';
+import { ToolManager } from '../tools/ToolManager';
+import type { Tool } from '../tools/Tool';
+import { CursorManager } from '../objects/CursorManager';
 import { DataStorage } from '../core/DataStorage';
 import { Vector3 } from 'three';
 import * as THREE from 'three';
-import { DataModel, type ImageData, type Project } from '../models/DataModel';
-import { CommandManager } from '../core/CommandManager';
+import { SceneModel } from '../models/SceneModel';
+import { type ImageData } from '../models/Image';
+import { type Project } from '../models/Project';
+import { CommandManager } from '../commands/CommandManager';
 import type { Command } from '../models/Command';
 import { DeletePointCommand } from '../commands/DeletePointCommand';
 import { DeleteLineCommand } from '../commands/DeleteLineCommand';
 import { SVGExporter } from '../core/SVGExporter';
 import type { Settings } from '../models/Settings';
-import { TransformTool } from './tools/TransformTool';
 import { AddImageCommand } from '../commands/AddImageCommand';
 import { generateId } from '../utils/id';
 import { DeleteImageCommand } from '../commands/DeleteImageCommand';
+import { LineManager } from '../objects/LineManager';
 
 export type ToolType = 'point' | 'move' | 'line';
 //Import SVG?
-//multiple Images?
-//Scale / move Image
 
 //check points 0/1 connections
 //get all polygons
@@ -46,7 +46,7 @@ export class ThreeEditor {
   private transformTool: TransformTool;
   private lineTool: LineTool;
 
-  private model: DataModel;
+  private model: SceneModel;
   private project: Project;
   private history: CommandManager;
   private raycaster = new THREE.Raycaster();
@@ -57,7 +57,7 @@ export class ThreeEditor {
   public hasChanges = false;
 
   constructor(container: HTMLDivElement) {
-    this.model = new DataModel();
+    this.model = new SceneModel();
     this.history = new CommandManager();
     this.cursorManager = new CursorManager(container);
     this.sceneManager = new SceneManager(container);

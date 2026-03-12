@@ -1,5 +1,6 @@
 import type { Command } from '../models/Command';
-import type { DataModel, ImageData } from '../models/DataModel';
+import type { SceneModel } from '../models/SceneModel';
+import type { ImageData } from '../models/Image';
 
 /**
  * Command that updates an existing Image
@@ -14,11 +15,11 @@ export class UpdateImageCommand implements Command {
     this.after = data;
   }
 
-  execute(model: DataModel) {
+  execute(model: SceneModel) {
     const img = model.images.get(this.after.id);
     if (!img) return;
 
-    this.before = {...img};
+    this.before = { ...img };
 
     img.x = this.after.x;
     img.y = this.after.y;
@@ -26,9 +27,9 @@ export class UpdateImageCommand implements Command {
     img.height = this.after.height;
   }
 
-  undo(model: DataModel) {
-    if(!this.before)return;
-    
+  undo(model: SceneModel) {
+    if (!this.before) return;
+
     const img = model.images.get(this.after.id);
     if (!img) return;
 

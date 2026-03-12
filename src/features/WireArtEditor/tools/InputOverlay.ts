@@ -1,4 +1,4 @@
-import { parseMathInput } from '../../utils/math';
+import { parseMathInput } from '../utils/math';
 
 export class InputOverlay {
   private lengthInput: HTMLInputElement;
@@ -43,7 +43,7 @@ export class InputOverlay {
   private handleLengthInput = () => {
     const value = parseMathInput(this.lengthInput.value);
     this.manualLength = value ?? undefined;
-    if(this.manualLength) this.manualLength/=10;
+    if (this.manualLength) this.manualLength /= 10;
     this.onChange();
   };
 
@@ -77,11 +77,11 @@ export class InputOverlay {
   }
 
   setLength(value: number) {
-    this.lengthInput.value = value.toFixed(2) + "mm";
+    this.lengthInput.value = value.toFixed(2) + 'mm';
   }
 
   setAngle(value: number) {
-    this.angleInput.value = value.toFixed(2) + "°";
+    this.angleInput.value = value.toFixed(2) + '°';
   }
 
   focus() {

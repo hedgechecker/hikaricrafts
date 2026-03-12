@@ -1,8 +1,10 @@
 import type { Command } from '../models/Command';
-import type { DataModel, LineData, PointData } from '../models/DataModel';
+import type { LineData } from '../models/Line';
+import type { PointData } from '../models/Point';
+import type { SceneModel } from '../models/SceneModel';
 
 /**
- * Command that removes a Point and all connected Lines from the DataModel.
+ * Command that removes a Point and all connected Lines from the SceneModel.
  *
  * Does nothing if given Id is invalid
  */
@@ -15,16 +17,16 @@ export class DeletePointCommand implements Command {
     this.pointId = pointId;
   }
 
-  execute(model: DataModel) {
+  execute(model: SceneModel) {
     const point = model.points.get(this.pointId);
     if (!point) return;
 
-    this.deletedPoint = {...point};
+    this.deletedPoint = { ...point };
 
     // Backup connected lines
     for (const line of model.lines.values()) {
       if (line.startPointId === this.pointId || line.endPointId === this.pointId) {
-        this.deletedLines.push({...line});
+        this.deletedLines.push({ ...line });
       }
     }
 
@@ -34,7 +36,7 @@ export class DeletePointCommand implements Command {
     model.points.delete(this.pointId);
   }
 
-  undo(model: DataModel) {
+  undo(model: SceneModel) {
     if (!this.deletedPoint) return;
 
     model.points.set(this.deletedPoint.id, this.deletedPoint);

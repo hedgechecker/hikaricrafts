@@ -1,5 +1,5 @@
 import type { Settings } from '../models/Settings';
-import type { Project } from '../models/DataModel';
+import type { Project } from '../models/Project';
 
 type Listener = () => void;
 

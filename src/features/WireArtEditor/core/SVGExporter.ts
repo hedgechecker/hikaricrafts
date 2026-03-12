@@ -1,8 +1,8 @@
-import { DataModel } from '../models/DataModel';
-import type { Project } from '../models/DataModel';
+import { SceneModel } from '../models/SceneModel';
+import type { Project } from '../models/Project';
 
 export class SVGExporter {
-  public static simpleExport(model: DataModel, project: Project) {
+  public static simpleExport(model: SceneModel, project: Project) {
     const lines = Array.from(model.lines.values());
     if (lines.length === 0) return;
 

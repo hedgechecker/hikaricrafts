@@ -1,8 +1,9 @@
 import type { Command } from '../models/Command';
-import type { DataModel, LineData } from '../models/DataModel';
+import type { LineData } from '../models/Line';
+import type { SceneModel } from '../models/SceneModel';
 
 /**
- * Command that removes a Line from the DataModel.
+ * Command that removes a Line from the SceneModel.
  *
  * Does nothing if given Id is invalid
  */
@@ -14,15 +15,15 @@ export class DeleteLineCommand implements Command {
     this.lineId = lineId;
   }
 
-  execute(model: DataModel) {
+  execute(model: SceneModel) {
     const line = model.lines.get(this.lineId);
     if (!line) return;
 
-    this.deletedLine = {...line};
+    this.deletedLine = { ...line };
     model.lines.delete(this.lineId);
   }
 
-  undo(model: DataModel) {
+  undo(model: SceneModel) {
     if (!this.deletedLine) return;
 
     model.lines.set(this.deletedLine.id, this.deletedLine);

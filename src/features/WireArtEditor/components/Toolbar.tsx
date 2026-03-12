@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import type { ToolType } from '../three/ThreeEditor';
 import ImageUploader from './ImageUploader';
 import ToolButton from './ToolButton';
 import styles from './styles/Toolbar.module.css';
@@ -8,6 +7,7 @@ import { useDialog } from '../../global/useDialog';
 import type { Settings } from '../models/Settings';
 import type { EditorEngine } from '../core/EditorEngine';
 import { useEditorStore } from '../core/EditorStore';
+import type { ToolType } from '../core/ThreeEditor';
 
 interface Props {
   engine: EditorEngine;

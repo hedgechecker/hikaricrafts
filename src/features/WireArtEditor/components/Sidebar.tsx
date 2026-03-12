@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import styles from './styles/SideBar.module.css';
+import styles from './styles/Sidebar.module.css';
 import type { EditorEngine } from '../core/EditorEngine';
 import ToolButton from './ToolButton';
 import { useDialog } from '../../global/useDialog';
@@ -125,7 +125,6 @@ export default function SideBar({ engine }: Props) {
     }
 
     const token = localStorage.getItem('token');
-
     const res = await fetch(`${BASE_URL}/wireArtProjects/${project.id}`, {
       method: 'DELETE',
       headers: token ? { Authorization: `Bearer ${token}` } : {},

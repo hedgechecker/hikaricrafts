@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { ImageData } from '../../models/DataModel';
+import type { ImageData } from '../models/Image';
 
 export class BackgroundImage {
   mesh: THREE.Mesh;
@@ -25,7 +25,7 @@ export class BackgroundImage {
   }
 
   setHeight(height: number) {
-    if(!height)return;
+    if (!height) return;
     this.height = height;
 
     const width = this.height * this.aspect;

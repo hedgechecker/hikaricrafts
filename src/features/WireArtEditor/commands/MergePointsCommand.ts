@@ -1,5 +1,7 @@
 import type { Command } from '../models/Command';
-import type { DataModel, LineData, PointData } from '../models/DataModel';
+import type { LineData } from '../models/Line';
+import type { PointData } from '../models/Point';
+import type { SceneModel } from '../models/SceneModel';
 /**
  * Command that merges a given Point to another Point, duplicate Lines get Removed
  *
@@ -17,7 +19,7 @@ export class MergePointsCommand implements Command {
     this.targetId = targetId;
   }
 
-  execute(model: DataModel) {
+  execute(model: SceneModel) {
     if (this.sourceId === this.targetId) return;
 
     const source = model.points.get(this.sourceId);
@@ -61,7 +63,7 @@ export class MergePointsCommand implements Command {
     model.points.delete(this.sourceId);
   }
 
-  undo(model: DataModel) {
+  undo(model: SceneModel) {
     if (!this.deletedPoint) return;
     model.points.set(this.deletedPoint.id, { ...this.deletedPoint });
 

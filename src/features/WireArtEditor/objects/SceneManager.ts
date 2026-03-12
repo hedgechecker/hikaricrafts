@@ -1,8 +1,8 @@
 import * as THREE from 'three';
-import { CameraController } from './core/CameraController';
-import { BackgroundImage } from './objects/BackgroundImage';
-import { TransformGizmo } from './objects/TransformGizmo';
-import type { ImageData } from '../models/DataModel';
+import { CameraController } from './CameraController';
+import { BackgroundImage } from './BackgroundImage';
+import { TransformGizmo } from './TransformGizmo';
+import type { ImageData } from '../models/Image';
 
 export class SceneManager {
   scene: THREE.Scene;
@@ -250,7 +250,7 @@ export class SceneManager {
   }
 
   getImageHitboxes() {
-    if(!this.imageVisible)return [];
+    if (!this.imageVisible) return [];
     let meshes: THREE.Mesh[] = [];
     this.images.forEach((image) => {
       meshes.push(image.mesh);
@@ -325,7 +325,7 @@ export class SceneManager {
     loader.load(image.url, (texture) => {
       const data = new BackgroundImage(texture, image);
       this.images.set(image.id, data);
-      if(this.imageVisible)this.scene.add(data.mesh);
+      if (this.imageVisible) this.scene.add(data.mesh);
     });
   }
   getAllIds(): string[] {

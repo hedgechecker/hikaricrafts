@@ -3,11 +3,11 @@ type DragMode = 'none' | 'move' | 'resize';
 import * as THREE from 'three';
 import type { BackgroundImage } from '../objects/BackgroundImage';
 import type { Tool } from './Tool';
-import type { ThreeEditor } from '../ThreeEditor';
 import type { CursorManager } from '../objects/CursorManager';
-import { UpdateImageCommand } from '../../commands/UpdateImageCommand';
-import type { SceneManager } from '../SceneManager';
-import type { ImageData } from '../../models/DataModel';
+import { UpdateImageCommand } from '../commands/UpdateImageCommand';
+import type { SceneManager } from '../objects/SceneManager';
+import type { ImageData } from '../models/Image';
+import type { ThreeEditor } from '../core/ThreeEditor';
 
 export class TransformTool implements Tool {
   dragMode: DragMode = 'none';

@@ -1,8 +1,9 @@
 import type { Command } from '../models/Command';
-import type { DataModel, ImageData } from '../models/DataModel';
+import type { SceneModel } from '../models/SceneModel';
+import type { ImageData } from '../models/Image';
 
 /**
- * Command that removes an Image from the DataModel.
+ * Command that removes an Image from the SceneModel.
  *
  * Does nothing if given Id is invalid
  */
@@ -14,15 +15,15 @@ export class DeleteImageCommand implements Command {
     this.imageId = imageId;
   }
 
-  execute(model: DataModel) {
+  execute(model: SceneModel) {
     const image = model.images.get(this.imageId);
     if (!image) return;
 
-    this.deletedImage = {...image};
+    this.deletedImage = { ...image };
     model.images.delete(this.imageId);
   }
 
-  undo(model: DataModel) {
+  undo(model: SceneModel) {
     if (!this.deletedImage) return;
     model.images.set(this.deletedImage.id, { ...this.deletedImage });
   }

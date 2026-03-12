@@ -1,12 +1,12 @@
 import * as THREE from 'three';
 import type { Tool } from './Tool';
-import type { ThreeEditor } from '../ThreeEditor';
-import { AddPointCommand } from '../../commands/AddPointCommand ';
-import { generateId } from '../../utils/id';
-import { AddLineCommand } from '../../commands/AddLineCommand';
-import { DeleteLineCommand } from '../../commands/DeleteLineCommand';
-import { CompositeCommand } from '../../commands/CompositeCommand';
-import { projectPointToSegment } from '../../utils/math';
+import { AddPointCommand } from '../commands/AddPointCommand';
+import { generateId } from '../utils/id';
+import { AddLineCommand } from '../commands/AddLineCommand';
+import { DeleteLineCommand } from '../commands/DeleteLineCommand';
+import { CompositeCommand } from '../commands/CompositeCommand';
+import { projectPointToSegment } from '../utils/math';
+import type { ThreeEditor } from '../core/ThreeEditor';
 
 export class PointTool implements Tool {
   private raycaster = new THREE.Raycaster();
@@ -77,8 +77,16 @@ export class PointTool implements Tool {
       const splitCommand = new CompositeCommand([
         new AddPointCommand(newPoint),
         new DeleteLineCommand(hoveredLine.id),
-        new AddLineCommand(generateId(), hoveredLine.startId, newPointId),
-        new AddLineCommand(generateId(), newPointId, hoveredLine.endId),
+        new AddLineCommand({
+          id: generateId(),
+          startPointId: hoveredLine.startId,
+          endPointId: newPointId,
+        }),
+        new AddLineCommand({
+          id: generateId(),
+          startPointId: newPointId,
+          endPointId: hoveredLine.endId,
+        }),
       ]);
 
       this.editor.executeCommand(splitCommand);
@@ -108,6 +116,4 @@ export class PointTool implements Tool {
     this.placementBlocked = false;
     this.editor.handleHover(event);
   }
-
-  
 }

@@ -1,5 +1,5 @@
 import type { Settings } from '../models/Settings.ts';
-import { ThreeEditor, type ToolType } from '../three/ThreeEditor.ts';
+import { ThreeEditor, type ToolType } from './ThreeEditor.ts';
 import { EditorStore } from './EditorStore.ts';
 
 export class EditorEngine {

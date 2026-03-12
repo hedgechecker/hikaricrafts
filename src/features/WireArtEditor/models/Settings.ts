@@ -1,4 +1,3 @@
-
 export interface Settings {
   showPoints: boolean;
   showLines: boolean;
