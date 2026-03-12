@@ -5,6 +5,11 @@ interface Props {
   onImageSelected: (image: string) => void;
 }
 
+/**
+ * Handles the Upload of an User-Image
+ * @param onImageSelected reaction to Image-Upload
+ * @returns 
+ */
 export default function ImageUploader({ onImageSelected }: Props) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 

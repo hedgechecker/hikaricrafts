@@ -5,6 +5,9 @@ import styles from './styles/EditorLayout.module.css';
 import SideBar from './Sidebar';
 import { EditorEngine } from '../core/EditorEngine';
 
+/**
+ * Handles the High-Level Layout of the Editor
+ */
 export default function EditorLayout() {
   const [engine] = useState(() => new EditorEngine());
 

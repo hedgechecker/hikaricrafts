@@ -1,4 +1,4 @@
-.toolbar{
+.toolbar {
   display: flex;
   justify-content: left;
   align-items: center;
@@ -7,35 +7,34 @@
   box-sizing: border-box;
   background-color: var(--color-background);
   gap: var(--space-sm);
-  /* box-shadow: var(--shadow-lg); */
   font-size: var(--font-size-xl);
   color: var(--color-primary-dark);
 }
 .title {
-    margin: 0;
+  margin: 0;
 }
 .toolSection {
-    display: flex;
-    flex-direction: row;
-    gap: var(--space-sm);
+  display: flex;
+  flex-direction: row;
+  gap: var(--space-sm);
 }
 .settingsMenu {
   position: absolute;
-  top: 60px;
-  right: 20px;
+  top: var(--space-xl);
+  right: var(--space-md);
 
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  background: var(--color-background);
+  border: var(--space-border) solid var(--color-border);
+  border-radius: var(--space-md);
 
-  padding: 12px;
+  padding: var(--space-sm);
   width: 200px;
 
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-sm);
 
-  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
   z-index: 20;
 }
 
@@ -43,7 +42,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 14px;
+  font-size: var(--font-size-md);
 }
 
 .settingsMenu h4 {

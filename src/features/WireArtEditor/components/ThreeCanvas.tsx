@@ -6,13 +6,16 @@ interface Props {
   engine: EditorEngine;
 }
 
+/**
+ * Displays the UI for the WireArt Editor
+ * @param engine The Orchestration for the Three Canvas
+ */
 export default function ThreeCanvas({ engine }: Props) {
   const mountRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!mountRef.current) return;
 
-    // Initialize engine with container
     engine.initialize(mountRef.current);
 
     return () => {

@@ -17,20 +17,40 @@ interface Props {
   engine: EditorEngine;
 }
 
+/**
+ * SideBar component
+ * 
+ * Displays the list of user projects and allows:
+ * - creating a new project
+ * - loading existing projects
+ * - renaming projects
+ * - deleting projects
+ *
+ * Integrates with EditorEngine for loading/opening projects
+ * and communicates with the backend API for project persistence.
+ */
 export default function SideBar({ engine }: Props) {
+  //UI State
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingName, setEditingName] = useState('');
-  const [isLoggedId, setIsLoggedIn] = useState<boolean>(!!localStorage.getItem('token'));
+
+  // authentication state
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(!!localStorage.getItem('token'));
+
+  // project data
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setselectedProject] = useState<number | null>(null);
+
   const { showDialog, dialogComponent } = useDialog();
   const navigate = useNavigate();
 
+  // Load projects from API once when the sidebar mounts
   useEffect(() => {
     loadProjects();
   }, []);
 
+  // Close dropdown menus and inline editing when clicking outside
   useEffect(() => {
     function handleClickOutside() {
       setOpenMenuId(null);
@@ -42,6 +62,7 @@ export default function SideBar({ engine }: Props) {
     };
   }, []);
 
+  // Fetch all projects available to the current user (private + public)
   async function loadProjects() {
     const token = localStorage.getItem('token');
 
@@ -55,7 +76,8 @@ export default function SideBar({ engine }: Props) {
     setProjects(data);
   }
 
-  async function handleClick(id: number) {
+  // Prevent losing unsaved work before switching projects
+  async function handleProjectClick(id: number) {
     if (engine.hasChanges()) {
       const result = await showDialog({
         type: 'confirm',
@@ -69,6 +91,7 @@ export default function SideBar({ engine }: Props) {
     engine.loadGlobal(id);
   }
 
+  // Rename a project via API and refresh the project list
   async function submitRename(project: Project) {
     if (!editingName.trim()) return;
 
@@ -91,6 +114,7 @@ export default function SideBar({ engine }: Props) {
     setOpenMenuId(null);
   }
 
+  // Delete a project after user confirmation
   async function handleDelete(project: Project) {
     const result = await showDialog({
       type: 'confirm',
@@ -111,6 +135,7 @@ export default function SideBar({ engine }: Props) {
       loadProjects();
     }
 
+    setEditingId(null);
     setOpenMenuId(null);
   }
 
@@ -142,13 +167,19 @@ export default function SideBar({ engine }: Props) {
   return (
     <div className={styles.wrapper}>
       {dialogComponent}
-      <ToolButton
-        label="Neues Projekt erstellen"
-        image="/icons/add.png"
+      <div
+        key={-1}
+        className={`${styles.projectItem} ${-1 === selectedProject ? styles.selected : ''}`}
         onClick={handleNewProject}
-      ></ToolButton>
-      {isLoggedId && <h3>Eigene Projekte</h3>}
-      {!isLoggedId && <ToolButton label="Anmelden" onClick={() => navigate('/login')}></ToolButton>}
+      >
+        {' '}
+        <img src="/icons/add.png" style={{ height: '28px', width: '28px' }}></img>
+        <span className={styles.projectName}>{'Neues Projekt erstellen'}</span>
+      </div>
+
+      {isLoggedIn && <h3>Deine Projekte</h3>}
+      {!isLoggedIn && <ToolButton label="Anmelden" onClick={() => navigate('/login')}></ToolButton>}
+      {/* Project list */}
       {projects
         .filter((p) => !p.isPublic)
         .map((project) => (
@@ -156,7 +187,7 @@ export default function SideBar({ engine }: Props) {
             key={project.id}
             className={`${styles.projectItem} ${project.id === selectedProject ? styles.selected : ''}`}
             onClick={() => {
-              if (!editingId) handleClick(project.id);
+              if (!editingId) handleProjectClick(project.id);
             }}
           >
             {/* PROJECT NAME OR INLINE INPUT */}

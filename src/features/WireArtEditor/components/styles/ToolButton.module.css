@@ -1,25 +1,28 @@
 .button{
-  padding: 12px;
+  padding: var(--space-sm);
   background: var(--color-background);
   color: var(--color-accent);
-  border: 1px solid var(--color-border);
+  border: var(--space-border) solid var(--color-border);
   border-radius: var(--radius-md);
   cursor: pointer;
-  font-size: var(--font-size-md);
+  font-size: var(--font-size-lg);
+  font-family: var(--font-family-base);
   transition: background 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: space-evenly;
 }
 .button:hover {
-  border-width: 3px;
-  padding: 10px;
+  border-width: var(--space-border);
+  padding: var(--space-sm);
   border-color: var(--color-accent);
+  background: rgba(0, 0, 0, 0.1);
 }  
 .selected {
-  border-width: 3px;
-  padding: 10px;
+  border-width: var(--space-border);
+  padding: var(--space-sm);
   border-color: var(--color-accent);
+  background: rgba(0, 0, 0, 0.1);
 }
 .image {
     width: 30px;
@@ -30,17 +33,16 @@
   cursor: pointer;
 }
 
-/* Tooltip text */
 .tooltip::after {
   content: attr(data-tooltip);
   position: absolute;
-  bottom: -50%; /* above the element */
+  bottom: -50%; 
   left: 50%;
   transform: translateX(-50%);
   background-color: #333;
   color: #fff;
-  padding: 6px 10px;
-  border-radius: 4px;
+  padding: var(--space-sm);
+  border-radius: var(--radius-md);
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
@@ -49,7 +51,6 @@
   font-size: medium;
 }
 
-/* Show tooltip on hover */
 .tooltip:hover::after,
 .tooltip:hover::before {
   opacity: 1;

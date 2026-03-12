@@ -12,25 +12,56 @@ import { useEditorStore } from '../core/EditorStore';
 interface Props {
   engine: EditorEngine;
 }
-
+/**
+ * Toolbar component
+ *
+ * Provides the main editor controls such as:
+ * - tool selection (move, point, line)
+ * - saving the project
+ * - exporting as SVG
+ * - view/settings configuration
+ * - background image upload
+ *
+ * Communicates with the EditorEngine to update tools,
+ * project state, and editor settings.
+ */
 export default function Toolbar({ engine }: Props) {
   const navigate = useNavigate();
+
+  // currently active editor tool
   const [active, setActive] = useState<ToolType>('move');
+
+  // temporary save indicator (shows "Gespeichert" after saving)
   const [saved, setSaved] = useState(false);
+
   const { showDialog, dialogComponent } = useDialog();
+
+  // controls visibility of the settings dropdown
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  // reactive editor settings from the store
   const { settings } = useEditorStore(engine.getStore());
 
+  /**
+   * Update a single editor setting.
+   * Creates a new settings object and sends it to the engine.
+   */
   function updateSetting<K extends keyof Settings>(key: K, value: Settings[K]) {
     const newSettings: Settings = { ...settings, [key]: value } as Settings;
     engine.updateSettings(newSettings);
   }
 
-  const handleClick = (tool: ToolType) => {
+  const changeTool = (tool: ToolType) => {
     setActive(tool);
     engine.setActiveTool(tool);
   };
 
+  /**
+   * Save the current project.
+   *
+   * If the user is not logged in, a warning dialog is shown.
+   * A short visual confirmation is displayed after saving.
+   */
   const handleSave = async () => {
     if (saved) return;
     const token = localStorage.getItem('token');
@@ -53,6 +84,10 @@ export default function Toolbar({ engine }: Props) {
     engine.exportSVG();
   };
 
+  /**
+   * * Global keyboard shortcut:
+   * Ctrl/Cmd + S triggers save.
+   */
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
@@ -70,18 +105,22 @@ export default function Toolbar({ engine }: Props) {
   return (
     <div className={styles.toolbar}>
       {dialogComponent}
+
+      {/* Navigation */}
       <ToolButton
         label="Zurück zum Anfang"
         image="/icons/back-arrow.png"
         onClick={() => navigate('/')}
       />
+
+      {/* Tool selection */}
       <div className={styles.toolSection}>
         <ToolButton
           label="Bewegen"
           image="/icons/move.png"
           toolTip="Elemente bewegen"
           active={active === 'move'}
-          onClick={() => handleClick('move')}
+          onClick={() => changeTool('move')}
         />
 
         <ToolButton
@@ -89,7 +128,7 @@ export default function Toolbar({ engine }: Props) {
           image="/icons/single-point.png"
           toolTip="Einen Punkt zeichnen"
           active={active === 'point'}
-          onClick={() => handleClick('point')}
+          onClick={() => changeTool('point')}
         />
 
         <ToolButton
@@ -97,26 +136,34 @@ export default function Toolbar({ engine }: Props) {
           image="/icons/line.png"
           toolTip="Eine Linie zeichnen"
           active={active === 'line'}
-          onClick={() => handleClick('line')}
+          onClick={() => changeTool('line')}
         />
+
+        {/* Save project */}
         <ToolButton
           label={saved ? 'Gespeichert' : 'Speichern'}
           image={saved ? '/icons/check.png' : '/icons/save.png'}
           toolTip="Projekt speichern"
           onClick={handleSave}
         />
+
+        {/* Export project */}
         <ToolButton
           label="SVG exportieren"
           image="/icons/export.png"
           toolTip="Projekt als SVG Datei exportieren"
           onClick={handleExport}
         />
+
+        {/* Toggle settings panel */}
         <ToolButton
           label="Ansicht"
           image="/icons/setting.png"
           toolTip="Sichtbarkeiten ändern"
           onClick={() => setSettingsOpen(!settingsOpen)}
         />
+
+        {/* Settings menu */}
         {settingsOpen && (
           <div className={styles.settingsMenu}>
             <h4>Ansicht</h4>
@@ -177,6 +224,8 @@ export default function Toolbar({ engine }: Props) {
           </div>
         )}
       </div>
+
+      {/* Upload background reference image */}
       <ImageUploader
         onImageSelected={(img) => {
           engine.setBackgroundImage(img);

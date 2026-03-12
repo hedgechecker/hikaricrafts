@@ -1,15 +1,18 @@
-.wrapper {
+.wrapper,
+.center {
     display:flex;
-    flex-direction: column;
-    align-items: center;
-    height: 100%;
-    overflow: hidden;
+    align-items:center;
+    height:100%;
+    width:100%;
 }
-.center{
-    display:flex;
+
+.wrapper {
+    flex-direction: column;
+}
+
+.center {
+    box-sizing: border-box;
+    padding: var(--space-md);
     flex-direction: row;
-    align-items: center;
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
+    gap: var(--space-md);
 }
