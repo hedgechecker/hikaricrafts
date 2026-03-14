@@ -1,5 +1,12 @@
 import * as THREE from 'three';
 
+/**
+ * Projects a Point onto a given Segment
+ * @param p Point to be Projected
+ * @param a StartPoint of Segment
+ * @param b EndPoint of Segment
+ * @returns the Projected Point
+ */
 export function projectPointToSegment(
   p: THREE.Vector3,
   a: THREE.Vector3,
@@ -17,6 +24,16 @@ export function projectPointToSegment(
   return new THREE.Vector3().copy(a).add(ab.multiplyScalar(t));
 }
 
+
+/**
+ * Calculates a best snapping angle out of:
+ * -global snapping(45° increments)
+ * -relative snapping (colinear or 90°) to existing lines given by the connected Points
+ * @param start the Origin of the Angle
+ * @param target the Point to find a closest match to
+ * @param connectedPoints all Points connected to the start position
+ * @returns the best snapping candidate
+ */
 export function snapAngle(
   start: THREE.Vector3,
   target: THREE.Vector3,
@@ -29,15 +46,11 @@ export function snapAngle(
 
   const candidateAngles: number[] = [];
 
-  // -------------------------
   // 1. Global snapping (45°)
-  // -------------------------
   const increment = Math.PI / 4;
   candidateAngles.push(Math.round(baseAngle / increment) * increment);
 
-  // -------------------------
   // 2. Relative snapping
-  // -------------------------
   if (connectedPoints.length > 0) {
     for (const point of connectedPoints) {
       const lineDir = point.clone().sub(start);
@@ -51,9 +64,7 @@ export function snapAngle(
     }
   }
 
-  // -------------------------
   // 3. Pick closest angle
-  // -------------------------
   let bestAngle = candidateAngles[0];
   let smallestDiff = Infinity;
 
@@ -68,14 +79,18 @@ export function snapAngle(
     }
   }
 
-  // -------------------------
   // 4. Apply snap
-  // -------------------------
   return start
     .clone()
     .add(new THREE.Vector3(Math.cos(bestAngle) * distance, Math.sin(bestAngle) * distance, 0));
 }
 
+/**
+ * Parses a String into a Math expression and evaluates it
+ * @param value The Value that could be a Math expression
+ * @returns null if the value is not a valid expression,
+ * else the value of the calculated Expression
+ */
 export function parseMathInput(value: string): number | null {
   if (!value) return null;
 

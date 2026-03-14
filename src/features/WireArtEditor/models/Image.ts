@@ -3,6 +3,7 @@ export interface ImageData {
   url: string;
   x: number;
   y: number;
+  z: number;
   rotation: number;
   height: number;
 }

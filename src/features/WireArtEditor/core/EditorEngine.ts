@@ -1,6 +1,7 @@
 import type { Settings } from '../models/Settings.ts';
-import { ThreeEditor, type ToolType } from './ThreeEditor.ts';
+import { ThreeEditor } from './ThreeEditor.ts';
 import { EditorStore } from './EditorStore.ts';
+import type { ToolType } from '../tools/ToolManager.ts';
 
 export class EditorEngine {
   private threeEditor?: ThreeEditor;
@@ -22,7 +23,7 @@ export class EditorEngine {
   setActiveTool(type: ToolType) {
     this.threeEditor?.setActiveTool(type);
   }
-  setBackgroundImage(url: string) {
+  addBackgroundImage(url: string) {
     this.threeEditor?.addBackgroundImage(url);
   }
 

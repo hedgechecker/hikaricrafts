@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import type { SceneManager } from './SceneManager';
 
 interface PointRenderData {
   mesh: THREE.Group;
@@ -6,12 +7,14 @@ interface PointRenderData {
   isSelected: boolean;
 }
 
-export class PointManager {
-  private scene: THREE.Scene;
+export class PointRenderer {
+  private sceneManager: SceneManager;
   private points = new Map<string, PointRenderData>();
 
   private readonly baseThickness = 1.0;
   private readonly hoverThickness = 2.0;
+  private snapDistance = 0.3;
+
   private zoom: number = 1;
   private pointsVisible = true;
   private color: THREE.Color = new THREE.Color(0x999999);
@@ -19,8 +22,8 @@ export class PointManager {
   private hovered: string | null = null;
   private selected: string[] = [];
 
-  constructor(scene: THREE.Scene) {
-    this.scene = scene;
+  constructor(sceneManager: SceneManager) {
+    this.sceneManager = sceneManager;
   }
 
   addPoint(position: THREE.Vector3, id: string) {
@@ -68,13 +71,14 @@ export class PointManager {
     const size = this.baseThickness / this.zoom;
     circle.scale.set(size, size, 1);
     outline.scale.set(size, size, 1);
+    outline.position.z = 0.001;
     hitbox.scale.set(size, size, 1);
     group.add(circle);
     group.add(outline);
     group.add(hitbox);
     group.userData.id = id;
 
-    if (this.pointsVisible) this.scene.add(group);
+    if (this.pointsVisible) this.sceneManager.scene.add(group);
 
     this.points.set(id, { mesh: group, isSelected: false, isHovered: false });
     return group;
@@ -145,7 +149,7 @@ export class PointManager {
     const p = this.points.get(id);
     if (!p) return;
 
-    this.scene.remove(p.mesh);
+    this.sceneManager.scene.remove(p.mesh);
     p.mesh.children.forEach((child) => {
       if (child instanceof THREE.Mesh) {
         child.geometry.dispose();
@@ -172,10 +176,6 @@ export class PointManager {
     });
   }
 
-  getPoints() {
-    return this.points;
-  }
-
   getHitboxes(): THREE.Object3D[] {
     let arr: THREE.Object3D<THREE.Object3DEventMap>[] = [];
     this.points.forEach((point) => {
@@ -185,19 +185,9 @@ export class PointManager {
     return arr;
   }
 
-  getSnapCandidates(position: THREE.Vector3, threshold: number): THREE.Group[] {
-    let closest: THREE.Group[] = [];
-    this.points.forEach((point) => {
-      const dist = point.mesh.position.distanceTo(position);
-
-      if (dist < threshold) {
-        closest.push(point.mesh);
-      }
-    });
-
-    return closest;
-  }
-  getSnapCandidateIds(position: THREE.Vector3, threshold: number): string[] {
+  getSnapCandidates(position: THREE.Vector3): string[] {
+    const zoom = (this.sceneManager.camera as THREE.OrthographicCamera).zoom;
+    const threshold = this.snapDistance / zoom;
     let closest: string[] = [];
     this.points.forEach((point, id) => {
       const dist = point.mesh.position.distanceTo(position);
@@ -208,16 +198,17 @@ export class PointManager {
     });
     return closest;
   }
-  getWorldPositionById(id: string): THREE.Vector3 | null {
+  getWorldPosition(id: string): THREE.Vector3 | null {
     return this.points.get(id)?.mesh.position ?? null;
   }
 
-  public getFirstHoverablePoint(intersects: THREE.Intersection[]): string | null {
+  getFirstHoverablePoint(intersects: THREE.Intersection[]): string | null {
     for (const hit of intersects) {
       const id = hit.object.parent?.userData.id;
       if (!id) continue;
 
-      if (this.selected.length > 0 && id == this.selected[0]) continue;
+      const selected = this.selected.some((image) => image == id);
+      if (selected) continue;
 
       return id;
     }
@@ -228,11 +219,11 @@ export class PointManager {
     if (visible == this.pointsVisible) return;
     if (visible) {
       this.points.forEach((point) => {
-        this.scene.add(point.mesh);
+        this.sceneManager.scene.add(point.mesh);
       });
     } else {
       this.points.forEach((point) => {
-        this.scene.remove(point.mesh);
+        this.sceneManager.scene.remove(point.mesh);
       });
     }
     this.pointsVisible = visible;
@@ -253,7 +244,7 @@ export class PointManager {
         ((visual as THREE.Mesh).material as THREE.Material & { color: THREE.Color }).color.copy(
           this.color,
         );
-      } 
+      }
 
       if (outline && (outline as THREE.Mesh).material) {
         ((outline as THREE.Mesh).material as THREE.Material & { color: THREE.Color }).color.copy(
@@ -263,9 +254,26 @@ export class PointManager {
     });
   }
 
+  handleHover(event: MouseEvent): boolean {
+    const rect = this.sceneManager.dom.getBoundingClientRect();
+    let mouse = new THREE.Vector2();
+    let raycaster = new THREE.Raycaster();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(mouse, this.sceneManager.camera);
+
+    const intersects = raycaster.intersectObjects(this.getHitboxes(), false);
+    const hoveredPointId = this.getFirstHoverablePoint(intersects);
+    if (hoveredPointId) {
+      this.setHovered(hoveredPointId);
+      return true;
+    }
+    return false;
+  }
+
   clear() {
     this.points.forEach((point) => {
-      this.scene.remove(point.mesh);
+      this.sceneManager.scene.remove(point.mesh);
     });
     this.points.clear();
   }

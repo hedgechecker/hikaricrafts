@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { Tool } from './Tool';
+import type { Tool, ToolContext } from './Tool';
 import { AddPointCommand } from '../commands/AddPointCommand';
 import { AddLineCommand } from '../commands/AddLineCommand';
 import { generateId } from '../utils/id';
@@ -7,40 +7,30 @@ import { Line2 } from 'three/examples/jsm/lines/Line2.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import { LineGeometry } from 'three/examples/jsm/Addons.js';
 import { projectPointToSegment, snapAngle } from '../utils/math';
-import { CompositeCommand } from '../commands/CompositeCommand';
-import { DeleteLineCommand } from '../commands/DeleteLineCommand';
 import { InputOverlay } from './InputOverlay';
-import type { ThreeEditor } from '../core/ThreeEditor';
+import { splitLine } from '../utils/commands';
+import type { LineData } from '../models/Line';
+import type { Command } from '../models/Command';
+import { CompositeCommand } from '../commands/CompositeCommand';
 
+/**
+ * Manages the Placement of Points
+ * snaps onto the Grid or other Lines
+ */
 export class LineTool implements Tool {
   private lastPointId: string | null = null;
   private previewLine: Line2 | null = null;
-  private snapTargetId: string | null = null;
-  private snapPosition: THREE.Vector3 | null = null;
 
-  private snapDistance = 0.3;
   private isShiftPressed = false;
-
-  private scene: THREE.Scene;
-  private camera: THREE.Camera;
-  private domElement: HTMLElement;
-  private editor: ThreeEditor;
+  private context: ToolContext;
 
   private inputOverlay: InputOverlay;
-  private lastMouseWorld = new THREE.Vector3();
+  private worldPos = new THREE.Vector3();
 
-  constructor(
-    scene: THREE.Scene,
-    camera: THREE.Camera,
-    domElement: HTMLElement,
-    editor: ThreeEditor,
-  ) {
-    this.scene = scene;
-    this.camera = camera;
-    this.domElement = domElement;
-    this.editor = editor;
+  constructor(context: ToolContext) {
+    this.context = context;
 
-    this.inputOverlay = new InputOverlay(this.domElement.parentElement!, () =>
+    this.inputOverlay = new InputOverlay(this.context.sceneManager.dom.parentElement!, () =>
       this.handleMouseMove(),
     );
 
@@ -49,218 +39,113 @@ export class LineTool implements Tool {
   }
 
   onMouseDown(event: MouseEvent) {
+    event.preventDefault();
+    event.stopPropagation();
     //right mouse button
     if (event.button === 2) {
       this.cancelLine();
       return;
     }
-    //do nothing on every other button, than left mouse click
+    //only left mouse click
     if (event.button !== 0) return;
-    event.preventDefault();
-    event.stopPropagation();
 
-    let worldPos = this.editor.getWorldPosition(event);
-    let snapCandidate = this.getBestSnappingCandidate(worldPos);
+    this.worldPos.copy(this.context.sceneManager.getWorldPosition(event));
+    let snapCandidate = this.getBestSnappingCandidate(this.worldPos);
 
     this.inputOverlay.reset();
     this.inputOverlay.show(event.clientX, event.clientY);
     this.inputOverlay.focus();
 
-    let currentPointId: string | null = null;
+    let selectedPointId: string | null = null;
+    let commands: Command[] = [];
 
+    //an already existing Point
     if (snapCandidate.pointId) {
-      currentPointId = snapCandidate.pointId;
-    } else if (snapCandidate.line) {
-      let Id = this.splitLine(
-        worldPos,
-        snapCandidate.line.id,
-        snapCandidate.line.startId,
-        snapCandidate.line.endId,
-      );
-      currentPointId = Id;
-    } else if (snapCandidate.position) {
-      //when clicking somewhere, where nothing snaps to it
-      currentPointId = generateId();
-      this.editor.executeCommand(
-        new AddPointCommand({
-          id: currentPointId,
-          x: snapCandidate.position.x,
-          y: snapCandidate.position.y,
-          z: snapCandidate.position.z,
-        }),
-      );
+      selectedPointId = snapCandidate.pointId;
+    }
+    //if a Line gets clicked split it
+    else if (snapCandidate.line) {
+      const cmd = splitLine(this.worldPos, snapCandidate.line, this.context.pointRenderer);
+      if (cmd) {
+        commands.push(cmd.command);
+        selectedPointId = cmd.pointId;
+      }
+    }
+    //when clicking at an empty world Position
+    else if (snapCandidate.position) {
+      selectedPointId = generateId();
+      commands.push(new AddPointCommand({ id: selectedPointId, ...snapCandidate.position }));
     }
 
     //Line between lastPoint and current Point
     if (
       this.lastPointId &&
-      currentPointId &&
-      currentPointId !== this.lastPointId &&
-      !this.editor.hasLineBetween(this.lastPointId, currentPointId)
+      selectedPointId &&
+      selectedPointId !== this.lastPointId &&
+      !this.context.lineRenderer.hasLineBetween(this.lastPointId, selectedPointId)
     ) {
-      this.editor.executeCommand(
+      commands.push(
         new AddLineCommand({
           id: generateId(),
           startPointId: this.lastPointId,
-          endPointId: currentPointId,
+          endPointId: selectedPointId,
         }),
       );
     }
 
-    this.lastPointId = currentPointId;
+    //add Point and Line Together
+    this.context.executeCommand(new CompositeCommand(commands));
+
+    this.lastPointId = selectedPointId;
     if (!this.previewLine) {
       this.createPreviewLine();
     }
   }
 
-  /**Snapping Logic Most Important to least Important:
-    1. Snap to User Input Values
-    2. Snap to existing Points
-    3. Snap to existing Lines
-    4. Snap to next grid Point
-    5. Snap Angle 
-    6. return given Position
-  **/
-  private getBestSnappingCandidate(worldPos: THREE.Vector3): {
-    pointId: string | null;
-    line: { id: string; endId: string; startId: string } | null;
-    position: THREE.Vector3 | null;
-  } {
-    //1
-    const hasUserInputLength =
-      (this.inputOverlay.manualAngle || this.inputOverlay.manualLength) &&
-      this.lastPointId &&
-      this.snapPosition;
-    if (hasUserInputLength) {
-      return { pointId: null, line: null, position: this.snapPosition };
-    }
-    //2
-    if (this.snapTargetId) return { pointId: this.snapTargetId, line: null, position: null };
-    //3
-    const hoveredLine = this.editor.getHoveredLine();
-    if (hoveredLine) {
-      return { pointId: null, line: hoveredLine, position: null };
-    }
-    //4
-    const snapGridPoint = this.editor.getHoveredGridPoint();
-    if (snapGridPoint) {
-      return { pointId: null, line: null, position: snapGridPoint };
-    }
-    //5
-    if (this.isShiftPressed && this.lastPointId) {
-      const last = this.editor.getPointWorldPosition(this.lastPointId);
-      if (last) worldPos = snapAngle(last, worldPos, this.getConnectedPositions());
-      return { pointId: null, line: null, position: worldPos };
-    }
-    //6
-    return { pointId: null, line: null, position: worldPos };
-  }
-
-  private splitLine(worldPos: THREE.Vector3, id: string, startId: string, endId: string) {
-    //Add a new Point on an existing line
-    const aPos = this.editor.getPointWorldPosition(startId);
-    const bPos = this.editor.getPointWorldPosition(endId);
-    if (!aPos || !bPos) return null;
-
-    const a = aPos.clone();
-    const b = bPos.clone();
-    worldPos = projectPointToSegment(worldPos, a, b);
-
-    const newPointId = generateId();
-    const newPoint = {
-      id: newPointId,
-      x: worldPos.x,
-      y: worldPos.y,
-      z: worldPos.z,
-    };
-
-    // prevent splitting exactly at endpoints
-    if (worldPos.distanceTo(a) < 0.001 || worldPos.distanceTo(b) < 0.001) {
-      return null;
-    }
-
-    const splitCommand = new CompositeCommand([
-      new AddPointCommand(newPoint),
-      new DeleteLineCommand(id),
-      new AddLineCommand({ id: generateId(), startPointId: startId, endPointId: newPointId }),
-      new AddLineCommand({ id: generateId(), startPointId: newPointId, endPointId: endId }),
-    ]);
-    this.editor.executeCommand(splitCommand);
-    return newPointId as string;
-  }
-
   onMouseMove(event: MouseEvent) {
     if (!this.lastPointId) this.inputOverlay.hide();
 
-    this.editor.handleHover(event);
-    const worldPos = this.editor.getWorldPosition(event);
-    this.lastMouseWorld.copy(worldPos);
+    this.handleHover(event);
+    this.worldPos.copy(this.context.sceneManager.getWorldPosition(event));
     this.handleMouseMove();
   }
 
   private handleMouseMove() {
-    const zoom = (this.camera as THREE.OrthographicCamera).zoom;
-    const threshold = this.snapDistance / zoom;
-    const worldPos = this.lastMouseWorld;
-
-    const snapCandidates = this.editor.getSnapCandidates(worldPos, threshold);
-    const gridPoint = this.editor.getHoveredGridPoint();
-
-    let endPosition = worldPos;
-
-    if (snapCandidates.length > 0 && snapCandidates[0] !== this.lastPointId) {
-      this.snapTargetId = snapCandidates[0];
-      const pos = this.editor.getPointWorldPosition(snapCandidates[0]);
-      if (pos) endPosition = pos;
-    } else if (gridPoint) {
-      endPosition = gridPoint;
-    } else {
-      this.snapTargetId = null;
-      this.editor.clearHover();
-
-      if (this.isShiftPressed && this.lastPointId) {
-        const last = this.editor.getPointWorldPosition(this.lastPointId);
-        if (last) endPosition = snapAngle(last, worldPos, this.getConnectedPositions());
-      }
-    }
-
     if (!this.lastPointId || !this.previewLine) return;
-    const start = this.editor.getPointWorldPosition(this.lastPointId);
+    const start = this.context.pointRenderer.getWorldPosition(this.lastPointId);
     if (!start) return;
 
-    let finalEnd = endPosition.clone();
+    let snapCandidate = this.getBestSnappingCandidate(this.worldPos);
+    let endPosition = this.worldPos;
 
-    const dir = endPosition.clone().sub(start);
+    //snap to the Possible Candidates
+    if (snapCandidate.pointId) {
+      const pos = this.context.pointRenderer.getWorldPosition(snapCandidate.pointId);
+      if (pos) endPosition = pos;
+    } else if (snapCandidate.line) {
+      const a = this.context.pointRenderer.getWorldPosition(snapCandidate.line.startPointId);
+      const b = this.context.pointRenderer.getWorldPosition(snapCandidate.line.endPointId);
+      if (a && b) endPosition = projectPointToSegment(this.worldPos, a, b);
+    } else if (snapCandidate.position) {
+      endPosition = snapCandidate.position;
+    }
+
+    let dir = endPosition.clone().sub(start);
     const mouseDistance = dir.length();
     if (mouseDistance > 0) dir.normalize();
-    let finalDir = dir.clone();
 
-    // update input when NOT typing
+    // update inputField when no manual Input
     if (this.inputOverlay.manualLength === null) {
       this.inputOverlay.setLength(mouseDistance * 10);
-      this.snapPosition = null;
     }
+    // update inputField when no manual Input
     if (this.inputOverlay.manualAngle === null) {
       const angleRad = Math.atan2(dir.y, dir.x);
       const angleDeg = THREE.MathUtils.radToDeg(angleRad);
       this.inputOverlay.setAngle((angleDeg + 360) % 360);
-      this.snapPosition = null;
     }
 
-    // enforce manual angle
-    if (this.inputOverlay.manualAngle) {
-      const angleRad = THREE.MathUtils.degToRad(this.inputOverlay.manualAngle);
-      finalDir.set(Math.cos(angleRad), Math.sin(angleRad), 0).normalize();
-    }
-    // enforce manual length
-    if (this.inputOverlay.manualLength) {
-      finalEnd = start.clone().add(finalDir.multiplyScalar(this.inputOverlay.manualLength));
-    } else {
-      finalEnd = start.clone().add(finalDir.multiplyScalar(mouseDistance));
-    }
-
-    this.snapPosition = finalEnd.clone();
-    this.previewLine.geometry.setFromPoints([start.clone(), finalEnd.clone()]);
+    this.previewLine.geometry.setFromPoints([start.clone(), endPosition.clone()]);
   }
 
   private createPreviewLine() {
@@ -273,47 +158,146 @@ export class LineTool implements Tool {
       linewidth: 2,
     });
 
-    material.resolution.set(this.domElement.clientWidth, this.domElement.clientHeight);
+    material.resolution.set(
+      this.context.sceneManager.dom.clientWidth,
+      this.context.sceneManager.dom.clientHeight,
+    );
 
     this.previewLine = new Line2(geometry, material);
     this.previewLine.computeLineDistances();
-    this.scene.add(this.previewLine);
+    this.context.sceneManager.scene.add(this.previewLine);
   }
 
   private cancelLine() {
     this.lastPointId = null;
-    this.snapTargetId = null;
     this.inputOverlay.hide();
 
     if (this.previewLine) {
-      this.scene.remove(this.previewLine);
+      this.context.sceneManager.scene.remove(this.previewLine);
       this.previewLine.geometry.dispose();
       (this.previewLine.material as THREE.Material).dispose();
       this.previewLine = null;
     }
   }
 
+  /**
+   *
+   * @returns the Positions of the Points connected to the last selected Point
+   */
   private getConnectedPositions() {
     if (!this.lastPointId) return [];
     let positions: THREE.Vector3[] = [];
-    const connectedPoints = this.editor.getConnectedPoints(this.lastPointId);
+    const connectedPoints = this.context.lineRenderer.getConnectedPoints(this.lastPointId);
     for (const point of connectedPoints) {
-      const otherPos = this.editor.getPointWorldPosition(point);
+      const otherPos = this.context.pointRenderer.getWorldPosition(point);
       if (otherPos) positions.push(otherPos);
     }
     return positions;
   }
 
-  private onKeyDown = (e: KeyboardEvent) => {
-    if (e.key === 'Shift') this.isShiftPressed = true;
-    if (e.key === 'Escape') this.cancelLine();
+  /**Snapping Logic Most Important to least Important:
+    1. Snap to User Input Values
+    2. Snap to existing Points
+    3. Snap to existing Lines
+    4. Snap to next grid Point
+    5. Snap Angle 
+    6. return given Position
+  **/
+  private getBestSnappingCandidate(worldPos: THREE.Vector3): {
+    pointId: string | null;
+    line: LineData | null;
+    position: THREE.Vector3 | null;
+  } {
+    //1 Snap to User Input Values
+    const hasUserInputLength =
+      (this.inputOverlay.manualAngle || this.inputOverlay.manualLength) && this.lastPointId;
+    if (hasUserInputLength) {
+      return { pointId: null, line: null, position: this.calculateUserInputLine() };
+    }
+    //2 Snap to existing Points
+    const hoveredPoint = this.context.pointRenderer.getHovered();
+    if (hoveredPoint) return { pointId: hoveredPoint, line: null, position: null };
+    //3 Snap to existing Lines
+    const hoveredLine = this.context.lineRenderer.getHovered();
+    if (hoveredLine) {
+      return { pointId: null, line: hoveredLine, position: null };
+    }
+    //4 Snap to next grid Point
+    const snapGridPoint = this.context.sceneManager.getHoveredGrid();
+    if (snapGridPoint) {
+      return { pointId: null, line: null, position: snapGridPoint };
+    }
+    //5 Snap Angle
+    if (this.isShiftPressed && this.lastPointId) {
+      const last = this.context.pointRenderer.getWorldPosition(this.lastPointId);
+      if (last) worldPos = snapAngle(last, worldPos, this.getConnectedPositions());
+      return { pointId: null, line: null, position: worldPos };
+    }
+    //6 return given Position
+    return { pointId: null, line: null, position: worldPos };
+  }
+
+  /**
+   * Calculates the Point wich follows the input of user (length/angle)
+   * @returns the snapped Line
+   */
+  private calculateUserInputLine() {
+    let endPosition;
+    if (!this.lastPointId) return null;
+    const start = this.context.pointRenderer.getWorldPosition(this.lastPointId);
+    if (!start) return null;
+
+    let dir = this.worldPos.clone().sub(start);
+    const distance = dir.length();
+    if (distance > 0) dir.normalize();
+
+    // enforce manual angle
+    if (this.inputOverlay.manualAngle) {
+      const angleRad = THREE.MathUtils.degToRad(this.inputOverlay.manualAngle);
+      dir.set(Math.cos(angleRad), Math.sin(angleRad), 0).normalize();
+    }
+    // enforce manual length
+    if (this.inputOverlay.manualLength) {
+      endPosition = start.clone().add(dir.multiplyScalar(this.inputOverlay.manualLength));
+    } else {
+      endPosition = start.clone().add(dir.multiplyScalar(distance));
+    }
+
+    return endPosition;
+  }
+
+  private onKeyDown = (event: KeyboardEvent) => {
+    if (event.key === 'Shift') this.isShiftPressed = true;
+    if (event.key === 'Escape') this.cancelLine();
+    if (event.key === 'Tab') this.inputOverlay.switchInput(event);
   };
 
-  private onKeyUp = (e: KeyboardEvent) => {
-    if (e.key === 'Shift') this.isShiftPressed = false;
+  private onKeyUp = (event: KeyboardEvent) => {
+    if (event.key === 'Shift') this.isShiftPressed = false;
   };
 
   dispose() {
     this.cancelLine();
+  }
+
+  //Enable Hover for Points, Lines and Grid
+  handleHover(event: MouseEvent) {
+    this.context.pointRenderer.setHovered(null);
+    this.context.lineRenderer.setHovered(null);
+    this.context.sceneManager.setHoveredGrid(null);
+    this.context.cursorManager.setCursor('default');
+
+    if (this.context.pointRenderer.handleHover(event)) {
+      this.context.cursorManager.setCursor('pointer');
+      return;
+    }
+    if (this.context.lineRenderer.handleHover(event)) {
+      this.context.cursorManager.setCursor('pointer');
+      return;
+    }
+    if (this.context.sceneManager.handleHover(event)) {
+      this.context.cursorManager.setCursor('crosshair');
+      return;
+    }
   }
 }

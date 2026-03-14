@@ -1,119 +1,118 @@
 import * as THREE from 'three';
-import type { Tool } from './Tool';
-import { CursorManager } from '../objects/CursorManager';
-import type { CameraController } from '../objects/CameraController';
+import type { Tool, ToolContext } from './Tool';
 import { UpdatePointCommand } from '../commands/UpdatePointCommand';
 import { MergePointsCommand } from '../commands/MergePointsCommand';
-import type { ThreeEditor } from '../core/ThreeEditor';
+import { splitLine } from '../utils/commands';
+import { CompositeCommand } from '../commands/CompositeCommand';
 
+/**
+ * Manages the Movement of Points
+ * Merges Points and Lines if necessary
+ */
 export class MoveTool implements Tool {
-  private raycaster = new THREE.Raycaster();
-  private mouse = new THREE.Vector2();
-  private plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
-
   private selectedPoint: string | null = null;
-  private startPosition: THREE.Vector3 | null = null;
-  private currentPosition: THREE.Vector3 | null = null;
+  private startPosition = new THREE.Vector3();
+  private currentPosition = new THREE.Vector3();
 
-  private camera: THREE.Camera;
-  private domElement: HTMLElement;
-  private cursorManager: CursorManager;
-  private cameraController: CameraController;
-  private editor: ThreeEditor;
+  private context: ToolContext;
 
-  constructor(
-    camera: THREE.Camera,
-    domElement: HTMLElement,
-    cursorManager: CursorManager,
-    cameraController: CameraController,
-    editor: ThreeEditor,
-  ) {
-    this.camera = camera;
-    this.domElement = domElement;
-    this.cursorManager = cursorManager;
-    this.cameraController = cameraController;
-    this.editor = editor;
+  constructor(context: ToolContext) {
+    this.context = context;
   }
 
-  private updateMouse(event: MouseEvent) {
-    const rect = this.domElement.getBoundingClientRect();
-
-    this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-  }
-
-  onMouseDown() {
-    const hovered = this.editor.getHoveredPoint();
+  //check for Hit with existing Point
+  onMouseDown(event: MouseEvent) {
+    if (event.button != 0) return; //only move on left click
+    const hovered = this.context.pointRenderer.getHovered();
     if (!hovered) return;
-
+    const pos = this.context.pointRenderer.getWorldPosition(hovered);
+    if (!pos) return;
     this.selectedPoint = hovered;
-    if (!this.startPosition) this.startPosition = new THREE.Vector3(0, 0, 0);
-    this.startPosition.copy(this.editor.getPointWorldPosition(this.selectedPoint) as THREE.Vector3);
-    this.editor.setSelected([this.selectedPoint]);
+    this.startPosition.copy(pos);
 
-    this.cameraController.setPanEnabled(false);
-    this.cursorManager.setCursor('grabbing');
+    this.context.pointRenderer.setSelected([this.selectedPoint]);
+    this.context.sceneManager.cameraController.setPanEnabled(false);
+    this.context.cursorManager.setCursor('grabbing');
   }
 
   onMouseMove(event: MouseEvent) {
-    this.editor.handleHover(event);
-    if (!this.selectedPoint) {
-      return;
-    }
+    this.handleHover(event);
+    if (!this.selectedPoint) return;
+    this.currentPosition = this.context.sceneManager.getWorldPosition(event);
+    if (!this.currentPosition) return;
 
-    this.updateMouse(event);
-    this.raycaster.setFromCamera(this.mouse, this.camera);
-
-    const intersection = new THREE.Vector3();
-    const hit = this.raycaster.ray.intersectPlane(this.plane, intersection);
-
-    if (!hit) return;
-    if (!this.currentPosition) this.currentPosition = new THREE.Vector3(0, 0, 0);
-    this.currentPosition.copy(intersection);
-    this.editor.previewMovePoint(this.selectedPoint, this.currentPosition);
+    //Preview Move the Point
+    this.context.pointRenderer.setPosition(this.selectedPoint, this.currentPosition);
+    this.context.lineRenderer.update();
   }
 
   onMouseUp() {
-    this.editor.clearPreview();
-    if (!this.selectedPoint || !this.startPosition || !this.currentPosition) {
-      console.log('missin');
-      this.cameraController.setPanEnabled(true);
+    if (!this.selectedPoint) {
+      this.context.sceneManager.cameraController.setPanEnabled(true);
       this.selectedPoint = null;
-      this.startPosition = null;
-      this.currentPosition = null;
-      this.editor.setSelected([]);
-      this.cursorManager.setCursor('default');
+      this.context.pointRenderer.setSelected([]);
+      this.context.cursorManager.setCursor('default');
       return;
     }
-    var endPosition = this.currentPosition;
 
-    if (!this.currentPosition.equals(this.startPosition)) {
-      const hovered = this.editor.getHoveredPoint();
-      if (hovered && hovered != this.selectedPoint) {
-        this.editor.executeCommand(new MergePointsCommand(this.selectedPoint, hovered));
-        this.editor.setHovered(hovered);
-      } else {
-        const point = this.editor.getHoveredGridPoint();
-        if (point) {
-          endPosition.copy(point);
-        }
-        this.editor.executeCommand(
-          new UpdatePointCommand({
-            id: this.selectedPoint,
-            x: endPosition.x,
-            y: endPosition.y,
-            z: endPosition.z,
-          }),
+    if (this.currentPosition.equals(this.startPosition)) return;
+
+    const hoveredPoint = this.context.pointRenderer.getHovered();
+    const hoveredLine = this.context.lineRenderer.getHovered();
+
+    //when Hovering a Point: merge
+    if (hoveredPoint && hoveredPoint != this.selectedPoint) {
+      this.context.executeCommand(new MergePointsCommand(this.selectedPoint, hoveredPoint));
+    } //when hovering a Line: Split Line
+    else if (hoveredLine) {
+      const split = splitLine(this.currentPosition, hoveredLine, this.context.pointRenderer);
+      if (split)
+        this.context.executeCommand(
+          new CompositeCommand([
+            split?.command,
+            new MergePointsCommand(this.selectedPoint, split?.pointId),
+          ]),
         );
-        this.editor.setHovered(this.selectedPoint);
+    } // Else Move the Point
+    else {
+      const point = this.context.sceneManager.getHoveredGrid();
+      if (point) {
+        this.currentPosition.copy(point);
       }
+      this.context.executeCommand(
+        new UpdatePointCommand({
+          id: this.selectedPoint,
+          x: this.currentPosition.x,
+          y: this.currentPosition.y,
+          z: this.currentPosition.z,
+        }),
+      );
     }
 
-    this.cameraController.setPanEnabled(true);
+    this.context.sceneManager.cameraController.setPanEnabled(true);
     this.selectedPoint = null;
-    this.startPosition = null;
-    this.currentPosition = null;
-    this.editor.setSelected([]);
-    this.cursorManager.setCursor('default');
+    this.context.pointRenderer.setSelected([]);
+    this.context.cursorManager.setCursor('default');
+  }
+
+  //Enable Hover for Points, Lines and Grid
+  handleHover(event: MouseEvent) {
+    this.context.pointRenderer.setHovered(null);
+    this.context.lineRenderer.setHovered(null);
+    this.context.sceneManager.setHoveredGrid(null);
+    this.context.cursorManager.setCursor(this.selectedPoint ? 'grabbing' : 'default');
+
+    if (this.context.pointRenderer.handleHover(event)) {
+      this.context.cursorManager.setCursor('pointer');
+      return;
+    }
+    if (this.selectedPoint && this.context.lineRenderer.handleHover(event)) {
+      this.context.cursorManager.setCursor('pointer');
+      return;
+    }
+    if (this.context.sceneManager.handleHover(event)) {
+      this.context.cursorManager.setCursor('crosshair');
+      return;
+    }
   }
 }

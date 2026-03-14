@@ -1,29 +1,15 @@
 type DragMode = 'none' | 'move' | 'resize';
 
 import * as THREE from 'three';
-import type { BackgroundImage } from '../objects/BackgroundImage';
-import type { Tool } from './Tool';
-import type { CursorManager } from '../objects/CursorManager';
+import type { Tool, ToolContext } from './Tool';
 import { UpdateImageCommand } from '../commands/UpdateImageCommand';
-import type { SceneManager } from '../objects/SceneManager';
 import type { ImageData } from '../models/Image';
-import type { ThreeEditor } from '../core/ThreeEditor';
 
 export class TransformTool implements Tool {
-  dragMode: DragMode = 'none';
-  activeHandle?: THREE.Object3D;
-  dragging = false;
+  private context: ToolContext;
+  private worldPos = new THREE.Vector3();
 
-  private editor: ThreeEditor;
-  private sceneManager: SceneManager;
-  private cursorManager: CursorManager;
-  private selectedImage: BackgroundImage | null = null;
-  private selectedId: string | null = null;
-
-  private mouse = new THREE.Vector2();
-  private raycaster = new THREE.Raycaster();
-
-  private dragPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 5);
+  private selectedImage: string | null = null;
 
   private startData: ImageData | null = null;
   private currentData: ImageData = {
@@ -31,133 +17,92 @@ export class TransformTool implements Tool {
     url: '',
     x: 0,
     y: 0,
+    z: 0,
     rotation: 0,
     height: 1,
   };
-  private dragOffset = new THREE.Vector3();
+  private dragOffset = new THREE.Vector2();
 
-  constructor(cursorManager: CursorManager, editor: ThreeEditor, sceneManager: SceneManager) {
-    this.editor = editor;
-    this.cursorManager = cursorManager;
-    this.sceneManager = sceneManager;
+  dragMode: DragMode = 'none';
+  dragging = false;
+
+  constructor(context: ToolContext) {
+    this.context = context;
   }
 
-  onMouseDown = (event: MouseEvent) => {
+  //check for Hit with existing Image
+  onMouseDown(event: MouseEvent) {
     if (event.button != 0) return; //only move on left click
-    this.handleHover(event);
-    this.selectedId = this.sceneManager.getHoveredImage();
-    console.log(this.selectedId);
-    if (!this.selectedId) {
-      this.sceneManager.gizmo.group.visible = false;
-      return;
-    }
-    this.selectedImage = this.sceneManager.getImage(this.selectedId);
-    if (!this.selectedImage) return;
+    this.worldPos.copy(this.context.sceneManager.getWorldPosition(event));
 
-    this.updateMouse(event);
-    this.raycaster.setFromCamera(this.mouse, this.sceneManager.camera);
+    const handle = this.context.imageRenderer.getHoveredHandle();
 
-    this.startData = {
-      ...this.selectedImage.data,
-      url: '',
-    };
-    this.currentData = {
-      ...this.selectedImage.data,
-      url: '',
-    };
-    // check handles first
-    const handleHits = this.raycaster.intersectObjects(this.sceneManager.gizmo.handles, true);
-    if (handleHits.length) {
+    const hovered = this.context.imageRenderer.getHovered();
+    if (!hovered) return;
+    const data = this.context.imageRenderer.getImage(hovered);
+    if (!data) return;
+
+    if (handle) {
       this.dragMode = 'resize';
-      this.activeHandle = handleHits[0].object;
-      this.dragging = true;
-      return;
-    }
-
-    const pos = new THREE.Vector3();
-
-    if (this.raycaster.ray.intersectPlane(this.dragPlane, pos)) {
+    } else {
       this.dragMode = 'move';
-      this.dragging = true;
-
-      this.dragOffset.copy(pos).sub(this.selectedImage.mesh.position);
     }
-  };
+
+    this.selectedImage = hovered;
+    this.startData = data;
+    this.currentData = { ...this.startData };
+
+    this.dragging = true;
+    this.dragOffset.copy(this.worldPos).sub({ x: this.startData.x, y: this.startData.y });
+
+    this.context.imageRenderer.setSelected([this.selectedImage]);
+    this.context.sceneManager.cameraController.setPanEnabled(false);
+    this.context.cursorManager.setCursor('grabbing');
+  }
 
   onMouseMove = (event: MouseEvent) => {
     this.handleHover(event);
-    if (!this.dragging || !this.selectedImage) return;
-
-    this.updateMouse(event);
-    this.raycaster.setFromCamera(this.mouse, this.sceneManager.camera);
-
-    const pos = new THREE.Vector3();
-
-    if (!this.raycaster.ray.intersectPlane(this.dragPlane, pos)) return;
+    if (!this.dragging || !this.selectedImage || !this.startData) return;
+    this.worldPos.copy(this.context.sceneManager.getWorldPosition(event));
 
     // MOVE IMAGE
     if (this.dragMode === 'move') {
-      this.selectedImage.mesh.position.copy(pos.clone().sub(this.dragOffset));
-      this.currentData.x = this.selectedImage.mesh.position.x;
-      this.currentData.y = this.selectedImage.mesh.position.y;
+      this.currentData.x = this.worldPos.x - this.dragOffset.x;
+      this.currentData.y = this.worldPos.y - this.dragOffset.y;
+      this.context.imageRenderer.updateImage(this.currentData);
     }
 
     // RESIZE IMAGE
     if (this.dragMode === 'resize') {
-      const center = this.selectedImage.mesh.position;
-      const newHeight = Math.abs(pos.y - center.y) * 2;
-      this.selectedImage.setHeight(newHeight);
+      const newHeight = Math.abs(this.worldPos.y - this.startData.y) * 2;
       this.currentData.height = newHeight;
-      this.cursorManager.setCursor('ne-resize');
+      this.context.imageRenderer.updateImage(this.currentData);
+      this.context.cursorManager.setCursor('ne-resize');
     }
-
-    this.sceneManager.gizmo.update(this.selectedImage);
   };
 
-  onMouseUp = () => {
-    if (!this.selectedId || !this.startData || this.startData == this.currentData) {
-      console.log('missin');
-      this.selectedId = null;
-      this.dragging = false;
-      this.dragMode = 'none';
-      this.activeHandle = undefined;
-      this.cursorManager.setCursor('default');
-      return;
+  onMouseUp = (event: MouseEvent) => {
+    if (this.selectedImage && this.startData && this.startData != this.currentData) {
+      this.context.executeCommand(new UpdateImageCommand(this.currentData));
     }
 
-    this.editor.executeCommand(new UpdateImageCommand(this.currentData));
-    this.selectedId = null;
+    this.selectedImage = null;
     this.dragging = false;
     this.dragMode = 'none';
-    this.activeHandle = undefined;
+    this.context.cursorManager.setCursor('default');
+    this.context.sceneManager.cameraController.setPanEnabled(true);
+    this.context.imageRenderer.setSelected([]);
+    this.handleHover(event);
   };
 
-  updateMouse(event: MouseEvent) {
-    const rect = this.sceneManager.renderer.domElement.getBoundingClientRect();
-
-    this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-  }
-
+  //Enable Hover for Images
   handleHover(event: MouseEvent) {
-    this.updateMouse(event);
-    this.raycaster.setFromCamera(this.mouse, this.sceneManager.camera);
+    this.context.imageRenderer.setHovered(null);
+    this.context.cursorManager.setCursor(this.selectedImage ? 'grabbing' : 'default');
 
-    const imageHits = this.raycaster.intersectObjects(this.sceneManager.getImageHitboxes(), false);
-    const hoveredImage = this.sceneManager.getFirstHoverableImage(imageHits);
-    if (hoveredImage) {
-      this.sceneManager.setHoveredImage(hoveredImage);
-      this.cursorManager.setCursor('move');
+    if (this.context.imageRenderer.handleHover(event)) {
+      this.context.cursorManager.setCursor('pointer');
       return;
     }
-    const handleHits = this.raycaster.intersectObjects(this.sceneManager.gizmo.getHitboxes(), true);
-
-    if (handleHits.length) {
-      this.cursorManager.setCursor('ne-resize');
-
-      return;
-    }
-    this.sceneManager.setHoveredImage(null);
-    this.cursorManager.setCursor('default');
   }
 }

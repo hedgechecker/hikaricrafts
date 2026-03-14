@@ -76,6 +76,13 @@ export class InputOverlay {
     this.angleInput.value = '';
   }
 
+  switchInput(event: KeyboardEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.focusedElement = this.focusedElement == 'length' ? 'angle' : 'length';
+    this.focus();
+  }
+
   setLength(value: number) {
     this.lengthInput.value = value.toFixed(2) + 'mm';
   }

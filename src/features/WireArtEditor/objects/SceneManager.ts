@@ -1,18 +1,12 @@
 import * as THREE from 'three';
 import { CameraController } from './CameraController';
-import { BackgroundImage } from './BackgroundImage';
-import { TransformGizmo } from './TransformGizmo';
-import type { ImageData } from '../models/Image';
 
 export class SceneManager {
   scene: THREE.Scene;
   camera: THREE.OrthographicCamera;
   renderer: THREE.WebGLRenderer;
   cameraController: CameraController;
-  private images = new Map<string, BackgroundImage>();
-  private hoveredImage: string | null = null;
-
-  gizmo!: TransformGizmo;
+  dom: HTMLCanvasElement;
 
   private overlay!: HTMLDivElement;
   private gridLabel!: HTMLDivElement;
@@ -22,7 +16,9 @@ export class SceneManager {
   private size: number = 200;
   private hoveredGrid: THREE.Vector3 | null = null;
   private gridVisible: boolean = true;
-  private imageVisible: boolean = true;
+
+  private raycaster = new THREE.Raycaster();
+  private plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
 
   constructor(container: HTMLDivElement) {
     this.container = container;
@@ -49,10 +45,9 @@ export class SceneManager {
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setSize(width, height);
     this.cameraController = new CameraController(this.camera, this.renderer.domElement);
+    this.dom = this.renderer.domElement;
 
-    this.gizmo = new TransformGizmo();
-    this.scene.add(this.gizmo.group);
-    this.gizmo.group.visible = false;
+    
 
     container.appendChild(this.renderer.domElement);
     container.appendChild(this.createOverlay(container));
@@ -113,14 +108,6 @@ export class SceneManager {
     this.camera.updateProjectionMatrix();
     if (this.gridVisible) this.updateGrid();
     this.updateOverlay();
-
-    const size = 1.0 / this.camera.zoom;
-
-    this.gizmo.handles.forEach((handle) => {
-      handle.children.forEach((child) => {
-        child.scale.set(size, size, size);
-      });
-    });
   }
 
   updateGrid() {
@@ -235,60 +222,14 @@ export class SceneManager {
   getHoveredGrid() {
     return this.hoveredGrid;
   }
-  getHoveredImage() {
-    if (!this.hoveredImage) return null;
-    return this.hoveredImage;
-  }
   getGridStep(): number {
     const divisions = this.getSubdivisionDivisions(this.camera.zoom);
     return this.size / divisions;
   }
-  getImage(id: string) {
-    const img = this.images.get(id);
-    if (!img) return null;
-    return img;
-  }
 
-  getImageHitboxes() {
-    if (!this.imageVisible) return [];
-    let meshes: THREE.Mesh[] = [];
-    this.images.forEach((image) => {
-      meshes.push(image.mesh);
-    });
-    return meshes;
-  }
-
-  public getFirstHoverableImage(intersects: THREE.Intersection[]): string | null {
-    for (const hit of intersects) {
-      const id = hit.object.userData.id;
-      if (!id) continue;
-      return id;
-    }
-    return null;
-  }
 
   setHoveredGrid(point: THREE.Vector3 | null) {
     this.hoveredGrid = point;
-  }
-
-  setHoveredImage(id: string | null) {
-    if (this.hoveredImage == id) return;
-    if (this.hoveredImage) {
-      this.gizmo.group.visible = false;
-      const image = this.images.get(this.hoveredImage);
-      if (image != undefined) {
-        image.isHovered = false;
-      }
-    }
-    this.hoveredImage = id;
-
-    if (this.hoveredImage) {
-      const image = this.images.get(this.hoveredImage);
-      if (image != undefined) {
-        image.isHovered = true;
-        this.gizmo.update(image);
-      }
-    }
   }
 
   setGridVisible(visible: boolean) {
@@ -302,55 +243,38 @@ export class SceneManager {
     }
   }
 
-  setImageVisible(visible: boolean) {
-    if (visible == this.imageVisible) return;
-    this.images.forEach((image) => {
-      this.imageVisible ? this.scene.remove(image.mesh) : this.scene.add(image.mesh);
-    });
-    this.imageVisible = visible;
-    this.gizmo.group.visible = visible;
+  handleHover(event: MouseEvent): boolean {
+    if (!this.gridVisible) return false;
+
+    const rect = this.dom.getBoundingClientRect();
+    let mouse = new THREE.Vector2();
+    let raycaster = new THREE.Raycaster();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(mouse, this.camera);
+
+    const planeZ = 0;
+    const ray = raycaster.ray;
+
+    const t = (planeZ - ray.origin.z) / ray.direction.z;
+    const worldPos = new THREE.Vector3().copy(ray.direction).multiplyScalar(t).add(ray.origin);
+
+    const snappedPos = this.snapToGrid(worldPos);
+    this.setHoveredGrid(snappedPos);
+    return snappedPos ? true : false;
   }
 
-  setPosition(id: string, data: ImageData) {
-    const img = this.images.get(id);
-    if (!img) return;
-    img.mesh.position.set(data.x, data.y, 0);
-    img.mesh.position.set(data.x, data.y, 0);
-    img.setHeight(data.height);
-  }
+  getWorldPosition(event: MouseEvent): THREE.Vector3 {
+    const rect = this.dom.getBoundingClientRect();
+    let mouse = new THREE.Vector2();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
-  addImage(image: ImageData) {
-    const loader = new THREE.TextureLoader();
+    this.raycaster.setFromCamera(mouse, this.camera);
 
-    loader.load(image.url, (texture) => {
-      const data = new BackgroundImage(texture, image);
-      this.images.set(image.id, data);
-      if (this.imageVisible) this.scene.add(data.mesh);
-    });
-  }
-  getAllIds(): string[] {
-    return Array.from(this.images.keys());
-  }
-  hasImage(id: string) {
-    return this.images.has(id);
-  }
-  updateImage(data: ImageData) {
-    const image = this.images.get(data.id);
-    if (!image) return;
-    this.setPosition(data.id, data);
-  }
-  removeImage(id: string) {
-    const image = this.images.get(id);
-    if (!image) return;
+    const intersection = new THREE.Vector3();
+    this.raycaster.ray.intersectPlane(this.plane, intersection);
 
-    this.scene.remove(image.mesh);
-    image.mesh.children.forEach((child) => {
-      if (child instanceof THREE.Mesh) {
-        child.geometry.dispose();
-        child.material.dispose();
-      }
-    });
-
-    this.images.delete(id);
+    return intersection;
   }
 }

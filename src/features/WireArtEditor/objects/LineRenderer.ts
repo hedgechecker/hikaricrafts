@@ -1,18 +1,19 @@
 import * as THREE from 'three';
-import { PointManager } from './PointManager';
+import { PointRenderer } from './PointRenderer';
+import type { SceneManager } from './SceneManager';
 
 interface LineRenderData {
-  startId: string;
-  endId: string;
+  startPointId: string;
+  endPointId: string;
   mesh: THREE.Group;
   isHovered: boolean;
   isSelected: boolean;
 }
 
-export class LineManager {
+export class LineRenderer {
   private lines = new Map<string, LineRenderData>();
-  private scene: THREE.Scene;
-  private pointManager: PointManager;
+  private sceneManager: SceneManager;
+  private pointManager: PointRenderer;
   private hovered: string | null = null;
 
   private zoom: number = 1;
@@ -20,12 +21,12 @@ export class LineManager {
   private readonly hoverThickness = 0.05;
   private color: THREE.Color = new THREE.Color(0x000000);
 
-  constructor(scene: THREE.Scene, pointManager: PointManager) {
-    this.scene = scene;
+  constructor(sceneManager: SceneManager, pointManager: PointRenderer) {
+    this.sceneManager = sceneManager;
     this.pointManager = pointManager;
   }
 
-  addLine(startId: string, endId: string, id: string) {
+  addLine(startPointId: string, endPointId: string, id: string) {
     const group = new THREE.Group();
     group.userData.id = id;
     const geometry = new THREE.BoxGeometry(1, 1, 1);
@@ -48,11 +49,11 @@ export class LineManager {
 
     group.add(lineMesh);
     group.add(hitboxMesh);
-    this.scene.add(group);
+    this.sceneManager.scene.add(group);
 
     this.lines.set(id, {
-      startId: startId,
-      endId: endId,
+      startPointId: startPointId,
+      endPointId: endPointId,
       mesh: group,
       isHovered: false,
       isSelected: false,
@@ -91,10 +92,10 @@ export class LineManager {
   public getConnectedPoints(pointId: string): string[] {
     const connected: string[] = [];
     for (const [, line] of this.lines) {
-      if (line.startId === pointId) {
-        connected.push(line.endId);
-      } else if (line.endId === pointId) {
-        connected.push(line.startId);
+      if (line.startPointId === pointId) {
+        connected.push(line.endPointId);
+      } else if (line.endPointId === pointId) {
+        connected.push(line.startPointId);
       }
     }
     return connected;
@@ -104,17 +105,17 @@ export class LineManager {
     const line = this.lines.get(lineId);
     if (!line) return false;
 
-    return line.startId === pointId || line.endId === pointId;
+    return line.startPointId === pointId || line.endPointId === pointId;
   }
 
-  public getFirstHoverableLine(
-    intersects: THREE.Intersection[],
-    excludedPointId: string | null,
-  ): string | null {
+  public getFirstHoverableLine(intersects: THREE.Intersection[]): string | null {
+    const selectedPoints = this.pointManager.getSelected();
     for (const hit of intersects) {
       const id = hit.object.parent?.userData.id;
       if (!id) continue;
-      if (excludedPointId && this.isConnectedToPoint(id, excludedPointId)) continue;
+
+      const connected = selectedPoints.some((point) => this.isConnectedToPoint(id, point));
+      if (connected) continue;
 
       return id;
     }
@@ -128,15 +129,11 @@ export class LineManager {
     return { id: this.hovered, ...data };
   }
 
-  getHoveredId(): string | null {
-    return this.hovered;
-  }
-
   removeLine(id: string) {
     const data = this.lines.get(id);
     if (!data) return;
 
-    this.scene.remove(data.mesh);
+    this.sceneManager.scene.remove(data.mesh);
     data.mesh.children.forEach((child) => {
       if (child instanceof THREE.Mesh) {
         child.geometry.dispose();
@@ -149,8 +146,8 @@ export class LineManager {
 
   public hasLineBetween(a: string, b: string): boolean {
     for (const [, line] of this.lines) {
-      const s = line.startId;
-      const e = line.endId;
+      const s = line.startPointId;
+      const e = line.endPointId;
 
       if ((s === a && e === b) || (s === b && e === a)) {
         return true;
@@ -180,12 +177,12 @@ export class LineManager {
     return Array.from(this.lines.keys());
   }
 
-  updateConnection(id: string, startId: string, endId: string) {
+  updateConnection(id: string, startPointId: string, endPointId: string) {
     const line = this.lines.get(id);
     if (!line) return;
 
-    line.startId = startId;
-    line.endId = endId;
+    line.startPointId = startPointId;
+    line.endPointId = endPointId;
 
     this.updateLineGeometry(id);
   }
@@ -194,8 +191,8 @@ export class LineManager {
     const data = this.lines.get(id);
     if (!data) return;
 
-    const startPos = this.pointManager.getWorldPositionById(data.startId);
-    const endPos = this.pointManager.getWorldPositionById(data.endId);
+    const startPos = this.pointManager.getWorldPosition(data.startPointId);
+    const endPos = this.pointManager.getWorldPosition(data.endPointId);
 
     if (!startPos || !endPos) return;
 
@@ -228,8 +225,8 @@ export class LineManager {
   updateScale(zoom: number) {
     this.zoom = zoom;
     for (const [id, line] of this.lines) {
-      const startPos = this.pointManager.getWorldPositionById(line.startId);
-      const endPos = this.pointManager.getWorldPositionById(line.endId);
+      const startPos = this.pointManager.getWorldPosition(line.startPointId);
+      const endPos = this.pointManager.getWorldPosition(line.endPointId);
 
       if (!startPos || !endPos) continue;
 
@@ -259,5 +256,22 @@ export class LineManager {
         );
       }
     });
+  }
+
+  handleHover(event: MouseEvent): boolean {
+    const rect = this.sceneManager.dom.getBoundingClientRect();
+    let mouse = new THREE.Vector2();
+    let raycaster = new THREE.Raycaster();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(mouse, this.sceneManager.camera);
+
+    const intersects = raycaster.intersectObjects(this.getHitboxes(), false);
+    const hoveredLine = this.getFirstHoverableLine(intersects);
+    if (hoveredLine) {
+      this.setHovered(hoveredLine);
+      return true;
+    }
+    return false;
   }
 }

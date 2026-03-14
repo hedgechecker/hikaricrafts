@@ -7,7 +7,7 @@ import { useDialog } from '../../global/useDialog';
 import type { Settings } from '../models/Settings';
 import type { EditorEngine } from '../core/EditorEngine';
 import { useEditorStore } from '../core/EditorStore';
-import type { ToolType } from '../core/ThreeEditor';
+import type { ToolType } from '../tools/ToolManager';
 
 interface Props {
   engine: EditorEngine;
@@ -228,7 +228,7 @@ export default function Toolbar({ engine }: Props) {
       {/* Upload background reference image */}
       <ImageUploader
         onImageSelected={(img) => {
-          engine.setBackgroundImage(img);
+          engine.addBackgroundImage(img);
         }}
       />
     </div>

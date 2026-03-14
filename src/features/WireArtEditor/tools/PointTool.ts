@@ -1,119 +1,78 @@
-import * as THREE from 'three';
-import type { Tool } from './Tool';
+import type { Tool, ToolContext } from './Tool';
 import { AddPointCommand } from '../commands/AddPointCommand';
 import { generateId } from '../utils/id';
-import { AddLineCommand } from '../commands/AddLineCommand';
-import { DeleteLineCommand } from '../commands/DeleteLineCommand';
-import { CompositeCommand } from '../commands/CompositeCommand';
-import { projectPointToSegment } from '../utils/math';
-import type { ThreeEditor } from '../core/ThreeEditor';
+import { splitLine } from '../utils/commands';
 
+/**
+ * Manages the Placement of Points
+ * snaps onto the Grid or other Lines
+ */
 export class PointTool implements Tool {
-  private raycaster = new THREE.Raycaster();
-  private mouse = new THREE.Vector2();
-  private plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+  private context: ToolContext;
 
-  private downPosition: [number, number] = [0, 0];
-  private placementBlocked = false;
-
-  private camera: THREE.Camera;
-  private domElement: HTMLElement;
-  private editor: ThreeEditor;
-
-  constructor(camera: THREE.Camera, domElement: HTMLElement, editor: ThreeEditor) {
-    this.camera = camera;
-    this.domElement = domElement;
-    this.editor = editor;
+  constructor(context: ToolContext) {
+    this.context = context;
   }
 
   onMouseDown(event: MouseEvent): void {
-    this.downPosition = [event.clientX, event.clientY];
+    if (event.button !== 0) return;
   }
 
   onMouseUp(event: MouseEvent): void {
-    const moved =
-      Math.abs(this.downPosition[0] - event.clientX) > 0.5 ||
-      Math.abs(this.downPosition[1] - event.clientY) > 0.5;
+    //No Placement on existing Points
+    if (this.context.pointRenderer.getHovered()) return;
 
-    if (moved || this.placementBlocked || this.editor.getHoveredPoint()) return;
+    let worldPos = this.context.sceneManager.getWorldPosition(event);
 
-    const rect = this.domElement.getBoundingClientRect();
-
-    this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-    this.raycaster.setFromCamera(this.mouse, this.camera);
-
-    let intersection = new THREE.Vector3();
-    const hit = this.raycaster.ray.intersectPlane(this.plane, intersection);
-    if (!hit) return;
-
-    const hoveredLine = this.editor.getHoveredLine();
+    //If a Point is placed on a Line split the line at this point
+    const hoveredLine = this.context.lineRenderer.getHovered();
     if (hoveredLine) {
-      const aPos = this.editor.getPointWorldPosition(hoveredLine.startId);
-      const bPos = this.editor.getPointWorldPosition(hoveredLine.endId);
-      if (!aPos || !bPos) return;
-
-      const a = aPos.clone();
-      const b = bPos.clone();
-
-      // ---- PROJECT CLICK ONTO LINE ----
-      intersection = projectPointToSegment(intersection, a, b);
-
-      const newPointId = generateId();
-
-      const newPoint = {
-        id: newPointId,
-        x: intersection.x,
-        y: intersection.y,
-        z: intersection.z,
-      };
-
-      // prevent splitting exactly at endpoints
-      if (intersection.distanceTo(a) < 0.001 || intersection.distanceTo(b) < 0.001) {
-        return;
+      const cmd = splitLine(worldPos, hoveredLine, this.context.pointRenderer);
+      if (cmd) {
+        this.context.executeCommand(cmd.command);
       }
-
-      const splitCommand = new CompositeCommand([
-        new AddPointCommand(newPoint),
-        new DeleteLineCommand(hoveredLine.id),
-        new AddLineCommand({
-          id: generateId(),
-          startPointId: hoveredLine.startId,
-          endPointId: newPointId,
-        }),
-        new AddLineCommand({
-          id: generateId(),
-          startPointId: newPointId,
-          endPointId: hoveredLine.endId,
-        }),
-      ]);
-
-      this.editor.executeCommand(splitCommand);
-
-      this.placementBlocked = true;
+      this.context.pointRenderer.handleHover(event);
       return;
     }
 
-    const point = this.editor.getHoveredGridPoint();
+    //Snap to Grid
+    const point = this.context.sceneManager.getHoveredGrid();
     if (point) {
-      intersection = point;
+      worldPos = point;
     }
 
-    this.editor.executeCommand(
+    this.context.executeCommand(
       new AddPointCommand({
         id: generateId(),
-        x: intersection.x,
-        y: intersection.y,
-        z: intersection.z,
+        x: worldPos.x,
+        y: worldPos.y,
+        z: worldPos.z,
       }),
     );
-
-    this.placementBlocked = true;
   }
 
   onMouseMove(event: MouseEvent) {
-    this.placementBlocked = false;
-    this.editor.handleHover(event);
+    this.handleHover(event);
+  }
+
+  //Enable Hover for Points, Lines and Grid
+  handleHover(event: MouseEvent) {
+    this.context.pointRenderer.setHovered(null);
+    this.context.lineRenderer.setHovered(null);
+    this.context.sceneManager.setHoveredGrid(null);
+    this.context.cursorManager.setCursor('default');
+
+    if (this.context.pointRenderer.handleHover(event)) {
+      this.context.cursorManager.setCursor('pointer');
+      return;
+    }
+    if (this.context.lineRenderer.handleHover(event)) {
+      this.context.cursorManager.setCursor('pointer');
+      return;
+    }
+    if (this.context.sceneManager.handleHover(event)) {
+      this.context.cursorManager.setCursor('crosshair');
+      return;
+    }
   }
 }
