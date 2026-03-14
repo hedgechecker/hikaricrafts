@@ -29,6 +29,7 @@ export class MoveTool implements Tool {
     if (!pos) return;
     this.selectedPoint = hovered;
     this.startPosition.copy(pos);
+    this.currentPosition.copy(pos);
 
     this.context.pointRenderer.setSelected([this.selectedPoint]);
     this.context.sceneManager.cameraController.setPanEnabled(false);

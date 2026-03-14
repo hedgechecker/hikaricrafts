@@ -9,7 +9,6 @@ import * as THREE from 'three';
 import { SceneModel } from '../models/SceneModel';
 import { type Project } from '../models/Project';
 import { CommandManager } from '../commands/CommandManager';
-import type { Command } from '../models/Command';
 import { DeletePointCommand } from '../commands/DeletePointCommand';
 import { DeleteLineCommand } from '../commands/DeleteLineCommand';
 import { SVGExporter } from '../core/SVGExporter';
@@ -18,8 +17,10 @@ import { AddImageCommand } from '../commands/AddImageCommand';
 import { generateId } from '../utils/id';
 import { DeleteImageCommand } from '../commands/DeleteImageCommand';
 import { ImageRenderer } from '../objects/ImageRenderer';
+import type { Command } from '../commands/Command';
 
 //Import SVG?
+//Highlight Line length input correctly
 
 //check points 0/1 connections
 //get all polygons
@@ -261,14 +262,14 @@ export class ThreeEditor {
   }
 
   private onKeyDown = async (e: KeyboardEvent) => {
-    if (e.key === 'i') {
-      e.preventDefault();
-      this.toolManager.setActiveTool('transform');
-    }
-    if (e.key === 'o') {
-      e.preventDefault();
-      this.toolManager.setActiveTool(null);
-    }
+    // if (e.key === 'i') {
+    //   e.preventDefault();
+    //   this.toolManager.setActiveTool('drag');
+    // }
+    // if (e.key === 'o') {
+    //   e.preventDefault();
+    //   this.toolManager.setActiveTool(null);
+    // }
 
     if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
       e.preventDefault();

@@ -1,4 +1,4 @@
-import type { Command } from '../models/Command';
+import type { Command } from './Command';
 import type { SceneModel } from '../models/SceneModel';
 import type { ImageData } from '../models/Image';
 
@@ -20,11 +20,7 @@ export class UpdateImageCommand implements Command {
     if (!img) return;
 
     this.before = { ...img };
-
-    img.x = this.after.x;
-    img.y = this.after.y;
-    img.rotation = this.after.rotation;
-    img.height = this.after.height;
+    Object.assign(img, this.after);
   }
 
   undo(model: SceneModel) {
@@ -33,9 +29,6 @@ export class UpdateImageCommand implements Command {
     const img = model.images.get(this.after.id);
     if (!img) return;
 
-    img.x = this.before.x;
-    img.y = this.before.y;
-    img.rotation = this.before.rotation;
-    img.height = this.before.height;
+    Object.assign(img, this.before);
   }
 }

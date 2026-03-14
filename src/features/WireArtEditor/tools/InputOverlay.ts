@@ -1,5 +1,7 @@
 import { parseMathInput } from '../utils/math';
-
+/**
+ * Handles Display and Input of Line length and angle
+ */
 export class InputOverlay {
   private lengthInput: HTMLInputElement;
   private angleInput: HTMLInputElement;
@@ -36,6 +38,11 @@ export class InputOverlay {
     input.style.pointerEvents = 'auto';
     input.style.width = '70px';
     input.style.display = 'none';
+    input.style.backgroundColor = 'var(--color-background)';
+    input.style.color = 'var(--color-text-primary)';
+    input.style.border = 'var(--space-border) solid var(--color-border)';
+    input.style.outline = 'none';
+    input.style.borderRadius = 'var(--space-xxs)';
 
     return input;
   }
@@ -95,9 +102,13 @@ export class InputOverlay {
     if (this.focusedElement == 'length') {
       this.lengthInput.focus();
       this.lengthInput.select();
+      this.lengthInput.style.borderColor = "var(--color-accent)"
+      this.angleInput.style.borderColor = 'var(--color-border)';
     } else {
       this.angleInput.focus();
       this.angleInput.select();
+      this.angleInput.style.borderColor = 'var(--color-accent)';
+      this.lengthInput.style.borderColor = 'var(--color-border)';
     }
   }
 }

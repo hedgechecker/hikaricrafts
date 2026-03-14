@@ -1,4 +1,4 @@
-import type { Command } from '../models/Command';
+import type { Command } from './Command';
 import type { SceneModel } from '../models/SceneModel';
 
 /**

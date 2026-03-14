@@ -10,8 +10,8 @@ import { projectPointToSegment, snapAngle } from '../utils/math';
 import { InputOverlay } from './InputOverlay';
 import { splitLine } from '../utils/commands';
 import type { LineData } from '../models/Line';
-import type { Command } from '../models/Command';
 import { CompositeCommand } from '../commands/CompositeCommand';
+import type { Command } from '../commands/Command';
 
 /**
  * Manages the Placement of Points
@@ -104,9 +104,9 @@ export class LineTool implements Tool {
 
   onMouseMove(event: MouseEvent) {
     if (!this.lastPointId) this.inputOverlay.hide();
+    this.worldPos.copy(this.context.sceneManager.getWorldPosition(event));
 
     this.handleHover(event);
-    this.worldPos.copy(this.context.sceneManager.getWorldPosition(event));
     this.handleMouseMove();
   }
 

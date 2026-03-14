@@ -1,10 +1,13 @@
-type DragMode = 'none' | 'move' | 'resize';
+type DragMode = 'none' | 'move' | 'resize' | 'rotate';
 
 import * as THREE from 'three';
 import type { Tool, ToolContext } from './Tool';
 import { UpdateImageCommand } from '../commands/UpdateImageCommand';
 import type { ImageData } from '../models/Image';
 
+/**
+ * Handles the Transformation of Images supports Scaling, Moving and Rotation
+ */
 export class TransformTool implements Tool {
   private context: ToolContext;
   private worldPos = new THREE.Vector3();
@@ -36,14 +39,18 @@ export class TransformTool implements Tool {
     this.worldPos.copy(this.context.sceneManager.getWorldPosition(event));
 
     const handle = this.context.imageRenderer.getHoveredHandle();
-
+    console.log(handle) 
     const hovered = this.context.imageRenderer.getHovered();
     if (!hovered) return;
     const data = this.context.imageRenderer.getImage(hovered);
     if (!data) return;
 
     if (handle) {
-      this.dragMode = 'resize';
+      if (handle == 'rotate') {
+        this.dragMode = 'rotate';
+      } else {
+        this.dragMode = 'resize';
+      }
     } else {
       this.dragMode = 'move';
     }
@@ -74,11 +81,32 @@ export class TransformTool implements Tool {
 
     // RESIZE IMAGE
     if (this.dragMode === 'resize') {
-      const newHeight = Math.abs(this.worldPos.y - this.startData.y) * 2;
+      const dx = this.worldPos.x - this.startData.x;
+      const dy = this.worldPos.y - this.startData.y;
+
+      // transform mouse into image local space
+      const cos = Math.cos(-this.startData.rotation);
+      const sin = Math.sin(-this.startData.rotation);
+
+      const localY = dx * sin + dy * cos;
+      const newHeight = Math.abs(localY) * 2;
+
       this.currentData.height = newHeight;
       this.context.imageRenderer.updateImage(this.currentData);
       this.context.cursorManager.setCursor('ne-resize');
     }
+
+    //ROTATE IMAGE
+    if (this.dragMode === 'rotate') {
+      const dx = this.worldPos.x - this.startData.x;
+      const dy = this.worldPos.y - this.startData.y;
+
+      const angle = Math.atan2(dy, dx);
+      this.currentData.rotation = angle - Math.PI/2;
+
+      this.context.imageRenderer.updateImage(this.currentData);
+    }
+    
   };
 
   onMouseUp = (event: MouseEvent) => {
@@ -95,7 +123,7 @@ export class TransformTool implements Tool {
     this.handleHover(event);
   };
 
-  //Enable Hover for Images
+  //Enable Hover only for Images
   handleHover(event: MouseEvent) {
     this.context.imageRenderer.setHovered(null);
     this.context.cursorManager.setCursor(this.selectedImage ? 'grabbing' : 'default');

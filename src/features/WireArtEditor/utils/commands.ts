@@ -8,6 +8,14 @@ import { projectPointToSegment } from './math';
 import type { LineData } from '../models/Line';
 import type { PointRenderer } from '../objects/PointRenderer';
 
+
+/**
+ * Manages the splitting of an existing Line
+ * @param worldPos The Point in Space, wich gets projected onto the Line
+ * @param line the Line to be split
+ * @param pointManager To get the WorldPosition of the points
+ * @returns command: the SplitCommand , id: the Id of the newly created Point
+ */
 export function splitLine(worldPos: THREE.Vector3, line: LineData, pointManager: PointRenderer) {
   //Add a new Point on an existing line
   const aPos = pointManager.getWorldPosition(line.startPointId);

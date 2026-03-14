@@ -1,4 +1,4 @@
-import type { Command } from '../models/Command';
+import type { Command } from './Command';
 import type { LineData } from '../models/Line';
 import type { PointData } from '../models/Point';
 import type { SceneModel } from '../models/SceneModel';

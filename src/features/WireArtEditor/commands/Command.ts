@@ -1,4 +1,5 @@
-import type { SceneModel } from './SceneModel';
+import type { SceneModel } from "../models/SceneModel";
+
 
 export interface Command {
   execute(model: SceneModel): void;

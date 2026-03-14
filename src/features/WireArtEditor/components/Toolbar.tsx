@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import ImageUploader from './ImageUploader';
-import ToolButton from './ToolButton';
+import ToolButton from '../../global/ToolButton';
 import styles from './styles/Toolbar.module.css';
 import { useNavigate } from 'react-router-dom';
 import { useDialog } from '../../global/useDialog';

@@ -79,7 +79,7 @@ export class ImageRenderer {
   }
 
   getHoveredHandle() {
-    return this.gizmo.hovered;
+    return this.gizmo.getHovered();
   }
 
   setHovered(id: string | null) {
@@ -120,10 +120,12 @@ export class ImageRenderer {
     img.mesh.position.set(data.x, data.y, 0);
     img.mesh.position.set(data.x, data.y, 0);
     img.height = data.height;
+    img.data = {...data};
 
     //Set Height
     img.mesh.geometry.dispose();
     img.mesh.geometry = new THREE.PlaneGeometry(img.height * img.aspect, img.height);
+    img.mesh.rotation.z = data.rotation;
   }
 
   setSelected(ids: string[]) {
@@ -167,6 +169,7 @@ export class ImageRenderer {
       };
       this.images.set(image.id, data);
       if (this.imageVisible) this.sceneManager.scene.add(data.mesh);
+      this.updateImage(image);
     });
   }
 
@@ -213,12 +216,13 @@ export class ImageRenderer {
 
     this.gizmo.visible = true;
     const handleHits = raycaster.intersectObjects(this.gizmo.getHitboxes(), true);
+
     if (handleHits.length) {
-      this.gizmo.setHovered(true);
+      this.gizmo.setHovered(handleHits[0].object.parent?.userData.type);
       this.setHovered(this.gizmo.parent!.data.id);
       return true;
     }
-    this.gizmo.setHovered(false);
+    this.gizmo.setHovered("none");
 
     const intersects = raycaster.intersectObjects(this.getHitboxes(), false);
     const hoveredImageId = this.getFirstHoverableImage(intersects);

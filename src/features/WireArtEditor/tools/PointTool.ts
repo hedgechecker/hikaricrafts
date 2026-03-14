@@ -20,6 +20,7 @@ export class PointTool implements Tool {
 
   onMouseUp(event: MouseEvent): void {
     //No Placement on existing Points
+    if (event.button !== 0) return;
     if (this.context.pointRenderer.getHovered()) return;
 
     let worldPos = this.context.sceneManager.getWorldPosition(event);

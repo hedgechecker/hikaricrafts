@@ -1,4 +1,5 @@
-import type { Command } from '../models/Command';
+
+import type { Command } from '../commands/Command';
 import type { CursorManager } from '../objects/CursorManager';
 import type { ImageRenderer } from '../objects/ImageRenderer';
 import type { LineRenderer } from '../objects/LineRenderer';

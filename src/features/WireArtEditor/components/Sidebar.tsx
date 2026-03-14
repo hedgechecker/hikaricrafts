@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import styles from './styles/Sidebar.module.css';
 import type { EditorEngine } from '../core/EditorEngine';
-import ToolButton from './ToolButton';
+import ToolButton from '../../global/ToolButton';
 import { useDialog } from '../../global/useDialog';
 import { useNavigate } from 'react-router-dom';
 
@@ -19,14 +19,14 @@ interface Props {
 
 /**
  * SideBar component
- * 
+ *
  * Displays the list of user projects and allows:
  * - creating a new project
  * - loading existing projects
  * - renaming projects
  * - deleting projects
  *
- * Integrates with EditorEngine for loading/opening projects
+ * Integrates with Editor for loading/opening projects
  * and communicates with the backend API for project persistence.
  */
 export default function SideBar({ engine }: Props) {
@@ -138,6 +138,7 @@ export default function SideBar({ engine }: Props) {
     setOpenMenuId(null);
   }
 
+  // Open a new project after user confirmation
   const handleNewProject = async () => {
     const token = localStorage.getItem('token');
     setIsLoggedIn(!!token);

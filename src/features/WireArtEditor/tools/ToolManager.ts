@@ -1,11 +1,13 @@
+import { DragTool } from './DragTool';
 import { LineTool } from './LineTool';
-import { MoveTool } from './MoveTool';
 import { PointTool } from './PointTool';
 import type { Tool, ToolContext } from './Tool';
-import { TransformTool } from './TransformTool';
 
-export type ToolType = 'point' | 'move' | 'line' | 'transform' | null;
+export type ToolType = 'point' | 'line' | 'move' | null;
 
+/**
+ * Manages the activation/deactivation of all available Tools
+ */
 export class ToolManager {
   private domElement: HTMLElement;
   private activeTool: Tool | null = null;
@@ -22,8 +24,7 @@ export class ToolManager {
 
     this.tools.set("point", new PointTool(toolContext));
     this.tools.set('line', new LineTool(toolContext));
-    this.tools.set("move",new MoveTool(toolContext));
-    this.tools.set("transform", new TransformTool(toolContext));
+    this.tools.set('move', new DragTool(toolContext));
     this.setActiveTool('move');
   }
 

@@ -1,14 +1,14 @@
-import { useRef } from "react";
-import ToolButton from "./ToolButton";
+import { useRef } from 'react';
+import ToolButton from '../../global/ToolButton';
 
 interface Props {
   onImageSelected: (image: string) => void;
 }
 
 /**
- * Handles the Upload of an User-Image
+ * Handles the hidden Upload of an User-Image
  * @param onImageSelected reaction to Image-Upload
- * @returns 
+ * @returns
  */
 export default function ImageUploader({ onImageSelected }: Props) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -23,7 +23,7 @@ export default function ImageUploader({ onImageSelected }: Props) {
 
     const reader = new FileReader();
     reader.onload = () => {
-      if (typeof reader.result === "string") {
+      if (typeof reader.result === 'string') {
         onImageSelected(reader.result);
       }
     };
@@ -37,12 +37,17 @@ export default function ImageUploader({ onImageSelected }: Props) {
         ref={fileInputRef}
         type="file"
         accept="image/*"
-        style={{ display: "none" }}
+        style={{ display: 'none' }}
         onChange={handleFileChange}
       />
 
       {/* Visible ToolButton */}
-      <ToolButton label="Bild laden" onClick={handleButtonClick} image="/icons/image.png" toolTip="Ein neues Hintergrundbild öffnen" />
+      <ToolButton
+        label="Bild laden"
+        onClick={handleButtonClick}
+        image="/icons/image.png"
+        toolTip="Ein neues Hintergrundbild öffnen"
+      />
     </>
   );
 }

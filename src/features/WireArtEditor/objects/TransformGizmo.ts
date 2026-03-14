@@ -3,12 +3,12 @@ import type { ImageRenderData } from './ImageRenderer';
 
 export class TransformGizmo {
   handles: THREE.Group[] = [];
-  hovered: boolean = false;
+  hovered: string = 'none';
   visible = false;
   parent: ImageRenderData | null = null;
 
   constructor() {
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 5; i++) {
       const group = new THREE.Group();
       const baseRadius = 0.1;
       const hitRadius = 0.25;
@@ -50,13 +50,14 @@ export class TransformGizmo {
       group.add(outline);
       group.add(hitbox);
 
+      group.userData.type = i === 4 ? 'rotate' : 'resize';
       group.userData.corner = i;
       this.handles.push(group);
     }
   }
 
   getHitboxes() {
-    if(!this.visible)return [];
+    if (!this.visible) return [];
     let arr: THREE.Object3D<THREE.Object3DEventMap>[] = [];
     this.handles.forEach((handle) => {
       arr.push(handle.getObjectByName('hitbox')!);
@@ -65,12 +66,15 @@ export class TransformGizmo {
     return arr;
   }
 
-  setHovered(hovered: boolean){
-    this.hovered = hovered;
+  setHovered(type: string) {
+    this.hovered = type;
+  }
+  getHovered() {
+    return this.hovered;
   }
 
   update(image: ImageRenderData | null) {
-    if(!image){
+    if (!image) {
       this.handles.forEach((h) => {
         h.visible = this.visible;
       });
@@ -78,24 +82,36 @@ export class TransformGizmo {
     }
 
     this.parent = image;
+
     const width = image.height * image.aspect;
     const halfW = width / 2;
     const halfH = image.height / 2;
+    const rotateOffset = 0.6;
 
     const corners = [
-      [-halfW, halfH],
-      [halfW, halfH],
-      [halfW, -halfH],
-      [-halfW, -halfH],
+      [-halfW, halfH], // TL
+      [halfW, halfH], // TR
+      [halfW, -halfH], // BR
+      [-halfW, -halfH], // BL
+      [0, halfH + rotateOffset], // ROTATE
     ];
+
+    const centerX = image.mesh.position.x;
+    const centerY = image.mesh.position.y;
+
+    const cos = Math.cos(image.data.rotation);
+    const sin = Math.sin(image.data.rotation);
 
     this.handles.forEach((h, i) => {
       h.visible = this.visible;
-      h.position.set(
-        image.mesh.position.x + corners[i][0],
-        image.mesh.position.y + corners[i][1],
-        5,
-      );
+
+      const [ox, oy] = corners[i];
+
+      // rotate offset
+      const rx = ox * cos - oy * sin;
+      const ry = ox * sin + oy * cos;
+
+      h.position.set(centerX + rx, centerY + ry, 5);
     });
   }
 }
