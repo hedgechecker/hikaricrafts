@@ -1,29 +1,35 @@
 import * as THREE from 'three';
 import { PointRenderer } from './PointRenderer';
-import type { SceneManager } from './SceneManager';
+import type { SceneManager } from '../SceneManager';
+import { BaseRenderer, type RenderData } from './BaseRenderer';
+import type { LineData } from '../../models/Line';
 
-interface LineRenderData {
+interface LineRenderData extends RenderData {
   startPointId: string;
   endPointId: string;
   mesh: THREE.Group;
-  isHovered: boolean;
-  isSelected: boolean;
 }
 
-export class LineRenderer {
-  private lines = new Map<string, LineRenderData>();
-  private sceneManager: SceneManager;
+export class LineRenderer extends BaseRenderer<LineRenderData, LineData> {
   private pointManager: PointRenderer;
-  private hovered: string | null = null;
 
-  private zoom: number = 1;
   private readonly baseThickness = 0.02;
   private readonly hoverThickness = 0.05;
   private color: THREE.Color = new THREE.Color(0x000000);
 
   constructor(sceneManager: SceneManager, pointManager: PointRenderer) {
-    this.sceneManager = sceneManager;
+    super(sceneManager);
     this.pointManager = pointManager;
+  }
+
+  protected getId(data: LineData) {
+    return data.id;
+  }
+  protected addFromData(data: LineData) {
+    this.addLine(data.startPointId, data.endPointId, data.id);
+  }
+  protected updateFromData(data: LineData) {
+    this.updateConnection(data.id, data.startPointId, data.endPointId);
   }
 
   addLine(startPointId: string, endPointId: string, id: string) {
@@ -51,7 +57,7 @@ export class LineRenderer {
     group.add(hitboxMesh);
     this.sceneManager.scene.add(group);
 
-    this.lines.set(id, {
+    this.objects.set(id, {
       startPointId: startPointId,
       endPointId: endPointId,
       mesh: group,
@@ -62,36 +68,10 @@ export class LineRenderer {
     this.updateLineGeometry(id);
   }
 
-  public setHovered(id: string | null) {
-    if (id === this.hovered) return;
-    if (this.hovered) {
-      const line = this.lines.get(this.hovered);
-      if (line != undefined) {
-        line.isHovered = false;
-      }
-    }
-    this.hovered = id;
-
-    if (this.hovered) {
-      const line = this.lines.get(this.hovered);
-      if (line != undefined) {
-        line.isHovered = true;
-      }
-    }
-    this.updateScale(this.zoom);
-  }
-  getHitboxes(): THREE.Object3D[] {
-    let arr: THREE.Object3D<THREE.Object3DEventMap>[] = [];
-    this.lines.forEach((line) => {
-      arr.push(line.mesh.getObjectByName('hitbox')!);
-    });
-
-    return arr;
-  }
-
+  //NEEEE
   public getConnectedPoints(pointId: string): string[] {
     const connected: string[] = [];
-    for (const [, line] of this.lines) {
+    for (const [, line] of this.objects) {
       if (line.startPointId === pointId) {
         connected.push(line.endPointId);
       } else if (line.endPointId === pointId) {
@@ -101,20 +81,19 @@ export class LineRenderer {
     return connected;
   }
 
-  public isConnectedToPoint(lineId: string, pointId: string): boolean {
-    const line = this.lines.get(lineId);
-    if (!line) return false;
-
-    return line.startPointId === pointId || line.endPointId === pointId;
-  }
-
   public getFirstHoverableLine(intersects: THREE.Intersection[]): string | null {
     const selectedPoints = this.pointManager.getSelected();
     for (const hit of intersects) {
       const id = hit.object.parent?.userData.id;
       if (!id) continue;
 
-      const connected = selectedPoints.some((point) => this.isConnectedToPoint(id, point));
+      //check if Line is connected to the selected Point
+      const connected = selectedPoints.some((point) => {
+        const line = this.objects.get(id);
+        if (!line) return false;
+
+        return line.startPointId === point || line.endPointId === point;
+      });
       if (connected) continue;
 
       return id;
@@ -122,30 +101,9 @@ export class LineRenderer {
     return null;
   }
 
-  getHovered() {
-    if (!this.hovered) return null;
-    const data = this.lines.get(this.hovered);
-    if (!data) return null;
-    return { id: this.hovered, ...data };
-  }
-
-  removeLine(id: string) {
-    const data = this.lines.get(id);
-    if (!data) return;
-
-    this.sceneManager.scene.remove(data.mesh);
-    data.mesh.children.forEach((child) => {
-      if (child instanceof THREE.Mesh) {
-        child.geometry.dispose();
-        child.material.dispose();
-      }
-    });
-
-    this.lines.delete(id);
-  }
-
+  //NEEE
   public hasLineBetween(a: string, b: string): boolean {
-    for (const [, line] of this.lines) {
+    for (const [, line] of this.objects) {
       const s = line.startPointId;
       const e = line.endPointId;
 
@@ -158,27 +116,13 @@ export class LineRenderer {
   }
 
   update() {
-    for (const [id] of this.lines) {
+    for (const [id] of this.objects) {
       this.updateLineGeometry(id);
     }
   }
 
-  clear() {
-    for (const [id] of this.lines) {
-      this.removeLine(id);
-    }
-  }
-
-  hasLine(id: string) {
-    return this.lines.has(id);
-  }
-
-  getAllIds(): string[] {
-    return Array.from(this.lines.keys());
-  }
-
   updateConnection(id: string, startPointId: string, endPointId: string) {
-    const line = this.lines.get(id);
+    const line = this.objects.get(id);
     if (!line) return;
 
     line.startPointId = startPointId;
@@ -188,7 +132,7 @@ export class LineRenderer {
   }
 
   private updateLineGeometry(id: string) {
-    const data = this.lines.get(id);
+    const data = this.objects.get(id);
     if (!data) return;
 
     const startPos = this.pointManager.getWorldPosition(data.startPointId);
@@ -224,7 +168,7 @@ export class LineRenderer {
 
   updateScale(zoom: number) {
     this.zoom = zoom;
-    for (const [id, line] of this.lines) {
+    for (const [id, line] of this.objects) {
       const startPos = this.pointManager.getWorldPosition(line.startPointId);
       const endPos = this.pointManager.getWorldPosition(line.endPointId);
 
@@ -248,7 +192,7 @@ export class LineRenderer {
 
     this.color = newColor;
 
-    this.lines.forEach((line) => {
+    this.objects.forEach((line) => {
       const visual = line.mesh.getObjectByName('visual');
       if (visual && (visual as THREE.Mesh).material) {
         ((visual as THREE.Mesh).material as THREE.Material & { color: THREE.Color }).color.copy(

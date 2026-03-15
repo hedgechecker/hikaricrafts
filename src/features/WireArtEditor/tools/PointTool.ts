@@ -28,12 +28,15 @@ export class PointTool implements Tool {
     //If a Point is placed on a Line split the line at this point
     const hoveredLine = this.context.lineRenderer.getHovered();
     if (hoveredLine) {
-      const cmd = splitLine(worldPos, hoveredLine, this.context.pointRenderer);
-      if (cmd) {
-        this.context.executeCommand(cmd.command);
+      const data = this.context.model.lines.get(hoveredLine);
+      if (data) {
+        const cmd = splitLine(worldPos, data, this.context.pointRenderer);
+        if (cmd) {
+          this.context.executeCommand(cmd.command);
+        }
+        this.context.pointRenderer.handleHover(event);
+        return;
       }
-      this.context.pointRenderer.handleHover(event);
-      return;
     }
 
     //Snap to Grid

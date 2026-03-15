@@ -220,7 +220,8 @@ export class LineTool implements Tool {
     //3 Snap to existing Lines
     const hoveredLine = this.context.lineRenderer.getHovered();
     if (hoveredLine) {
-      return { pointId: null, line: hoveredLine, position: null };
+      const line = this.context.model.lines.get(hoveredLine);
+      if(line) return { pointId: null, line: line, position: null };
     }
     //4 Snap to next grid Point
     const snapGridPoint = this.context.sceneManager.getHoveredGrid();

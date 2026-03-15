@@ -1,9 +1,9 @@
-
 import type { Command } from '../commands/Command';
+import type { SceneModel } from '../models/SceneModel';
 import type { CursorManager } from '../objects/CursorManager';
-import type { ImageRenderer } from '../objects/ImageRenderer';
-import type { LineRenderer } from '../objects/LineRenderer';
-import type { PointRenderer } from '../objects/PointRenderer';
+import type { ImageRenderer } from '../objects/Renderer/ImageRenderer';
+import type { LineRenderer } from '../objects/Renderer/LineRenderer';
+import type { PointRenderer } from '../objects/Renderer/PointRenderer';
 import type { SceneManager } from '../objects/SceneManager';
 
 export interface Tool {
@@ -21,4 +21,5 @@ export interface ToolContext {
   imageRenderer: ImageRenderer;
   sceneManager: SceneManager;
   cursorManager: CursorManager;
+  readonly model: SceneModel;
 }

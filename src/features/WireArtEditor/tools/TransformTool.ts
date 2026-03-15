@@ -39,10 +39,10 @@ export class TransformTool implements Tool {
     this.worldPos.copy(this.context.sceneManager.getWorldPosition(event));
 
     const handle = this.context.imageRenderer.getHoveredHandle();
-    console.log(handle) 
     const hovered = this.context.imageRenderer.getHovered();
     if (!hovered) return;
-    const data = this.context.imageRenderer.getImage(hovered);
+    const data = this.context.model.images.get(hovered);  
+
     if (!data) return;
 
     if (handle) {

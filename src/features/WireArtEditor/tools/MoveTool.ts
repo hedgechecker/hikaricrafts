@@ -66,14 +66,17 @@ export class MoveTool implements Tool {
       this.context.executeCommand(new MergePointsCommand(this.selectedPoint, hoveredPoint));
     } //when hovering a Line: Split Line
     else if (hoveredLine) {
-      const split = splitLine(this.currentPosition, hoveredLine, this.context.pointRenderer);
-      if (split)
-        this.context.executeCommand(
-          new CompositeCommand([
-            split?.command,
-            new MergePointsCommand(this.selectedPoint, split?.pointId),
-          ]),
-        );
+      const data = this.context.model.lines.get(hoveredLine);
+      if (data) {
+        const split = splitLine(this.currentPosition, data, this.context.pointRenderer);
+        if (split)
+          this.context.executeCommand(
+            new CompositeCommand([
+              split?.command,
+              new MergePointsCommand(this.selectedPoint, split?.pointId),
+            ]),
+          );
+      }
     } // Else Move the Point
     else {
       const point = this.context.sceneManager.getHoveredGrid();

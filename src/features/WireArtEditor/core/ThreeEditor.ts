@@ -1,11 +1,10 @@
-import { PointRenderer } from '../objects/PointRenderer';
-import { LineRenderer } from '../objects/LineRenderer';
+import { PointRenderer } from '../objects/Renderer/PointRenderer';
+import { LineRenderer } from '../objects/Renderer/LineRenderer';
 import { SceneManager } from '../objects/SceneManager';
 import { ToolManager, type ToolType } from '../tools/ToolManager';
 import { CursorManager } from '../objects/CursorManager';
 
 import { DataStorage } from '../core/DataStorage';
-import * as THREE from 'three';
 import { SceneModel } from '../models/SceneModel';
 import { type Project } from '../models/Project';
 import { CommandManager } from '../commands/CommandManager';
@@ -16,7 +15,7 @@ import type { Settings } from '../models/Settings';
 import { AddImageCommand } from '../commands/AddImageCommand';
 import { generateId } from '../utils/id';
 import { DeleteImageCommand } from '../commands/DeleteImageCommand';
-import { ImageRenderer } from '../objects/ImageRenderer';
+import { ImageRenderer } from '../objects/Renderer/ImageRenderer';
 import type { Command } from '../commands/Command';
 
 //Import SVG?
@@ -64,6 +63,7 @@ export class ThreeEditor {
       imageRenderer: this.imageRenderer,
       sceneManager: this.sceneManager,
       cursorManager: this.cursorManager,
+      model: this.model,
     };
     this.toolManager = new ToolManager(this.sceneManager.renderer.domElement, toolContext);
 
@@ -72,54 +72,9 @@ export class ThreeEditor {
   }
 
   private syncSceneFromModel() {
-    this.syncPoints();
-    this.syncLines();
-    this.syncImages();
-  }
-
-  private syncPoints() {
-    const existing = new Set(this.pointRenderer.getAllIds());
-    for (const point of this.model.points.values()) {
-      if (!this.pointRenderer.hasPoint(point.id)) {
-        this.pointRenderer.addPoint(new THREE.Vector3(point.x, point.y, point.z), point.id);
-      } else {
-        this.pointRenderer.setPosition(point.id, new THREE.Vector3(point.x, point.y, point.z));
-      }
-      existing.delete(point.id);
-    }
-    for (const id of existing) {
-      this.pointRenderer.removePoint(id);
-    }
-  }
-
-  private syncLines() {
-    const existing = new Set(this.lineRenderer.getAllIds());
-    for (const line of this.model.lines.values()) {
-      if (!this.lineRenderer.hasLine(line.id)) {
-        this.lineRenderer.addLine(line.startPointId, line.endPointId, line.id);
-      } else {
-        this.lineRenderer.updateConnection(line.id, line.startPointId, line.endPointId);
-      }
-      existing.delete(line.id);
-    }
-    for (const id of existing) {
-      this.lineRenderer.removeLine(id);
-    }
-  }
-
-  private syncImages() {
-    const existing = new Set(this.imageRenderer.getAllIds());
-    for (const image of this.model.images.values()) {
-      if (!this.imageRenderer.hasImage(image.id)) {
-        this.imageRenderer.addImage(image);
-      } else {
-        this.imageRenderer.updateImage(image);
-      }
-      existing.delete(image.id);
-    }
-    for (const id of existing) {
-      this.imageRenderer.removeImage(id);
-    }
+    this.pointRenderer.sync([...this.model.points.values()]);
+    this.lineRenderer.sync([...this.model.lines.values()]);
+    this.imageRenderer.sync([...this.model.images.values()]);
   }
 
   async loadGlobal(id: number) {
@@ -239,7 +194,7 @@ export class ThreeEditor {
               this.imageRenderer.setImageVisible(settings.showImage);
               break;
             case 'showPoints':
-              this.pointRenderer.setPointsVisible(settings.showPoints);
+              this.pointRenderer.setVisible(settings.showPoints);
               break;
             case 'pointColor':
               this.pointRenderer.setPointColor(settings.pointColor);
@@ -295,7 +250,7 @@ export class ThreeEditor {
         this.executeCommand(new DeletePointCommand(hoveredPoint));
         this.syncSceneFromModel();
       }
-      const hoveredLine = this.lineRenderer.getHovered()?.id;
+      const hoveredLine = this.lineRenderer.getHovered();
       if (hoveredLine) {
         this.executeCommand(new DeleteLineCommand(hoveredLine));
         this.syncSceneFromModel();

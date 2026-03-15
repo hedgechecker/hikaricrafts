@@ -6,8 +6,7 @@ import { DeleteLineCommand } from '../commands/DeleteLineCommand';
 import { generateId } from './id';
 import { projectPointToSegment } from './math';
 import type { LineData } from '../models/Line';
-import type { PointRenderer } from '../objects/PointRenderer';
-
+import type { PointRenderer } from '../objects/Renderer/PointRenderer';
 
 /**
  * Manages the splitting of an existing Line

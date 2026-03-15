@@ -1,9 +1,9 @@
 import * as THREE from 'three';
-import type { ImageRenderData } from './ImageRenderer';
+import type { ImageRenderData } from './Renderer/ImageRenderer';
 
 export class TransformGizmo {
   handles: THREE.Group[] = [];
-  hovered: string = 'none';
+  hovered: string | null = null;
   visible = false;
   parent: ImageRenderData | null = null;
 
@@ -66,7 +66,7 @@ export class TransformGizmo {
     return arr;
   }
 
-  setHovered(type: string) {
+  setHovered(type: string | null) {
     this.hovered = type;
   }
   getHovered() {
