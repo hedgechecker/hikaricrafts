@@ -1,6 +1,7 @@
 import type { Command } from '../commands/Command';
 import type { SceneModel } from '../models/SceneModel';
 import type { CursorManager } from '../objects/CursorManager';
+import type { GridRenderer } from '../objects/Renderer/GridRenderer';
 import type { ImageRenderer } from '../objects/Renderer/ImageRenderer';
 import type { LineRenderer } from '../objects/Renderer/LineRenderer';
 import type { PointRenderer } from '../objects/Renderer/PointRenderer';
@@ -19,6 +20,7 @@ export interface ToolContext {
   pointRenderer: PointRenderer;
   lineRenderer: LineRenderer;
   imageRenderer: ImageRenderer;
+  gridRenderer: GridRenderer;
   sceneManager: SceneManager;
   cursorManager: CursorManager;
   readonly model: SceneModel;

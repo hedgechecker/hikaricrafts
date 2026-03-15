@@ -83,7 +83,8 @@ export class ImageRenderer extends BaseRenderer<ImageRenderData, ImageData> {
   }
 
   //?????
-  setImageVisible(visible: boolean) {
+  setVisible(visible: boolean) {
+    super.setVisible(visible);
     this.gizmo.visible = visible;
   }
 

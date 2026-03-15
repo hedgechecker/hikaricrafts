@@ -17,6 +17,8 @@ import { generateId } from '../utils/id';
 import { DeleteImageCommand } from '../commands/DeleteImageCommand';
 import { ImageRenderer } from '../objects/Renderer/ImageRenderer';
 import type { Command } from '../commands/Command';
+import { GridRenderer } from '../objects/Renderer/GridRenderer';
+import { EditorStore } from './EditorStore';
 
 //Import SVG?
 //Highlight Line length input correctly
@@ -31,11 +33,14 @@ export class ThreeEditor {
   private pointRenderer: PointRenderer;
   private lineRenderer: LineRenderer;
   private imageRenderer: ImageRenderer;
-  private sceneManager: SceneManager;
+  private gridRenderer: GridRenderer;
+  public sceneManager: SceneManager;
   private cursorManager: CursorManager;
 
   private toolManager: ToolManager;
   private storage: DataStorage;
+  private store = new EditorStore();
+  private container: HTMLDivElement;
 
   private model: SceneModel;
   private project: Project;
@@ -45,22 +50,25 @@ export class ThreeEditor {
   public hasChanges = false;
 
   constructor(container: HTMLDivElement) {
+    this.container = container;
     this.model = new SceneModel();
     this.history = new CommandManager();
     this.storage = new DataStorage();
     this.project = this.storage.getEmptyProject();
 
-    this.cursorManager = new CursorManager(container);
-    this.sceneManager = new SceneManager(container);
+    this.cursorManager = new CursorManager(this.container);
+    this.sceneManager = new SceneManager(this.container);
     this.pointRenderer = new PointRenderer(this.sceneManager);
     this.lineRenderer = new LineRenderer(this.sceneManager, this.pointRenderer);
     this.imageRenderer = new ImageRenderer(this.sceneManager);
+    this.gridRenderer = new GridRenderer(this.sceneManager);
 
     const toolContext = {
       executeCommand: (command: Command) => this.executeCommand(command),
       pointRenderer: this.pointRenderer,
       lineRenderer: this.lineRenderer,
       imageRenderer: this.imageRenderer,
+      gridRenderer: this.gridRenderer,
       sceneManager: this.sceneManager,
       cursorManager: this.cursorManager,
       model: this.model,
@@ -69,6 +77,11 @@ export class ThreeEditor {
 
     window.addEventListener('keydown', this.onKeyDown);
     this.load(this.storage.loadFromLocal());
+    this.start();
+    const project = this.getProject();
+    if (project) {
+      this.store.setProject(project);
+    }
   }
 
   private syncSceneFromModel() {
@@ -79,6 +92,7 @@ export class ThreeEditor {
 
   async loadGlobal(id: number) {
     this.load(await this.storage.loadGlobal(id));
+    this.store.setProject(this.getProject());
   }
 
   load(data: Project | null) {
@@ -154,6 +168,7 @@ export class ThreeEditor {
         this.pointRenderer.updateScale(camera.zoom);
         this.lineRenderer.updateScale(camera.zoom);
         this.imageRenderer.updateScale(camera.zoom);
+        this.gridRenderer.updateScale(camera.zoom);
         this.sceneManager.update();
         lastZoom = camera.zoom;
       }
@@ -161,6 +176,12 @@ export class ThreeEditor {
       this.animationFrameId = requestAnimationFrame(animate);
     };
     animate();
+  }
+
+  resize(container: HTMLDivElement){
+    this.container = container;
+    this.sceneManager.container = container;
+    this.sceneManager.onResize();
   }
 
   addBackgroundImage(url: string) {
@@ -188,10 +209,10 @@ export class ThreeEditor {
         if (settings[key] !== oldSettings[key]) {
           switch (key) {
             case 'showGrid':
-              this.sceneManager.setGridVisible(settings.showGrid);
+              this.gridRenderer.setVisible(settings.showGrid);
               break;
             case 'showImage':
-              this.imageRenderer.setImageVisible(settings.showImage);
+              this.imageRenderer.setVisible(settings.showImage);
               break;
             case 'showPoints':
               this.pointRenderer.setVisible(settings.showPoints);
@@ -207,25 +228,21 @@ export class ThreeEditor {
       });
     }
     this.project.settings = settings;
+    this.store.updateSettings(settings);
+    this.hasChanges = true;
   }
 
   getProject() {
     return this.project;
+  }
+  getStore() {
+    return this.store;
   }
   exportSVG() {
     SVGExporter.simpleExport(this.model, this.project);
   }
 
   private onKeyDown = async (e: KeyboardEvent) => {
-    // if (e.key === 'i') {
-    //   e.preventDefault();
-    //   this.toolManager.setActiveTool('drag');
-    // }
-    // if (e.key === 'o') {
-    //   e.preventDefault();
-    //   this.toolManager.setActiveTool(null);
-    // }
-
     if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
       e.preventDefault();
 

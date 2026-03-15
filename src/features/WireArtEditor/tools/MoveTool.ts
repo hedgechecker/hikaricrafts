@@ -79,7 +79,7 @@ export class MoveTool implements Tool {
       }
     } // Else Move the Point
     else {
-      const point = this.context.sceneManager.getHoveredGrid();
+      const point = this.context.gridRenderer.getHoveredGrid();
       if (point) {
         this.currentPosition.copy(point);
       }
@@ -103,7 +103,7 @@ export class MoveTool implements Tool {
   handleHover(event: MouseEvent) {
     this.context.pointRenderer.setHovered(null);
     this.context.lineRenderer.setHovered(null);
-    this.context.sceneManager.setHoveredGrid(null);
+    this.context.gridRenderer.setHovered(null);
     this.context.cursorManager.setCursor(this.selectedPoint ? 'grabbing' : 'default');
 
     if (this.context.pointRenderer.handleHover(event)) {
@@ -114,7 +114,7 @@ export class MoveTool implements Tool {
       this.context.cursorManager.setCursor('pointer');
       return;
     }
-    if (this.context.sceneManager.handleHover(event)) {
+    if (this.context.gridRenderer.handleHover(event)) {
       this.context.cursorManager.setCursor('crosshair');
       return;
     }

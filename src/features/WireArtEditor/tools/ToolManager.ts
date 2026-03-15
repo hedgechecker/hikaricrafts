@@ -33,7 +33,7 @@ export class ToolManager {
     this.activeTool = name ? (this.tools.get(name) ?? null) : null;
     this.toolContext.pointRenderer.setHovered(null);
     this.toolContext.lineRenderer.setHovered(null);
-    this.toolContext.sceneManager.setHoveredGrid(null);
+    this.toolContext.gridRenderer.setHovered(null);
     this.toolContext.imageRenderer.setHovered(null);
   }
 

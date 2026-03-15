@@ -5,12 +5,12 @@ import styles from './styles/Toolbar.module.css';
 import { useNavigate } from 'react-router-dom';
 import { useDialog } from '../../global/useDialog';
 import type { Settings } from '../models/Settings';
-import type { EditorEngine } from '../core/EditorEngine';
+import type { ThreeEditor } from '../core/ThreeEditor';
 import { useEditorStore } from '../core/EditorStore';
 import type { ToolType } from '../tools/ToolManager';
 
 interface Props {
-  engine: EditorEngine;
+  engine: ThreeEditor;
 }
 /**
  * Toolbar component
@@ -48,7 +48,7 @@ export default function Toolbar({ engine }: Props) {
    */
   function updateSetting<K extends keyof Settings>(key: K, value: Settings[K]) {
     const newSettings: Settings = { ...settings, [key]: value } as Settings;
-    engine.updateSettings(newSettings);
+    engine.setSettings(newSettings);
   }
 
   const changeTool = (tool: ToolType) => {

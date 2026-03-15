@@ -224,7 +224,7 @@ export class LineTool implements Tool {
       if(line) return { pointId: null, line: line, position: null };
     }
     //4 Snap to next grid Point
-    const snapGridPoint = this.context.sceneManager.getHoveredGrid();
+    const snapGridPoint = this.context.gridRenderer.getHoveredGrid();
     if (snapGridPoint) {
       return { pointId: null, line: null, position: snapGridPoint };
     }
@@ -285,7 +285,7 @@ export class LineTool implements Tool {
   handleHover(event: MouseEvent) {
     this.context.pointRenderer.setHovered(null);
     this.context.lineRenderer.setHovered(null);
-    this.context.sceneManager.setHoveredGrid(null);
+    this.context.gridRenderer.setHovered(null);
     this.context.cursorManager.setCursor('default');
 
     if (this.context.pointRenderer.handleHover(event)) {
@@ -296,7 +296,7 @@ export class LineTool implements Tool {
       this.context.cursorManager.setCursor('pointer');
       return;
     }
-    if (this.context.sceneManager.handleHover(event)) {
+    if (this.context.gridRenderer.handleHover(event)) {
       this.context.cursorManager.setCursor('crosshair');
       return;
     }

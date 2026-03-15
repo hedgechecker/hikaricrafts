@@ -40,7 +40,7 @@ export class PointTool implements Tool {
     }
 
     //Snap to Grid
-    const point = this.context.sceneManager.getHoveredGrid();
+    const point = this.context.gridRenderer.getHoveredGrid();
     if (point) {
       worldPos = point;
     }
@@ -63,7 +63,7 @@ export class PointTool implements Tool {
   handleHover(event: MouseEvent) {
     this.context.pointRenderer.setHovered(null);
     this.context.lineRenderer.setHovered(null);
-    this.context.sceneManager.setHoveredGrid(null);
+    this.context.gridRenderer.setHovered(null);
     this.context.cursorManager.setCursor('default');
 
     if (this.context.pointRenderer.handleHover(event)) {
@@ -74,7 +74,7 @@ export class PointTool implements Tool {
       this.context.cursorManager.setCursor('pointer');
       return;
     }
-    if (this.context.sceneManager.handleHover(event)) {
+    if (this.context.gridRenderer.handleHover(event)) {
       this.context.cursorManager.setCursor('crosshair');
       return;
     }

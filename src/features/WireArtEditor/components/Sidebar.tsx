@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import styles from './styles/Sidebar.module.css';
-import type { EditorEngine } from '../core/EditorEngine';
+import type { ThreeEditor } from '../core/ThreeEditor';
 import ToolButton from '../../global/ToolButton';
 import { useDialog } from '../../global/useDialog';
 import { useNavigate } from 'react-router-dom';
@@ -14,7 +14,7 @@ interface Project {
 }
 
 interface Props {
-  engine: EditorEngine;
+  engine: ThreeEditor | null;
 }
 
 /**
@@ -78,7 +78,8 @@ export default function SideBar({ engine }: Props) {
 
   // Prevent losing unsaved work before switching projects
   async function handleProjectClick(id: number) {
-    if (engine.hasChanges()) {
+    if(!engine)return;
+    if (engine.hasChanges) {
       const result = await showDialog({
         type: 'confirm',
         message: 'Das Projekt hat ungespeicherte Änderungen, wollen sie diese Verwerfen?',
@@ -140,6 +141,7 @@ export default function SideBar({ engine }: Props) {
 
   // Open a new project after user confirmation
   const handleNewProject = async () => {
+    if (!engine) return;
     const token = localStorage.getItem('token');
     setIsLoggedIn(!!token);
     if (!token) {
@@ -151,7 +153,7 @@ export default function SideBar({ engine }: Props) {
       if (!result) {
         return;
       }
-    } else if (engine.hasChanges()) {
+    } else if (engine.hasChanges) {
       const result = await showDialog({
         type: 'confirm',
         message: 'Das Projekt hat ungespeicherte Änderungen, wollen sie diese Verwerfen?',
@@ -161,7 +163,8 @@ export default function SideBar({ engine }: Props) {
       }
     }
     setselectedProject(null);
-    engine.openNewProject();
+    //Load empty Project
+    engine.load(null);
   };
 
   return (

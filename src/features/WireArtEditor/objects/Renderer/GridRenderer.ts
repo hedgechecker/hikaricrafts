@@ -11,9 +11,6 @@ export class GridRenderer extends BaseRenderer<GridRenderData, number> {
   private size = 200;
   private hoveredGrid: THREE.Vector3 | null = null;
 
-  private raycaster = new THREE.Raycaster();
-  private plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
-
   constructor(sceneManager: SceneManager) {
     super(sceneManager);
 
@@ -44,6 +41,7 @@ export class GridRenderer extends BaseRenderer<GridRenderData, number> {
   }
   updateScale(zoom: number) {
     this.zoom = zoom;
+    this.update();
   }
 
   /* ---------------- Grid Logic ---------------- */
@@ -150,7 +148,7 @@ export class GridRenderer extends BaseRenderer<GridRenderData, number> {
   /* ---------------- Hover ---------------- */
 
   handleHover(event: MouseEvent): boolean {
-    const worldPos = this.getWorldPosition(event);
+    const worldPos = this.sceneManager.getWorldPosition(event);
 
     const snapped = this.snapToGrid(worldPos);
 
@@ -161,22 +159,5 @@ export class GridRenderer extends BaseRenderer<GridRenderData, number> {
 
   getHoveredGrid() {
     return this.hoveredGrid;
-  }
-
-  getWorldPosition(event: MouseEvent): THREE.Vector3 {
-    const rect = this.sceneManager.dom.getBoundingClientRect();
-
-    const mouse = new THREE.Vector2();
-
-    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-    this.raycaster.setFromCamera(mouse, this.sceneManager.camera);
-
-    const intersection = new THREE.Vector3();
-
-    this.raycaster.ray.intersectPlane(this.plane, intersection);
-
-    return intersection;
   }
 }

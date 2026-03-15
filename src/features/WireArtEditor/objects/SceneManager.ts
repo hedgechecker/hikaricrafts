@@ -10,12 +10,8 @@ export class SceneManager {
 
   private overlay!: HTMLDivElement;
   private gridLabel!: HTMLDivElement;
-  private container: HTMLDivElement;
+  container: HTMLDivElement;
   private animationId?: number;
-  private grid = this.createCustomGrid(20);
-  private size: number = 200;
-  private hoveredGrid: THREE.Vector3 | null = null;
-  private gridVisible: boolean = true;
 
   private raycaster = new THREE.Raycaster();
   private plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
@@ -88,7 +84,7 @@ export class SceneManager {
     return overlay;
   }
 
-  private onResize = () => {
+  onResize = () => {
     const width = this.container.clientWidth;
     const height = this.container.clientHeight;
     const aspect = width / height;
@@ -106,25 +102,12 @@ export class SceneManager {
 
   update() {
     this.camera.updateProjectionMatrix();
-    if (this.gridVisible) this.updateGrid();
     this.updateOverlay();
   }
 
-  updateGrid() {
-    const newDivisions = this.getSubdivisionDivisions(this.camera.zoom);
-    if (this.grid.userData.divisions !== newDivisions) {
-      this.scene.remove(this.grid);
-      this.grid.geometry.dispose();
-      this.grid.material.dispose();
-
-      this.grid = this.createCustomGrid(newDivisions);
-      this.grid.userData.divisions = newDivisions;
-      this.scene.add(this.grid);
-    }
-  }
-
   updateOverlay() {
-    const step = this.getGridStep() * 10;
+    //const step = this.getGridStep() * 10;
+    const step = 0;
 
     const cameraPos = this.camera.position;
 
@@ -134,77 +117,9 @@ export class SceneManager {
       `Center: (${cameraPos.x.toFixed(2)}, ${cameraPos.y.toFixed(2)})`;
   }
 
-  getSubdivisionDivisions(cameraZoom: number) {
-    if (cameraZoom > 5) return 2000; //1mm
-    if (cameraZoom > 1.6) return 400; //5mm
-    if (cameraZoom > 0.8) return 200; //10mm
-    if (cameraZoom > 0.2) return 80; //25mm
-    if (cameraZoom > 0.1) return 40; //50mm
-    return 20; //100mm
-  }
-
-  snapToGrid(worldPos: THREE.Vector3) {
-    const step = this.size / this.getSubdivisionDivisions(this.camera.zoom);
-
-    const snappedX = Math.round(worldPos.x / step) * step;
-    const snappedY = Math.round(worldPos.y / step) * step;
-
-    const point = new THREE.Vector3(snappedX, snappedY, 0);
-
-    if (worldPos.distanceTo(point) < step / 6) {
-      return point;
-    }
-
-    return null;
-  }
-
-  createCustomGrid(divisions: number) {
-    const halfSize = this.size / 2;
-    const step = this.size / divisions;
-
-    const vertices = [];
-    const colors = [];
-
-    const colorMinor = new THREE.Color(0x888888); // minor lines
-    const colorMajor = new THREE.Color(0x222222); // minor lines
-    const colorXCenter = new THREE.Color(0xaa0000); // center X
-    const colorZCenter = new THREE.Color(0x00aa00); // center Z
-
-    for (let i = 0; i <= divisions; i++) {
-      const pos = -halfSize + i * step;
-      const isMajor = i % 5 === 0;
-
-      const color = isMajor ? colorMajor : colorMinor;
-      // Line along X (parallel to X-axis, Z = pos)
-      let colorLineX = color.clone();
-      if (pos === 0) colorLineX = colorXCenter.clone();
-
-      vertices.push(-halfSize, pos, 0, halfSize, pos, 0); // 2 vertices
-      colors.push(colorLineX.r, colorLineX.g, colorLineX.b);
-      colors.push(colorLineX.r, colorLineX.g, colorLineX.b);
-
-      // Line along Z (parallel to Z-axis, X = pos)
-      let colorLineZ = color.clone();
-      if (pos === 0) colorLineZ = colorZCenter.clone();
-
-      vertices.push(pos, -halfSize, 0, pos, halfSize, 0); // 2 vertices
-      colors.push(colorLineZ.r, colorLineZ.g, colorLineZ.b);
-      colors.push(colorLineZ.r, colorLineZ.g, colorLineZ.b);
-    }
-
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-
-    const material = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true });
-    const grid = new THREE.LineSegments(geometry, material);
-    return grid;
-  }
-
   dispose() {
     if (this.animationId) cancelAnimationFrame(this.animationId);
 
-    this.scene.remove(this.grid);
     this.renderer.dispose();
     this.container.removeChild(this.overlay);
 
@@ -219,50 +134,7 @@ export class SceneManager {
   getCameraController() {
     return this.cameraController;
   }
-  getHoveredGrid() {
-    return this.hoveredGrid;
-  }
-  getGridStep(): number {
-    const divisions = this.getSubdivisionDivisions(this.camera.zoom);
-    return this.size / divisions;
-  }
 
-
-  setHoveredGrid(point: THREE.Vector3 | null) {
-    this.hoveredGrid = point;
-  }
-
-  setGridVisible(visible: boolean) {
-    if (visible == this.gridVisible) return;
-    this.gridVisible = visible;
-    if (!visible) {
-      this.scene.remove(this.grid);
-    } else {
-      this.scene.add(this.grid);
-      this.updateGrid();
-    }
-  }
-
-  handleHover(event: MouseEvent): boolean {
-    if (!this.gridVisible) return false;
-
-    const rect = this.dom.getBoundingClientRect();
-    let mouse = new THREE.Vector2();
-    let raycaster = new THREE.Raycaster();
-    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-    raycaster.setFromCamera(mouse, this.camera);
-
-    const planeZ = 0;
-    const ray = raycaster.ray;
-
-    const t = (planeZ - ray.origin.z) / ray.direction.z;
-    const worldPos = new THREE.Vector3().copy(ray.direction).multiplyScalar(t).add(ray.origin);
-
-    const snappedPos = this.snapToGrid(worldPos);
-    this.setHoveredGrid(snappedPos);
-    return snappedPos ? true : false;
-  }
 
   getWorldPosition(event: MouseEvent): THREE.Vector3 {
     const rect = this.dom.getBoundingClientRect();
