@@ -56,6 +56,5 @@
   --breakpoint-lg: 1024px;
   --breakpoint-xl: 1280px;
 
-  /* 🌤️ Optional Texture Overlay */
-  --texture-overlay: rgba(139, 94, 60, 0.05); /* subtle woodgrain tint */
+  
 }

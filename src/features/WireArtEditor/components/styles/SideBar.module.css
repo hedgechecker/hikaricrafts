@@ -11,8 +11,6 @@
   border: var(--space-border) solid var(--color-border);
   width: 20%;
   height: 100%;
-  min-width: 200px;
-  max-width: 500px;
   flex-direction: column;
 }
 
@@ -66,7 +64,6 @@
   top: 110%;
   /* border: var(--space-border) solid var(--color-border); */
   border-radius: var(--radius-md);
-  min-width: 140px;
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.1);
   opacity: 0;
   transform: translateY(-5px);
@@ -93,4 +90,12 @@
 }
 .delete:hover {
   background: rgba(192, 57, 43, 0.08);
+}
+
+@media screen and (max-width: 600px) {
+  .wrapper {
+    width: 100%;
+    height: fit-content;
+    max-width: none;
+  }
 }

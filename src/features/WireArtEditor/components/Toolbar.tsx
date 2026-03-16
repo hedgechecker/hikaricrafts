@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import ImageUploader from './ImageUploader';
 import ToolButton from '../../global/ToolButton';
 import styles from './styles/Toolbar.module.css';
@@ -7,7 +7,7 @@ import { useDialog } from '../../global/useDialog';
 import type { Settings } from '../models/Settings';
 import type { ThreeEditor } from '../core/ThreeEditor';
 import { useEditorStore } from '../core/EditorStore';
-import type { ToolType } from '../tools/ToolManager';
+import type { ToolType } from '../tools/Tool';
 
 interface Props {
   engine: ThreeEditor;
@@ -28,18 +28,12 @@ interface Props {
 export default function Toolbar({ engine }: Props) {
   const navigate = useNavigate();
 
-  // currently active editor tool
   const [active, setActive] = useState<ToolType>('move');
-
-  // temporary save indicator (shows "Gespeichert" after saving)
   const [saved, setSaved] = useState(false);
-
   const { showDialog, dialogComponent } = useDialog();
 
-  // controls visibility of the settings dropdown
   const [settingsOpen, setSettingsOpen] = useState(false);
-
-  // reactive editor settings from the store
+  const settingsRef = useRef<HTMLDivElement | null>(null);
   const { settings } = useEditorStore(engine.getStore());
 
   /**
@@ -93,15 +87,26 @@ export default function Toolbar({ engine }: Props) {
     function onKeyDown(e: KeyboardEvent) {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
-
         handleSave();
       }
     }
+
+    function handleClickOutside(e: MouseEvent) {
+      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
+        setSettingsOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
     document.addEventListener('keydown', onKeyDown);
+
     return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', onKeyDown);
     };
   }, []);
+
+
 
   return (
     <div className={styles.toolbar}>
@@ -117,7 +122,7 @@ export default function Toolbar({ engine }: Props) {
       {/* Tool selection */}
       <div className={styles.toolSection}>
         <ToolButton
-          label="Bewegen"
+          label=""
           image="/icons/move.png"
           toolTip="Elemente bewegen"
           active={active === 'move'}
@@ -125,7 +130,7 @@ export default function Toolbar({ engine }: Props) {
         />
 
         <ToolButton
-          label="Punkt"
+          label=""
           image="/icons/single-point.png"
           toolTip="Einen Punkt zeichnen"
           active={active === 'point'}
@@ -133,7 +138,7 @@ export default function Toolbar({ engine }: Props) {
         />
 
         <ToolButton
-          label="Linie"
+          label=""
           image="/icons/line.png"
           toolTip="Eine Linie zeichnen"
           active={active === 'line'}
@@ -142,7 +147,7 @@ export default function Toolbar({ engine }: Props) {
 
         {/* Save project */}
         <ToolButton
-          label={saved ? 'Gespeichert' : 'Speichern'}
+          label={saved ? '' : ''}
           image={saved ? '/icons/check.png' : '/icons/save.png'}
           toolTip="Projekt speichern"
           onClick={handleSave}
@@ -150,7 +155,7 @@ export default function Toolbar({ engine }: Props) {
 
         {/* Export project */}
         <ToolButton
-          label="SVG exportieren"
+          label=""
           image="/icons/export.png"
           toolTip="Projekt als SVG Datei exportieren"
           onClick={handleExport}
@@ -158,15 +163,23 @@ export default function Toolbar({ engine }: Props) {
 
         {/* Toggle settings panel */}
         <ToolButton
-          label="Ansicht"
+          label=""
           image="/icons/setting.png"
           toolTip="Sichtbarkeiten ändern"
           onClick={() => setSettingsOpen(!settingsOpen)}
         />
 
+        {/* Verify */}
+        <ToolButton
+          label="Überprüfen"
+          image="/icons/check.png"
+          toolTip="Inhalt checken"
+          onClick={() => changeTool('verify')}
+        />
+
         {/* Settings menu */}
         {settingsOpen && (
-          <div className={styles.settingsMenu}>
+          <div ref={settingsRef} className={styles.settingsMenu}>
             <h4>Ansicht</h4>
 
             <label>
@@ -224,14 +237,14 @@ export default function Toolbar({ engine }: Props) {
             </label>
           </div>
         )}
-      </div>
 
-      {/* Upload background reference image */}
-      <ImageUploader
-        onImageSelected={(img) => {
-          engine.addBackgroundImage(img);
-        }}
-      />
+        {/* Upload background reference image */}
+        <ImageUploader
+          onImageSelected={(img) => {
+            engine.addBackgroundImage(img);
+          }}
+        />
+      </div>
     </div>
   );
 }

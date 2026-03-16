@@ -1,7 +1,7 @@
 import { PointRenderer } from '../objects/Renderer/PointRenderer';
 import { LineRenderer } from '../objects/Renderer/LineRenderer';
 import { SceneManager } from '../objects/SceneManager';
-import { ToolManager, type ToolType } from '../tools/ToolManager';
+import { ToolManager } from '../tools/ToolManager';
 import { CursorManager } from '../objects/CursorManager';
 
 import { DataStorage } from '../core/DataStorage';
@@ -19,6 +19,7 @@ import { ImageRenderer } from '../objects/Renderer/ImageRenderer';
 import type { Command } from '../commands/Command';
 import { GridRenderer } from '../objects/Renderer/GridRenderer';
 import { EditorStore } from './EditorStore';
+import type { ToolType } from '../tools/Tool';
 
 //Import SVG?
 //Highlight Line length input correctly
@@ -136,8 +137,6 @@ export class ThreeEditor {
     const id = this.project.id;
     this.saveLocal();
     await this.saveGlobal();
-    console.log(id);
-    console.log(this.project.id);
     if(id != this.project.id){
       this.store.setProject(this.project);
       console.log('update');
@@ -235,10 +234,10 @@ export class ThreeEditor {
               this.pointRenderer.setVisible(settings.showPoints);
               break;
             case 'pointColor':
-              this.pointRenderer.setPointColor(settings.pointColor);
+              this.pointRenderer.setColorAll(settings.pointColor);
               break;
             case 'lineColor':
-              this.lineRenderer.setLineColor(settings.lineColor);
+              this.lineRenderer.setColorAll(settings.lineColor);
               break;
           }
         }

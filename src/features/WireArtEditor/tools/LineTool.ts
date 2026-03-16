@@ -38,9 +38,7 @@ export class LineTool implements Tool {
     window.addEventListener('keyup', this.onKeyUp);
   }
 
-  onMouseDown(event: MouseEvent) {
-    event.preventDefault();
-    event.stopPropagation();
+  onPointerDown(event: PointerEvent) {
     //right mouse button
     if (event.button === 2) {
       this.cancelLine();
@@ -102,7 +100,7 @@ export class LineTool implements Tool {
     }
   }
 
-  onMouseMove(event: MouseEvent) {
+  onPointerMove(event: PointerEvent) {
     if (!this.lastPointId) this.inputOverlay.hide();
     this.worldPos.copy(this.context.sceneManager.getWorldPosition(event));
 
@@ -282,7 +280,7 @@ export class LineTool implements Tool {
   }
 
   //Enable Hover for Points, Lines and Grid
-  handleHover(event: MouseEvent) {
+  handleHover(event: PointerEvent) {
     this.context.pointRenderer.setHovered(null);
     this.context.lineRenderer.setHovered(null);
     this.context.gridRenderer.setHovered(null);

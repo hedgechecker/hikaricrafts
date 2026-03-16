@@ -6,12 +6,14 @@ import type { ImageRenderer } from '../objects/Renderer/ImageRenderer';
 import type { LineRenderer } from '../objects/Renderer/LineRenderer';
 import type { PointRenderer } from '../objects/Renderer/PointRenderer';
 import type { SceneManager } from '../objects/SceneManager';
+export type ToolType = 'point' | 'line' | 'move'  | 'verify' | null;
+
 
 export interface Tool {
-  onMouseDown?(event: MouseEvent): void;
-  onMouseMove?(event: MouseEvent): void;
-  onMouseUp?(event: MouseEvent): void;
-  onClick?(event: MouseEvent): void;
+  onPointerDown?(event: PointerEvent): void;
+  onPointerMove?(event: PointerEvent): void;
+  onPointerUp?(event: PointerEvent): void;
+  onClick?(): void;
   dispose?(): void;
 }
 

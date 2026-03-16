@@ -21,7 +21,7 @@ export class MoveTool implements Tool {
   }
 
   //check for Hit with existing Point
-  onMouseDown(event: MouseEvent) {
+  onPointerDown(event: PointerEvent) {
     if (event.button != 0) return; //only move on left click
     const hovered = this.context.pointRenderer.getHovered();
     if (!hovered) return;
@@ -36,7 +36,7 @@ export class MoveTool implements Tool {
     this.context.cursorManager.setCursor('grabbing');
   }
 
-  onMouseMove(event: MouseEvent) {
+  onPointerMove(event: PointerEvent) {
     this.handleHover(event);
     if (!this.selectedPoint) return;
     this.currentPosition = this.context.sceneManager.getWorldPosition(event);
@@ -47,7 +47,7 @@ export class MoveTool implements Tool {
     this.context.lineRenderer.update();
   }
 
-  onMouseUp() {
+  onPointerUp() {
     if (!this.selectedPoint) {
       this.context.sceneManager.cameraController.setPanEnabled(true);
       this.selectedPoint = null;
@@ -100,7 +100,7 @@ export class MoveTool implements Tool {
   }
 
   //Enable Hover for Points, Lines and Grid
-  handleHover(event: MouseEvent) {
+  handleHover(event: PointerEvent) {
     this.context.pointRenderer.setHovered(null);
     this.context.lineRenderer.setHovered(null);
     this.context.gridRenderer.setHovered(null);

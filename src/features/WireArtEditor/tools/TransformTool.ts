@@ -34,7 +34,7 @@ export class TransformTool implements Tool {
   }
 
   //check for Hit with existing Image
-  onMouseDown(event: MouseEvent) {
+  onPointerDown(event: PointerEvent) {
     if (event.button != 0) return; //only move on left click
     this.worldPos.copy(this.context.sceneManager.getWorldPosition(event));
 
@@ -67,7 +67,7 @@ export class TransformTool implements Tool {
     this.context.cursorManager.setCursor('grabbing');
   }
 
-  onMouseMove = (event: MouseEvent) => {
+  onPointerMove = (event: PointerEvent) => {
     if(this.dragMode == 'none')this.handleHover(event);
     if (!this.dragging || !this.selectedImage || !this.startData) return;
     this.worldPos.copy(this.context.sceneManager.getWorldPosition(event));
@@ -109,7 +109,7 @@ export class TransformTool implements Tool {
     
   };
 
-  onMouseUp = (event: MouseEvent) => {
+  onPointerUp = (event: PointerEvent) => {
     if (this.selectedImage && this.startData && this.startData != this.currentData) {
       this.context.executeCommand(new UpdateImageCommand(this.currentData));
     }
@@ -124,7 +124,7 @@ export class TransformTool implements Tool {
   };
 
   //Enable Hover only for Images
-  handleHover(event: MouseEvent) {
+  handleHover(event: PointerEvent) {
     this.context.imageRenderer.setHovered(null);
     this.context.cursorManager.setCursor(this.selectedImage ? 'grabbing' : 'default');
 

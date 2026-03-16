@@ -5,6 +5,7 @@ export interface RenderData {
   mesh: THREE.Object3D;
   isHovered: boolean;
   isSelected: boolean;
+  isInValid: boolean;
 }
 
 export abstract class BaseRenderer<T extends RenderData, TInput> {
@@ -13,9 +14,13 @@ export abstract class BaseRenderer<T extends RenderData, TInput> {
 
   protected hovered: string | null = null;
   protected selected: string[] = [];
+  protected invalid: string[] = [];
 
   protected zoom = 1;
   protected visible = true;
+
+  protected colorInValid = "#ff0000";
+  
 
   constructor(sceneManager: SceneManager) {
     this.sceneManager = sceneManager;
@@ -76,6 +81,21 @@ export abstract class BaseRenderer<T extends RenderData, TInput> {
       const obj = this.objects.get(id);
       if (obj) obj.isSelected = true;
     });
+  }
+
+  setInvalid(ids: string[]) {
+    this.invalid.forEach((id) => {
+      const obj = this.objects.get(id);
+      if (obj) obj.isInValid = false;
+    });
+
+    this.invalid = ids;
+
+    this.invalid.forEach((id) => {
+      const obj = this.objects.get(id);
+      if (obj) obj.isInValid = true;
+    });
+    this.updateScale(this.zoom);
   }
 
   remove(id: string) {

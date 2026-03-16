@@ -15,7 +15,7 @@ export class LineRenderer extends BaseRenderer<LineRenderData, LineData> {
 
   private readonly baseThickness = 0.02;
   private readonly hoverThickness = 0.05;
-  private color: THREE.Color = new THREE.Color(0x000000);
+  private color = '#000000';
 
   constructor(sceneManager: SceneManager, pointManager: PointRenderer) {
     super(sceneManager);
@@ -63,6 +63,7 @@ export class LineRenderer extends BaseRenderer<LineRenderData, LineData> {
       mesh: group,
       isHovered: false,
       isSelected: false,
+      isInValid: false,
     });
 
     this.updateLineGeometry(id);
@@ -182,24 +183,36 @@ export class LineRenderer extends BaseRenderer<LineRenderData, LineData> {
       const thickness =
         this.hovered === id ? this.hoverThickness / zoom : this.baseThickness / zoom;
       line.mesh.scale.set(length, thickness, thickness);
+
+      if (line.isInValid) {
+        this.setColor(id, this.colorInValid);
+      } else {
+        this.setColor(id, this.color);
+      }
     }
   }
 
-  setLineColor(color: string) {
+  setColorAll(color: string) {
+    if (this.color == color) return;
+    this.color = color;
+
+    this.objects.forEach((_point, id) => {
+      this.setColor(id, color);
+    });
+  }
+
+  setColor(id: string, color: string) {
     const newColor = new THREE.Color(color);
 
-    if (this.color && this.color.equals(newColor)) return;
+    const line = this.objects.get(id);
+    if (!line) return;
+    const visual = line.mesh.getObjectByName('visual');
 
-    this.color = newColor;
-
-    this.objects.forEach((line) => {
-      const visual = line.mesh.getObjectByName('visual');
-      if (visual && (visual as THREE.Mesh).material) {
-        ((visual as THREE.Mesh).material as THREE.Material & { color: THREE.Color }).color.copy(
-          this.color,
-        );
-      }
-    });
+    if (visual && (visual as THREE.Mesh).material) {
+      ((visual as THREE.Mesh).material as THREE.Material & { color: THREE.Color }).color.copy(
+        newColor,
+      );
+    }
   }
 
   handleHover(event: MouseEvent): boolean {

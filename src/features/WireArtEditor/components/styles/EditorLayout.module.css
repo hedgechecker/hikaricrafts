@@ -16,3 +16,10 @@
     flex-direction: row;
     gap: var(--space-md);
 }
+
+@media screen and (max-width: 600px) {
+  .center {
+    flex-direction: column-reverse;
+    align-items: center;
+  }
+}

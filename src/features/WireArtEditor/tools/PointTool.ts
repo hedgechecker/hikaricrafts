@@ -14,11 +14,11 @@ export class PointTool implements Tool {
     this.context = context;
   }
 
-  onMouseDown(event: MouseEvent): void {
+  onPointerDown(event: PointerEvent): void {
     if (event.button !== 0) return;
   }
 
-  onMouseUp(event: MouseEvent): void {
+  onPointerUp(event: PointerEvent): void {
     //No Placement on existing Points
     if (event.button !== 0) return;
     if (this.context.pointRenderer.getHovered()) return;
@@ -55,12 +55,12 @@ export class PointTool implements Tool {
     );
   }
 
-  onMouseMove(event: MouseEvent) {
+  onPointerMove(event: PointerEvent) {
     this.handleHover(event);
   }
 
   //Enable Hover for Points, Lines and Grid
-  handleHover(event: MouseEvent) {
+  handleHover(event: PointerEvent) {
     this.context.pointRenderer.setHovered(null);
     this.context.lineRenderer.setHovered(null);
     this.context.gridRenderer.setHovered(null);

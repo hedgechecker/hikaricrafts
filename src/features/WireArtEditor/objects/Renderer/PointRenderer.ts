@@ -6,13 +6,14 @@ interface PointRenderData {
   mesh: THREE.Group;
   isHovered: boolean;
   isSelected: boolean;
+  isInValid: boolean;
 }
 
 export class PointRenderer extends BaseRenderer<PointRenderData, PointData> {
   private readonly baseThickness = 1.0;
   private readonly hoverThickness = 2.0;
 
-  private color: THREE.Color = new THREE.Color(0x999999);
+  private color = '#999999';
 
   protected getId(data: PointData) {
     return data.id;
@@ -23,17 +24,25 @@ export class PointRenderer extends BaseRenderer<PointRenderData, PointData> {
   protected updateFromData(data: PointData) {
     this.setPosition(data.id, new THREE.Vector3(data.x, data.y, data.z));
   }
+
   updateScale(zoom: number) {
     this.zoom = zoom;
     const size = this.baseThickness / zoom;
-    this.objects.forEach((object) => {
+    this.objects.forEach((object, id) => {
       const isHovered = object.isHovered;
       const isSelected = object.isSelected;
+      const isInValid = object.isInValid;
+      
       object.mesh.children.forEach((child) => {
         if ((isHovered || isSelected) && child.name != 'hitbox') {
           child.scale.set(size * this.hoverThickness, size * this.hoverThickness, 1);
         } else {
           child.scale.set(size, size, 1);
+        }
+        if (isInValid) {
+          this.setColor(id, this.colorInValid);
+        } else {
+          this.setColor(id, this.color);
         }
       });
     });
@@ -93,7 +102,7 @@ export class PointRenderer extends BaseRenderer<PointRenderData, PointData> {
 
     if (this.visible) this.sceneManager.scene.add(group);
 
-    this.objects.set(id, { mesh: group, isSelected: false, isHovered: false });
+    this.objects.set(id, { mesh: group, isSelected: false, isHovered: false, isInValid: false });
     return group;
   }
 
@@ -120,29 +129,34 @@ export class PointRenderer extends BaseRenderer<PointRenderData, PointData> {
     return null;
   }
 
-  setPointColor(color: string) {
+  setColorAll(color: string) {
+    if (this.color == color) return;
+    this.color = color;
+
+    this.objects.forEach((_point, id) => {
+      this.setColor(id, color);
+    });
+  }
+
+  setColor(id: string, color: string) {
     const newColor = new THREE.Color(color);
 
-    if (this.color && this.color.equals(newColor)) return;
+    const point = this.objects.get(id);
+    if (!point) return;
+    const visual = point.mesh.getObjectByName('visual');
+    const outline = point.mesh.getObjectByName('outline');
 
-    this.color = newColor;
+    if (visual && (visual as THREE.Mesh).material) {
+      ((visual as THREE.Mesh).material as THREE.Material & { color: THREE.Color }).color.copy(
+        newColor,
+      );
+    }
 
-    this.objects.forEach((point) => {
-      const visual = point.mesh.getObjectByName('visual');
-      const outline = point.mesh.getObjectByName('outline');
-
-      if (visual && (visual as THREE.Mesh).material) {
-        ((visual as THREE.Mesh).material as THREE.Material & { color: THREE.Color }).color.copy(
-          this.color,
-        );
-      }
-
-      if (outline && (outline as THREE.Mesh).material) {
-        ((outline as THREE.Mesh).material as THREE.Material & { color: THREE.Color }).color.copy(
-          this.color,
-        );
-      }
-    });
+    if (outline && (outline as THREE.Mesh).material) {
+      ((outline as THREE.Mesh).material as THREE.Material & { color: THREE.Color }).color.copy(
+        newColor,
+      );
+    }
   }
 
   handleHover(event: MouseEvent): boolean {

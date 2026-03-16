@@ -180,8 +180,8 @@ export default function SideBar({ engine }: Props) {
         onClick={handleNewProject}
       >
         {' '}
-        <img src="/icons/add.png" style={{ height: '28px', width: '28px' }}></img>
         <span className={styles.projectName}>{'Neues Projekt erstellen'}</span>
+        <div className={styles.menuWrapper}> <img src="/icons/add.png" style={{ height: '28px', width: '28px' }}></img> </div>
       </div>
 
       {isLoggedIn && <h3>Deine Projekte</h3>}

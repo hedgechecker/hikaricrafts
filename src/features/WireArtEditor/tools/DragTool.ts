@@ -22,14 +22,14 @@ export class DragTool implements Tool {
     this.transformTool = new TransformTool(context);
   }
 
-  onMouseDown(event: MouseEvent) {
+  onPointerDown(event: PointerEvent) {
     if (event.button !== 0) return;
 
     // PRIORITY 1 → POINT
     const hoveredPoint = this.context.pointRenderer.getHovered();
     if (hoveredPoint) {
       this.activeTool = 'point';
-      this.moveTool.onMouseDown(event);
+      this.moveTool.onPointerDown(event);
       return;
     }
 
@@ -37,21 +37,21 @@ export class DragTool implements Tool {
     const hoveredImage = this.context.imageRenderer.getHovered();
     if (hoveredImage) {
       this.activeTool = 'image';
-      this.transformTool.onMouseDown(event);
+      this.transformTool.onPointerDown(event);
       return;
     }
 
     this.activeTool = 'none';
   }
 
-  onMouseMove(event: MouseEvent) {
+  onPointerMove(event: PointerEvent) {
     if (this.activeTool === 'point') {
-      this.moveTool.onMouseMove(event);
+      this.moveTool.onPointerMove(event);
       return;
     }
 
     if (this.activeTool === 'image') {
-      this.transformTool.onMouseMove(event);
+      this.transformTool.onPointerMove(event);
       return;
     }
 
@@ -59,19 +59,19 @@ export class DragTool implements Tool {
     this.handleHover(event);
   }
 
-  onMouseUp(event: MouseEvent) {
+  onPointerUp(event: PointerEvent) {
     if (this.activeTool === 'point') {
-      this.moveTool.onMouseUp();
+      this.moveTool.onPointerUp();
     }
 
     if (this.activeTool === 'image') {
-      this.transformTool.onMouseUp(event);
+      this.transformTool.onPointerUp(event);
     }
 
     this.activeTool = 'none';
   }
 
-  handleHover(event: MouseEvent) {
+  handleHover(event: PointerEvent) {
     // Prefer point hover
     this.context.pointRenderer.setHovered(null);
     this.context.imageRenderer.setHovered(null);
