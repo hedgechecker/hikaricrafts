@@ -49,6 +49,7 @@ export default function Toolbar({ engine }: Props) {
   function updateSetting<K extends keyof Settings>(key: K, value: Settings[K]) {
     const newSettings: Settings = { ...settings, [key]: value } as Settings;
     engine.setSettings(newSettings);
+    engine.hasChanges = true;
   }
 
   const changeTool = (tool: ToolType) => {

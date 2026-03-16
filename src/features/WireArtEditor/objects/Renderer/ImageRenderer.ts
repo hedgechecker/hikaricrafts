@@ -20,9 +20,10 @@ export class ImageRenderer extends BaseRenderer<ImageRenderData, ImageData> {
 
     this.gizmo.handles.forEach((handle) => {
       this.sceneManager.scene.add(handle);
+      handle.visible = false;
     });
 
-    this.gizmo.visible = false;
+    this.gizmo.setVisible(false);
   }
 
   protected getId(data: ImageData) {
@@ -64,10 +65,10 @@ export class ImageRenderer extends BaseRenderer<ImageRenderData, ImageData> {
   setHovered(id: string | null) {
     if (this.hovered == id) return;
     if (this.hovered) {
-      this.gizmo.visible = false;
+      this.gizmo.setVisible(false);
       this.gizmo.update(null);
       const image = this.objects.get(this.hovered);
-      if (image != undefined) {
+      if (image) {
         image.isHovered = false;
       }
     }
@@ -75,17 +76,17 @@ export class ImageRenderer extends BaseRenderer<ImageRenderData, ImageData> {
 
     if (this.hovered) {
       const image = this.objects.get(this.hovered);
-      if (image != undefined) {
+      if (image) {
         image.isHovered = true;
+        this.gizmo.setVisible(true);
         this.gizmo.update(image);
       }
     }
   }
 
-  //?????
   setVisible(visible: boolean) {
     super.setVisible(visible);
-    this.gizmo.visible = visible;
+    this.gizmo.setVisible(visible);
   }
 
   addImage(image: ImageData) {
@@ -153,7 +154,7 @@ export class ImageRenderer extends BaseRenderer<ImageRenderData, ImageData> {
   }
 
   handleHover(event: MouseEvent): boolean {
-    if (!this.visible) return false;
+    if (!this.visible || this.objects.size < 1) return false;
     const rect = this.sceneManager.dom.getBoundingClientRect();
     let mouse = new THREE.Vector2();
     let raycaster = new THREE.Raycaster();
@@ -161,10 +162,11 @@ export class ImageRenderer extends BaseRenderer<ImageRenderData, ImageData> {
     mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     raycaster.setFromCamera(mouse, this.sceneManager.camera);
 
-    this.gizmo.visible = true;
+
     const handleHits = raycaster.intersectObjects(this.gizmo.getHitboxes(), true);
 
     if (handleHits.length) {
+      this.gizmo.setVisible(true);
       this.gizmo.setHovered(handleHits[0].object.parent?.userData.type);
       this.setHovered(this.gizmo.parent!.data.id);
       return true;
@@ -174,6 +176,7 @@ export class ImageRenderer extends BaseRenderer<ImageRenderData, ImageData> {
     const intersects = raycaster.intersectObjects(this.getHitboxes(), false);
     const hoveredImageId = this.getFirstHoverableImage(intersects);
     if (hoveredImageId) {
+      this.gizmo.setVisible(true);
       this.setHovered(hoveredImageId);
       return true;
     }

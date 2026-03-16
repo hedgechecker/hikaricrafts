@@ -4,7 +4,7 @@ import type { ImageData } from './Image';
 import type { Settings } from "./Settings";
 
 export interface Project {
-  id: string | null;
+  id: number | null;
   name: string;
   version: number;
   isPublic?: boolean;

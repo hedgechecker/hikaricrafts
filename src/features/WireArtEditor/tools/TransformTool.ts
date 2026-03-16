@@ -68,7 +68,7 @@ export class TransformTool implements Tool {
   }
 
   onMouseMove = (event: MouseEvent) => {
-    this.handleHover(event);
+    if(this.dragMode == 'none')this.handleHover(event);
     if (!this.dragging || !this.selectedImage || !this.startData) return;
     this.worldPos.copy(this.context.sceneManager.getWorldPosition(event));
 

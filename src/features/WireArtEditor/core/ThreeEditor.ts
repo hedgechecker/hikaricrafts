@@ -107,6 +107,8 @@ export class ThreeEditor {
       this.syncSceneFromModel();
       this.storage.deleteLocal();
       this.project = project;
+      this.store.setProject(project);
+      console.log('set');
       return;
     }
     this.setSettings(data.settings);
@@ -125,14 +127,22 @@ export class ThreeEditor {
     this.syncSceneFromModel();
   }
 
-  public save() {
+  public async save() {
     if (!this.hasChanges) {
       return;
     }
     this.hasChanges = false;
     this.project.version = this.project.version + 1;
+    const id = this.project.id;
     this.saveLocal();
-    this.saveGlobal();
+    await this.saveGlobal();
+    console.log(id);
+    console.log(this.project.id);
+    if(id != this.project.id){
+      this.store.setProject(this.project);
+      console.log('update');
+    }
+    
   }
   private saveLocal() {
     this.storage.saveToLocal({
@@ -144,12 +154,19 @@ export class ThreeEditor {
   }
 
   private async saveGlobal() {
-    this.storage.saveGlobal({
+    const savedProject = await this.storage.saveGlobal({
       ...this.project,
       points: Array.from(this.model.points.values()),
       lines: Array.from(this.model.lines.values()),
       images: Array.from(this.model.images.values()),
     });
+    console.log(savedProject);
+    if (!savedProject) return;
+    this.project = savedProject;
+    this.store.setProject(savedProject);
+
+
+    this.hasChanges = false;
   }
 
   public executeCommand(command: Command) {
@@ -178,7 +195,7 @@ export class ThreeEditor {
     animate();
   }
 
-  resize(container: HTMLDivElement){
+  resize(container: HTMLDivElement) {
     this.container = container;
     this.sceneManager.container = container;
     this.sceneManager.onResize();
@@ -229,7 +246,6 @@ export class ThreeEditor {
     }
     this.project.settings = settings;
     this.store.updateSettings(settings);
-    this.hasChanges = true;
   }
 
   getProject() {

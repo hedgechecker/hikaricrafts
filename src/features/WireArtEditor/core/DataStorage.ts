@@ -1,6 +1,6 @@
 import type { Project } from '../models/Project';
 const BASE_URL = import.meta.env.VITE_API_URL;
-const LOCALSTORAGE_KEY = "Project";
+const LOCALSTORAGE_KEY = 'Project';
 
 export class DataStorage {
   /**
@@ -40,7 +40,6 @@ export class DataStorage {
   }
 
   //Global storing of the Project
-
   /**
    * Saves a project to the backend.
    *
@@ -48,20 +47,20 @@ export class DataStorage {
    * - If the project already has an ID, it will be updated instead of created.
    * - Otherwise a new project is created via the API.
    *
-   * After creating a new project, the returned ID is written back to the
-   * project object so future saves will update the existing project.
+   * Returns the saved project (including generated id).
    */
-  async saveGlobal(project: Project): Promise<boolean> {
-    // Retrieve authentication token for API requests
+  async saveGlobal(project: Project): Promise<Project | null> {
     const token = localStorage.getItem('token');
+
     if (!token) {
       console.log('User not Logged In: No Global Storage');
-      return false;
+      return null;
     }
 
-    // If the project already exists in the backend, update it instead
+    // Update existing project
     if (project.id) {
-      return await this.updateGlobal(project);
+      const success = await this.updateGlobal(project);
+      return success ? project : null;
     }
 
     if (project.name.length < 1) {
@@ -70,7 +69,6 @@ export class DataStorage {
 
     console.log('Creating new project');
 
-    // Extract only the editor data that should be persisted
     const data = {
       points: project.points,
       lines: project.lines,
@@ -78,7 +76,6 @@ export class DataStorage {
       settings: project.settings,
     };
 
-    // Send request to create a new project in the backend
     const res = await fetch(`${BASE_URL}/wireArtProjects`, {
       method: 'POST',
       headers: {
@@ -92,15 +89,19 @@ export class DataStorage {
       }),
     });
 
-    // Read created project from API response
+    if (!res.ok) {
+      console.error('Failed to create project');
+      return null;
+    }
+
     const created = await res.json();
+    // return a new object so stores/react detect the change
+    return {
+      ...project,
+      id: created.id,
+    };
 
-    // Store the generated project ID locally for future updates
-    project.id = created.id;
-
-    return true;
   }
-
   /**
    *
    * @param project the Project to be Updated

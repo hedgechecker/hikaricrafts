@@ -57,7 +57,6 @@ export class TransformGizmo {
   }
 
   getHitboxes() {
-    if (!this.visible) return [];
     let arr: THREE.Object3D<THREE.Object3DEventMap>[] = [];
     this.handles.forEach((handle) => {
       arr.push(handle.getObjectByName('hitbox')!);
@@ -68,6 +67,13 @@ export class TransformGizmo {
 
   setHovered(type: string | null) {
     this.hovered = type;
+  }
+
+  setVisible(visible:boolean){
+    this.visible = visible;
+    this.handles.forEach((handle) => {
+      handle.visible = visible;
+    });
   }
   getHovered() {
     return this.hovered;

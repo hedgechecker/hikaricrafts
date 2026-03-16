@@ -4,6 +4,7 @@ import type { ThreeEditor } from '../core/ThreeEditor';
 import ToolButton from '../../global/ToolButton';
 import { useDialog } from '../../global/useDialog';
 import { useNavigate } from 'react-router-dom';
+import { useEditorStore } from '../core/EditorStore';
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -14,7 +15,7 @@ interface Project {
 }
 
 interface Props {
-  engine: ThreeEditor | null;
+  engine: ThreeEditor;
 }
 
 /**
@@ -40,7 +41,8 @@ export default function SideBar({ engine }: Props) {
 
   // project data
   const [projects, setProjects] = useState<Project[]>([]);
-  const [selectedProject, setselectedProject] = useState<number | null>(null);
+  const { project } = useEditorStore(engine.getStore());
+  const selectedProject = project? (project.id? project.id : -1) : null;
 
   const { showDialog, dialogComponent } = useDialog();
   const navigate = useNavigate();
@@ -49,6 +51,10 @@ export default function SideBar({ engine }: Props) {
   useEffect(() => {
     loadProjects();
   }, []);
+
+  useEffect(() => {
+    loadProjects();
+  }, [project]);
 
   // Close dropdown menus and inline editing when clicking outside
   useEffect(() => {
@@ -88,7 +94,6 @@ export default function SideBar({ engine }: Props) {
         return;
       }
     }
-    setselectedProject(id);
     engine.loadGlobal(id);
   }
 
@@ -162,7 +167,6 @@ export default function SideBar({ engine }: Props) {
         return;
       }
     }
-    setselectedProject(null);
     //Load empty Project
     engine.load(null);
   };
