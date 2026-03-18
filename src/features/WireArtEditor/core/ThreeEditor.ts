@@ -20,6 +20,7 @@ import type { Command } from '../commands/Command';
 import { GridRenderer } from '../objects/Renderer/GridRenderer';
 import { EditorStore } from './EditorStore';
 import type { ToolType } from '../tools/Tool';
+import { OrthographicCamera } from 'three';
 
 //Import SVG?
 //Highlight Line length input correctly
@@ -182,17 +183,21 @@ export class ThreeEditor {
   start() {
     let lastZoom = 0;
     const animate = () => {
-      const { renderer, scene, camera } = this.sceneManager;
-      renderer.render(scene, camera);
-      if (camera.zoom != lastZoom) {
-        this.pointRenderer.updateScale(camera.zoom);
-        this.lineRenderer.updateScale(camera.zoom);
-        this.imageRenderer.updateScale(camera.zoom);
-        this.gridRenderer.updateScale(camera.zoom);
-        this.sceneManager.update();
-        lastZoom = camera.zoom;
-      }
 
+      this.sceneManager.update();
+      const { renderer, scene, camera } = this.sceneManager;
+      //console.log(camera.position);
+
+      renderer.render(scene, camera);
+      if (camera instanceof OrthographicCamera) {
+        if (camera.zoom != lastZoom) {
+          this.pointRenderer.updateScale(camera.zoom);
+          this.lineRenderer.updateScale(camera.zoom);
+          this.imageRenderer.updateScale(camera.zoom);
+          this.gridRenderer.updateScale(camera.zoom);
+          lastZoom = camera.zoom;
+        }
+      }
       this.animationFrameId = requestAnimationFrame(animate);
     };
     animate();
@@ -211,7 +216,7 @@ export class ThreeEditor {
         url: url,
         x: 0,
         y: 0,
-        z: -5,
+        z: -0.5,
         rotation: 0,
         height: 10,
       }),

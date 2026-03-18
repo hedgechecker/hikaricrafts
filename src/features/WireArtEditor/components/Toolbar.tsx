@@ -146,6 +146,14 @@ export default function Toolbar({ engine }: Props) {
 
         <ToolButton
           label=""
+          image="/icons/eraser.png"
+          toolTip="Elemente löschen"
+          active={active === 'delete'}
+          onClick={() => changeTool('delete')}
+        />
+
+        <ToolButton
+          label=""
           image="/icons/undo.png"
           toolTip="Rückgängig machen"
           onClick={() => {

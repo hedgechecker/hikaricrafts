@@ -14,7 +14,7 @@ export class GridRenderer extends BaseRenderer<GridRenderData, number> {
   constructor(sceneManager: SceneManager) {
     super(sceneManager);
 
-    const divisions = this.getSubdivisionDivisions(this.sceneManager.camera.zoom);
+    const divisions = this.getSubdivisionDivisions();
     this.createGrid(divisions);
   }
 
@@ -47,8 +47,8 @@ export class GridRenderer extends BaseRenderer<GridRenderData, number> {
   /* ---------------- Grid Logic ---------------- */
 
   update() {
-    const divisions = this.getSubdivisionDivisions(this.sceneManager.camera.zoom);
-
+    const divisions = this.getSubdivisionDivisions();
+    this.sceneManager.updateOverlay(this.getGridStep()*10);
     this.sync([divisions]);
   }
 
@@ -115,7 +115,12 @@ export class GridRenderer extends BaseRenderer<GridRenderData, number> {
 
   /* ---------------- Grid Utility ---------------- */
 
-  getSubdivisionDivisions(cameraZoom: number) {
+  getSubdivisionDivisions() {
+
+    let cameraZoom = 10;
+    if(this.sceneManager.camera instanceof THREE.OrthographicCamera){
+      cameraZoom = this.sceneManager.camera.zoom;
+    }
     if (cameraZoom > 5) return 2000;
     if (cameraZoom > 1.6) return 400;
     if (cameraZoom > 0.8) return 200;
@@ -126,7 +131,7 @@ export class GridRenderer extends BaseRenderer<GridRenderData, number> {
   }
 
   getGridStep(): number {
-    const divisions = this.getSubdivisionDivisions(this.sceneManager.camera.zoom);
+    const divisions = this.getSubdivisionDivisions();
 
     return this.size / divisions;
   }

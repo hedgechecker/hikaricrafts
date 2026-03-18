@@ -33,7 +33,7 @@ export class MoveTool implements Tool {
     this.currentPosition.copy(pos);
 
     this.context.pointRenderer.setSelected([this.selectedPoint]);
-    this.context.sceneManager.cameraController.setPanEnabled(false);
+    this.context.sceneManager.setPanEnabled(false);
     this.context.cursorManager.setCursor('grabbing');
   }
 
@@ -49,15 +49,12 @@ export class MoveTool implements Tool {
   }
 
   onPointerUp() {
-    if (!this.selectedPoint) {
-      this.context.sceneManager.cameraController.setPanEnabled(true);
+    if (!this.selectedPoint || this.currentPosition.equals(this.startPosition)) {
       this.selectedPoint = null;
       this.context.pointRenderer.setSelected([]);
       this.context.cursorManager.setCursor('default');
       return;
     }
-
-    if (this.currentPosition.equals(this.startPosition)) return;
 
     const hoveredPoint = this.context.pointRenderer.getHovered();
     const hoveredLine = this.context.lineRenderer.getHovered();
@@ -94,7 +91,6 @@ export class MoveTool implements Tool {
       );
     }
 
-    this.context.sceneManager.cameraController.setPanEnabled(true);
     this.selectedPoint = null;
     this.context.pointRenderer.setSelected([]);
     this.context.cursorManager.setCursor('default');

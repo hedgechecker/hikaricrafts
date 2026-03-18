@@ -193,6 +193,5 @@ export class CameraController {
 
   setPanEnabled(enabled: boolean) {
     this.panEnabled = enabled;
-    console.log('Pan' + enabled);
   }
 }

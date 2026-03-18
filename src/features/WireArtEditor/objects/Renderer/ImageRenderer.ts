@@ -133,8 +133,7 @@ export class ImageRenderer extends BaseRenderer<ImageRenderData, ImageData> {
   updateImage(data: ImageData) {
     const img = this.objects.get(data.id);
     if (!img) return;
-    img.mesh.position.set(data.x, data.y, 0);
-    img.mesh.position.set(data.x, data.y, 0);
+    img.mesh.position.set(data.x, data.y, data.z);
     img.height = data.height;
     img.data = { ...data };
 

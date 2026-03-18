@@ -64,7 +64,7 @@ export class TransformTool implements Tool {
     this.dragOffset.copy(this.worldPos).sub({ x: this.startData.x, y: this.startData.y });
 
     this.context.imageRenderer.setSelected([this.selectedImage]);
-    this.context.sceneManager.cameraController.setPanEnabled(false);
+    this.context.sceneManager.setPanEnabled(false);
     this.context.cursorManager.setCursor('grabbing');
   }
 
@@ -119,7 +119,6 @@ export class TransformTool implements Tool {
     this.dragging = false;
     this.dragMode = 'none';
     this.context.cursorManager.setCursor('default');
-    this.context.sceneManager.cameraController.setPanEnabled(true);
     this.context.imageRenderer.setSelected([]);
     this.handleHover(event);
   };

@@ -1,5 +1,5 @@
 .button{
-  padding: var(--space-sm);
+  padding: var(--space-xs);
   background: var(--color-background);
   color: var(--color-accent);
   border: var(--space-border) solid var(--color-border);
@@ -16,13 +16,13 @@
 }
 .button:hover {
   border-width: var(--space-border);
-  padding: var(--space-sm);
+  padding: var(--space-xs);
   border-color: var(--color-accent);
   background: rgba(0, 0, 0, 0.1);
 }  
 .selected {
   border-width: var(--space-border);
-  padding: var(--space-sm);
+  padding: var(--space-xs);
   border-color: var(--color-accent);
   background: rgba(0, 0, 0, 0.1);
 }
@@ -38,7 +38,7 @@
 .tooltip::after {
   content: attr(data-tooltip);
   position: absolute;
-  bottom: -50%;
+  bottom: -120%;
   left: 50%;
   transform: translateX(-50%);
 

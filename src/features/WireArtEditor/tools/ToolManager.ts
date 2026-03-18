@@ -1,3 +1,4 @@
+import { DeleteTool } from './DeleteTool';
 import { DragTool } from './DragTool';
 import { LineTool } from './LineTool';
 import { PointTool } from './PointTool';
@@ -25,6 +26,7 @@ export class ToolManager {
     this.tools.set('line', new LineTool(toolContext));
     this.tools.set('move', new DragTool(toolContext));
     this.tools.set('verify', new VerifyTool(toolContext));
+    this.tools.set('delete', new DeleteTool(toolContext));
     this.setActiveTool('move');
   }
 
@@ -34,6 +36,9 @@ export class ToolManager {
     this.activeTool?.onClick?.();
     this.toolContext.pointRenderer.setHovered(null);
     this.toolContext.lineRenderer.setHovered(null);
+    this.toolContext.pointRenderer.setSelected([]);
+    this.toolContext.lineRenderer.setSelected([]);
+
     this.toolContext.gridRenderer.setHovered(null);
     this.toolContext.imageRenderer.setHovered(null);
     this.toolContext.cursorManager.setCursor('default');

@@ -1,11 +1,20 @@
 import * as THREE from 'three';
 import { CameraController } from './CameraController';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+
+type CameraMode = '2D' | '3D';
 
 export class SceneManager {
   scene: THREE.Scene;
-  camera: THREE.OrthographicCamera;
+
+  camera: THREE.Camera;
+  orthoCamera: THREE.OrthographicCamera;
+  perspectiveCamera: THREE.PerspectiveCamera;
+
+  controller!: CameraController | OrbitControls;
+  mode: CameraMode = '2D';
+
   renderer: THREE.WebGLRenderer;
-  cameraController: CameraController;
   dom: HTMLCanvasElement;
 
   private overlay!: HTMLDivElement;
@@ -17,6 +26,7 @@ export class SceneManager {
   private plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
 
   constructor(container: HTMLDivElement) {
+    container.appendChild(this.createOverlay(container));
     this.container = container;
     const width = container.clientWidth;
     const height = container.clientHeight;
@@ -26,7 +36,8 @@ export class SceneManager {
     const aspect = width / height;
     const frustumSize = 10;
 
-    this.camera = new THREE.OrthographicCamera(
+    // ORTHO
+    this.orthoCamera = new THREE.OrthographicCamera(
       (-frustumSize * aspect) / 2,
       (frustumSize * aspect) / 2,
       frustumSize / 2,
@@ -34,20 +45,23 @@ export class SceneManager {
       -1000,
       1000,
     );
-    this.camera.updateProjectionMatrix();
+    this.orthoCamera.position.set(0, 0, 10);
 
-    this.camera.position.z = 10;
+    // PERSPECTIVE
+    this.perspectiveCamera = new THREE.PerspectiveCamera(60, aspect, 0.1, 1000);
+    this.perspectiveCamera.position.set(0, 0, 10);
+    this.perspectiveCamera.lookAt(0, 0, 0);
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setSize(width, height);
-    this.cameraController = new CameraController(this.camera, this.renderer.domElement);
     this.dom = this.renderer.domElement;
+    container.appendChild(this.dom);
 
-    
+    // active camera
+    this.camera = this.orthoCamera;
+    this.setCameraMode('2D');
 
-    container.appendChild(this.renderer.domElement);
-    container.appendChild(this.createOverlay(container));
-
+  
     window.addEventListener('resize', this.onResize);
     this.renderer.domElement.addEventListener('contextmenu', (e) => e.preventDefault());
   }
@@ -67,14 +81,13 @@ export class SceneManager {
     // ---- GRID SIZE LABEL ----
     const gridLabel = document.createElement('div');
     gridLabel.style.position = 'absolute';
-    gridLabel.style.bottom = '10px';
-    gridLabel.style.left = '10px';
     gridLabel.style.padding = '4px 8px';
     gridLabel.style.background = 'rgba(0,0,0,0.6)';
     gridLabel.style.color = '#fff';
     gridLabel.style.fontFamily = 'monospace';
-    gridLabel.style.fontSize = '12px';
+    gridLabel.style.fontSize = 'var(--font-size-lg)';
     gridLabel.style.borderRadius = '4px';
+    gridLabel.style.width = 'max-content';
 
     overlay.appendChild(gridLabel);
 
@@ -91,33 +104,43 @@ export class SceneManager {
 
     const referenceWidth = 1200; // "desktop baseline"
     const scale = width / referenceWidth;
-    
-    const frustumSize = 10*scale;
 
-    this.camera.left = (-frustumSize * aspect) / 2;
-    this.camera.right = (frustumSize * aspect) / 2;
-    this.camera.top = frustumSize / 2;
-    this.camera.bottom = -frustumSize / 2;
+    const frustumSize = 20 * scale;
 
-    this.camera.updateProjectionMatrix();
+    if (this.camera instanceof THREE.OrthographicCamera) {
+      this.camera.left = (-frustumSize * aspect) / 2;
+      this.camera.right = (frustumSize * aspect) / 2;
+      this.camera.top = frustumSize / 2;
+      this.camera.bottom = -frustumSize / 2;
+      this.camera.updateProjectionMatrix();
+    } else if (this.camera instanceof THREE.PerspectiveCamera) {
+      this.camera.aspect = aspect;
+      this.camera.updateProjectionMatrix();
+    }
+
     this.renderer.setSize(width, height);
+
+    const rect = this.container.getBoundingClientRect();
+    this.overlay.style.position = 'absolute';
+    this.overlay.style.top = rect.top + 'px';
+    this.overlay.style.left = rect.left + 'px';
   };
 
   update() {
-    this.camera.updateProjectionMatrix();
-    this.updateOverlay();
+    if (this.controller instanceof OrbitControls) {
+      this.controller.update(); // needed for damping
+    }
+    if (this.camera instanceof THREE.OrthographicCamera) {
+      this.camera.updateProjectionMatrix();
+    } else if(this.camera instanceof THREE.PerspectiveCamera){
+      this.camera.updateProjectionMatrix();
+    }
   }
 
-  updateOverlay() {
-    //const step = this.getGridStep() * 10;
-    const step = 0;
-
-    const cameraPos = this.camera.position;
-
-    this.gridLabel.innerText =
-      `Grid: ${step.toFixed(4)} mm\n` +
-      `Zoom: ${this.camera.zoom.toFixed(2)}\n` +
-      `Center: (${cameraPos.x.toFixed(2)}, ${cameraPos.y.toFixed(2)})`;
+  updateOverlay(step: number) {
+    this.gridLabel.innerText = `Grid: ${step.toFixed(0)} mm\n`;
+    // `Zoom: ${this.camera.zoom.toFixed(2)}\n` +
+    // `Center: (${cameraPos.x.toFixed(2)}, ${cameraPos.y.toFixed(2)})`;
   }
 
   dispose() {
@@ -134,11 +157,6 @@ export class SceneManager {
     window.removeEventListener('resize', this.onResize);
   }
 
-  getCameraController() {
-    return this.cameraController;
-  }
-
-
   getWorldPosition(event: MouseEvent): THREE.Vector3 {
     const rect = this.dom.getBoundingClientRect();
     let mouse = new THREE.Vector2();
@@ -151,5 +169,51 @@ export class SceneManager {
     this.raycaster.ray.intersectPlane(this.plane, intersection);
 
     return intersection;
+  }
+
+  setCameraMode(mode: CameraMode) {
+    //if (this.mode === mode) return;
+
+    this.mode = mode;
+
+    if (mode === '2D') {
+      this.camera = this.orthoCamera;
+    } else {
+      this.perspectiveCamera.position.set(0, 0, 10);
+      this.perspectiveCamera.lookAt(0, 0, 0);
+      this.perspectiveCamera.updateProjectionMatrix();
+      this.perspectiveCamera.updateMatrix();
+      this.perspectiveCamera.updateMatrixWorld(true);
+
+      this.camera = this.perspectiveCamera;
+      this.renderer.render(this.scene,this.camera)
+    }
+
+    // Smooth transition
+    //this.camera.position.copy(prevCamera.position);
+
+    // Dispose old controller
+    if (this.controller) {
+      if ('dispose' in this.controller) this.controller.dispose();
+    }
+
+    // Create correct controller
+    if (mode === '2D') {
+      this.controller = new CameraController(this.orthoCamera, this.dom);
+    } else {
+      const controls = new OrbitControls(this.perspectiveCamera, this.dom);
+      controls.enableDamping = true;
+      controls.target.set(0, 0, 0);
+      this.controller = controls;
+      this.update();
+    }
+
+    this.onResize();
+  }
+
+  setPanEnabled(enabled: boolean) {
+    if (this.controller instanceof CameraController) {
+      this.controller.setPanEnabled(enabled); // needed for damping
+    }
   }
 }

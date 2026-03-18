@@ -164,7 +164,7 @@ export class LineTool implements Tool {
       color: 0x000000,
       transparent: true,
       opacity: 0.5,
-      linewidth: 2,
+      linewidth: 4,
     });
 
     material.resolution.set(
