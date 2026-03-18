@@ -66,7 +66,6 @@ export default function Toolbar({ engine }: Props) {
         message: 'Sie sind nicht angemeldet, Änderungen werden nur lokal gespeichert ',
       });
     }
-    console.log('save');
     engine.save();
     setSaved(true);
 
@@ -145,6 +144,23 @@ export default function Toolbar({ engine }: Props) {
           onClick={() => changeTool('line')}
         />
 
+        <ToolButton
+          label=""
+          image="/icons/undo.png"
+          toolTip="Rückgängig machen"
+          onClick={() => {
+            engine.undo();
+          }}
+        />
+
+        <ToolButton
+          label=""
+          image="/icons/redo.png"
+          toolTip="Wiederherstellen"
+          onClick={() => engine.redo()}
+        />
+      </div>
+      <div className={styles.toolSection}>
         {/* Save project */}
         <ToolButton
           label={saved ? '' : ''}
@@ -174,6 +190,7 @@ export default function Toolbar({ engine }: Props) {
           label="Überprüfen"
           image="/icons/check.png"
           toolTip="Inhalt checken"
+          active={active === 'verify'}
           onClick={() => changeTool('verify')}
         />
 

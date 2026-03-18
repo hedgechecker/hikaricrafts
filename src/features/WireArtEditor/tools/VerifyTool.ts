@@ -183,7 +183,7 @@ export class VerifyTool implements Tool {
     faces.sort((a, b) => this.polygonArea(b) - this.polygonArea(a));
     faces.shift(); // remove outer face
 
-    this.previewOffsetPolygons(faces, 0.05);
+    this.previewOffsetPolygons(faces, 0.1);
   }
 
   offsetPolygon(face: string[], offset: number) {

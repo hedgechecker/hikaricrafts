@@ -60,6 +60,7 @@ export class GridRenderer extends BaseRenderer<GridRenderData, number> {
       divisions,
       isHovered: false,
       isSelected: false,
+      isInValid: false
     };
 
     this.objects.set('grid', data);

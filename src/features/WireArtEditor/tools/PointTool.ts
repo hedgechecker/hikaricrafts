@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import type { Tool, ToolContext } from './Tool';
 import { AddPointCommand } from '../commands/AddPointCommand';
 import { generateId } from '../utils/id';
@@ -9,21 +10,26 @@ import { splitLine } from '../utils/commands';
  */
 export class PointTool implements Tool {
   private context: ToolContext;
+  private downPos = new THREE.Vector2;
 
   constructor(context: ToolContext) {
     this.context = context;
   }
 
   onPointerDown(event: PointerEvent): void {
-    if (event.button !== 0) return;
+    if (!event.isPrimary) return;
+    this.downPos.x = event.x;
+    this.downPos.y = event.y;
+    this.handleHover(event);
   }
 
   onPointerUp(event: PointerEvent): void {
+    if (!event.isPrimary) return;
     //No Placement on existing Points
     if (event.button !== 0) return;
     if (this.context.pointRenderer.getHovered()) return;
-
-    let worldPos = this.context.sceneManager.getWorldPosition(event);
+    if (Math.pow(event.x - this.downPos.x, 2) + Math.pow(event.y - this.downPos.y, 2) > 0.5) return;
+      let worldPos = this.context.sceneManager.getWorldPosition(event);
 
     //If a Point is placed on a Line split the line at this point
     const hoveredLine = this.context.lineRenderer.getHovered();
@@ -56,6 +62,7 @@ export class PointTool implements Tool {
   }
 
   onPointerMove(event: PointerEvent) {
+    if (!event.isPrimary) return;
     this.handleHover(event);
   }
 

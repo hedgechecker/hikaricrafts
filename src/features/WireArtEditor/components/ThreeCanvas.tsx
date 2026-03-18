@@ -25,6 +25,14 @@ export default function ThreeCanvas({ setEngine }: Props) {
     });
 
     resizeObserver.observe(mount);
+    
+    mount.addEventListener(
+      'touchstart',
+      (e) => {
+        e.preventDefault();
+      },
+      { passive: false },
+    );
 
     return () => {
       editor.dispose();

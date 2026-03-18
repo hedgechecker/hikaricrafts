@@ -26,6 +26,7 @@ export class LineTool implements Tool {
 
   private inputOverlay: InputOverlay;
   private worldPos = new THREE.Vector3();
+  private downPos = new THREE.Vector2();
 
   constructor(context: ToolContext) {
     this.context = context;
@@ -38,22 +39,31 @@ export class LineTool implements Tool {
     window.addEventListener('keyup', this.onKeyUp);
   }
 
-  onPointerDown(event: PointerEvent) {
+  onPointerDown(event: PointerEvent): void {
+    this.downPos.x = event.x;
+    this.downPos.y = event.y;
+    this.handleHover(event);
+  }
+
+  onPointerUp(event: PointerEvent) {
     //right mouse button
     if (event.button === 2) {
       this.cancelLine();
       return;
     }
-    //only left mouse click
     if (event.button !== 0) return;
+    if (Math.pow(event.x - this.downPos.x, 2) + Math.pow(event.y - this.downPos.y, 2) > 0.5) return;
+
 
     this.worldPos.copy(this.context.sceneManager.getWorldPosition(event));
     let snapCandidate = this.getBestSnappingCandidate(this.worldPos);
 
-    this.inputOverlay.reset();
-    this.inputOverlay.show(event.clientX, event.clientY);
-    this.inputOverlay.focus();
-
+    if (event.pointerType != 'touch') {
+      this.inputOverlay.reset();
+      this.inputOverlay.show(event.clientX, event.clientY);
+      this.inputOverlay.focus();
+    }
+    
     let selectedPointId: string | null = null;
     let commands: Command[] = [];
 
@@ -92,10 +102,10 @@ export class LineTool implements Tool {
     }
 
     //add Point and Line Together
-    this.context.executeCommand(new CompositeCommand(commands));
+    if(commands.length>0)this.context.executeCommand(new CompositeCommand(commands));
 
     this.lastPointId = selectedPointId;
-    if (!this.previewLine) {
+    if (!this.previewLine && event.pointerType != 'touch') {
       this.createPreviewLine();
     }
   }
@@ -103,6 +113,7 @@ export class LineTool implements Tool {
   onPointerMove(event: PointerEvent) {
     if (!this.lastPointId) this.inputOverlay.hide();
     this.worldPos.copy(this.context.sceneManager.getWorldPosition(event));
+    //this.context.sceneManager.cameraController.setPanEnabled((this.previewLine != null)? false:true);
 
     this.handleHover(event);
     this.handleMouseMove();
@@ -219,7 +230,7 @@ export class LineTool implements Tool {
     const hoveredLine = this.context.lineRenderer.getHovered();
     if (hoveredLine) {
       const line = this.context.model.lines.get(hoveredLine);
-      if(line) return { pointId: null, line: line, position: null };
+      if (line) return { pointId: null, line: line, position: null };
     }
     //4 Snap to next grid Point
     const snapGridPoint = this.context.gridRenderer.getHoveredGrid();

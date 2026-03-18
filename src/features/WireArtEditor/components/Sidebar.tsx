@@ -142,6 +142,7 @@ export default function SideBar({ engine }: Props) {
 
     setEditingId(null);
     setOpenMenuId(null);
+    engine.load(null);
   }
 
   // Open a new project after user confirmation

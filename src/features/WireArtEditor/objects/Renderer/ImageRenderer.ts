@@ -122,6 +122,7 @@ export class ImageRenderer extends BaseRenderer<ImageRenderData, ImageData> {
         data: image,
         isHovered: false,
         isSelected: false,
+        isInValid: false
       };
       this.objects.set(image.id, data);
       if (this.visible) this.sceneManager.scene.add(data.mesh);

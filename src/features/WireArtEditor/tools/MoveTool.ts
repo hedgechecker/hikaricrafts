@@ -22,7 +22,8 @@ export class MoveTool implements Tool {
 
   //check for Hit with existing Point
   onPointerDown(event: PointerEvent) {
-    if (event.button != 0) return; //only move on left click
+    this.handleHover(event);
+    //if (event.button != 0) return; //only move on left click
     const hovered = this.context.pointRenderer.getHovered();
     if (!hovered) return;
     const pos = this.context.pointRenderer.getWorldPosition(hovered);

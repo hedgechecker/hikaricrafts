@@ -89,6 +89,7 @@ export class ThreeEditor {
     this.pointRenderer.sync([...this.model.points.values()]);
     this.lineRenderer.sync([...this.model.lines.values()]);
     this.imageRenderer.sync([...this.model.images.values()]);
+    this.saveLocal();
   }
 
   async loadGlobal(id: number) {
@@ -109,7 +110,6 @@ export class ThreeEditor {
       this.storage.deleteLocal();
       this.project = project;
       this.store.setProject(project);
-      console.log('set');
       return;
     }
     this.setSettings(data.settings);
@@ -137,11 +137,9 @@ export class ThreeEditor {
     const id = this.project.id;
     this.saveLocal();
     await this.saveGlobal();
-    if(id != this.project.id){
+    if (id != this.project.id) {
       this.store.setProject(this.project);
-      console.log('update');
     }
-    
   }
   private saveLocal() {
     this.storage.saveToLocal({
@@ -159,11 +157,9 @@ export class ThreeEditor {
       lines: Array.from(this.model.lines.values()),
       images: Array.from(this.model.images.values()),
     });
-    console.log(savedProject);
     if (!savedProject) return;
     this.project = savedProject;
     this.store.setProject(savedProject);
-
 
     this.hasChanges = false;
   }
@@ -173,6 +169,14 @@ export class ThreeEditor {
     console.log(command);
     this.history.execute(command, this.model);
     this.syncSceneFromModel();
+  }
+
+  public redo() {
+    if (this.history.redo(this.model)) this.syncSceneFromModel();
+  }
+
+  public undo() {
+    if (this.history.undo(this.model)) this.syncSceneFromModel();
   }
 
   start() {
@@ -259,21 +263,12 @@ export class ThreeEditor {
 
   private onKeyDown = async (e: KeyboardEvent) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
-      e.preventDefault();
-
-      if (this.history.undo(this.model)) this.syncSceneFromModel();
+      this.undo();
     }
 
     if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
       e.preventDefault();
-
-      if (this.history.redo(this.model)) this.syncSceneFromModel();
-    }
-
-    if ((e.ctrlKey || e.metaKey) && e.key === 'u') {
-      e.preventDefault();
-
-      this.load(await this.storage.loadGlobal(1));
+      this.redo();
     }
 
     if (e.key === 'Delete' || e.key === 'Backspace') {

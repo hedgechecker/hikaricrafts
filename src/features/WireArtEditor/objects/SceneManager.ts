@@ -89,7 +89,10 @@ export class SceneManager {
     const height = this.container.clientHeight;
     const aspect = width / height;
 
-    const frustumSize = 10;
+    const referenceWidth = 1200; // "desktop baseline"
+    const scale = width / referenceWidth;
+    
+    const frustumSize = 10*scale;
 
     this.camera.left = (-frustumSize * aspect) / 2;
     this.camera.right = (frustumSize * aspect) / 2;

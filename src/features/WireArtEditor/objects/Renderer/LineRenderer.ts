@@ -13,8 +13,8 @@ interface LineRenderData extends RenderData {
 export class LineRenderer extends BaseRenderer<LineRenderData, LineData> {
   private pointManager: PointRenderer;
 
-  private readonly baseThickness = 0.02;
-  private readonly hoverThickness = 0.05;
+  private readonly baseThickness = 0.035;
+  private readonly hoverThickness = 0.06;
   private color = '#000000';
 
   constructor(sceneManager: SceneManager, pointManager: PointRenderer) {

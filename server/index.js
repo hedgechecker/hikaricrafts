@@ -27,6 +27,7 @@ app.use(
       'https://nowakl.org',
       'https://api.nowakl.org',
       'http://localhost:5173',
+      'http://192.168.178.42:5173',
       '*', // for local dev
     ],
     methods: 'GET,POST,PUT,DELETE',

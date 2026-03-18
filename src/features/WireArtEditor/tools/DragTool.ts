@@ -23,6 +23,7 @@ export class DragTool implements Tool {
   }
 
   onPointerDown(event: PointerEvent) {
+    this.handleHover(event);
     if (event.button !== 0) return;
 
     // PRIORITY 1 → POINT

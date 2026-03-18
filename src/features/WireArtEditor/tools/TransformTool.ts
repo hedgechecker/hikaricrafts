@@ -35,6 +35,7 @@ export class TransformTool implements Tool {
 
   //check for Hit with existing Image
   onPointerDown(event: PointerEvent) {
+    this.handleHover(event);
     if (event.button != 0) return; //only move on left click
     this.worldPos.copy(this.context.sceneManager.getWorldPosition(event));
 

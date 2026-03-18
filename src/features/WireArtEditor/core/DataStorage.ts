@@ -63,10 +63,6 @@ export class DataStorage {
       return success ? project : null;
     }
 
-    if (project.name.length < 1) {
-      window.alert('Projekt bennen');
-    }
-
     console.log('Creating new project');
 
     const data = {

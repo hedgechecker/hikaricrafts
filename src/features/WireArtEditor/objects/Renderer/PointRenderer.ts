@@ -12,6 +12,8 @@ interface PointRenderData {
 export class PointRenderer extends BaseRenderer<PointRenderData, PointData> {
   private readonly baseThickness = 1.0;
   private readonly hoverThickness = 2.0;
+  private readonly baseRadius = 0.09;
+  private readonly hitRadius = 0.2; // bigger for easier hover
 
   private color = '#999999';
 
@@ -32,7 +34,7 @@ export class PointRenderer extends BaseRenderer<PointRenderData, PointData> {
       const isHovered = object.isHovered;
       const isSelected = object.isSelected;
       const isInValid = object.isInValid;
-      
+
       object.mesh.children.forEach((child) => {
         if ((isHovered || isSelected) && child.name != 'hitbox') {
           child.scale.set(size * this.hoverThickness, size * this.hoverThickness, 1);
@@ -52,14 +54,11 @@ export class PointRenderer extends BaseRenderer<PointRenderData, PointData> {
     const group = new THREE.Group();
     group.position.copy(position);
 
-    const baseRadius = 0.07;
-    const hitRadius = 0.25; // bigger for easier hover
-
     // -----------------------------
     // Visible Circle (Outline + Fill)
     // -----------------------------
 
-    const geometry = new THREE.CircleGeometry(baseRadius, 32);
+    const geometry = new THREE.CircleGeometry(this.baseRadius, 32);
 
     const material = new THREE.MeshBasicMaterial({
       color: this.color,
@@ -80,7 +79,7 @@ export class PointRenderer extends BaseRenderer<PointRenderData, PointData> {
     circle.name = 'visual';
     outline.name = 'outline';
 
-    const hitGeometry = new THREE.CircleGeometry(hitRadius, 32);
+    const hitGeometry = new THREE.CircleGeometry(this.hitRadius, 32);
 
     const hitMaterial = new THREE.MeshBasicMaterial({
       transparent: true,
