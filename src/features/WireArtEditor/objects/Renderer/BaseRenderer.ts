@@ -118,9 +118,13 @@ export abstract class BaseRenderer<T extends RenderData, TInput> {
     this.objects.delete(id);
   }
 
+  getVisible(){
+    return this.visible;
+  }
+
   setVisible(visible: boolean) {
     if (visible === this.visible) return;
-
+    console.log(visible);
     this.objects.forEach((obj) => {
       if (visible) {
         this.sceneManager.scene.add(obj.mesh);

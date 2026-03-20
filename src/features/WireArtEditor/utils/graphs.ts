@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import type { LineData } from '../models/Line';
 import type { PointData } from '../models/Point';
 
@@ -163,4 +164,65 @@ export function polygonArea(points: Map<string, PointData>, polygon: string[]) {
   }
 
   return Math.abs(area);
+}
+
+function lineIntersection(
+  p: THREE.Vector2,
+  r: THREE.Vector2,
+  q: THREE.Vector2,
+  s: THREE.Vector2,
+): THREE.Vector2 | null {
+  const cross = (a: THREE.Vector2, b: THREE.Vector2) => a.x * b.y - a.y * b.x;
+
+  const rxs = cross(r, s);
+  if (Math.abs(rxs) < 1e-8) return null; // parallel
+
+  const qp = q.clone().sub(p);
+  const t = cross(qp, s) / rxs;
+
+  return p.clone().add(r.clone().multiplyScalar(t));
+}
+
+export function insetPolygon(
+  polygon: string[],
+  points: Map<string, PointData>,
+  inset: number,
+): THREE.Vector2[] {
+  const result: THREE.Vector2[] = [];
+  const n = polygon.length;
+
+  for (let i = 0; i < n; i++) {
+    const prev = points.get(polygon[(i - 1 + n) % n])!;
+    const curr = points.get(polygon[i])!;
+    const next = points.get(polygon[(i + 1) % n])!;
+
+    const p0 = new THREE.Vector2(prev.x, prev.y);
+    const p1 = new THREE.Vector2(curr.x, curr.y);
+    const p2 = new THREE.Vector2(next.x, next.y);
+
+    // edge directions
+    const d1 = p1.clone().sub(p0).normalize();
+    const d2 = p2.clone().sub(p1).normalize();
+
+    // perpendicular (left normal)
+    const n1 = new THREE.Vector2(-d1.y, d1.x);
+    const n2 = new THREE.Vector2(-d2.y, d2.x);
+
+    // offset lines
+    const offsetP1 = p1.clone().add(n1.multiplyScalar(inset));
+    const offsetDir1 = d1.clone();
+
+    const offsetP2 = p1.clone().add(n2.multiplyScalar(inset));
+    const offsetDir2 = d2.clone();
+
+    const intersect = lineIntersection(offsetP1, offsetDir1, offsetP2, offsetDir2);
+
+    if (intersect) result.push(intersect);
+  }
+
+  return result;
+}
+
+export function insetPolygons(polygons: string[][], points: Map<string, PointData>, inset: number) {
+  return polygons.map((poly) => insetPolygon(poly, points, inset));
 }
