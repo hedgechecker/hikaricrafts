@@ -173,7 +173,7 @@ export default function SideBar({ engine }: Props) {
   };
 
   return (
-    <div className={styles.wrapper}>
+    <div className={styles.wrapper} id='sidebar'>
       {dialogComponent}
       <div
         key={-1}

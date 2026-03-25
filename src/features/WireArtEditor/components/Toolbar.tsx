@@ -108,7 +108,7 @@ export default function Toolbar({ engine }: Props) {
 
 
   return (
-    <div className={styles.toolbar}>
+    <div className={styles.toolbar} id="toolbar">
       {dialogComponent}
 
       {/* Navigation */}
@@ -142,6 +142,7 @@ export default function Toolbar({ engine }: Props) {
           toolTip="Eine Linie zeichnen"
           active={active === 'line'}
           onClick={() => changeTool('line')}
+          id="linetool"
         />
 
         <ToolButton

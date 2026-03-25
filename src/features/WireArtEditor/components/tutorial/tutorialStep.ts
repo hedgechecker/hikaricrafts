@@ -8,15 +8,17 @@ type TutorialStep = {
 
 export const tutorialSteps: TutorialStep[] = [
   {
-    id: 'overview',
+    id: 'toolbar',
     target: '#toolbar',
     content: 'Hier sehen Sie alle Werkzeuge, die Sie zur verfügung haben',
+    action: 'click',
   },
   {
     id: 'sidebar',
     target: '#sidebar',
     content:
       'Hier sehen Sie all ihre erstellten Projekte, nachdem Sie sich angemeldet haben. Aber auch ohne Anmeldung wird ihr aktuelles Projekt lokal gespeichert',
+    action: 'click',
   },
   {
     id: 'linetool',

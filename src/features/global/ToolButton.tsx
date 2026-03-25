@@ -1,6 +1,7 @@
 import styles from './styles/ToolButton.module.css';
 interface Props {
   label: string;
+  id?: string;
   active?: boolean;
   image?: string;
   toolTip?: string;
@@ -15,7 +16,7 @@ interface Props {
  * @param toolTip text, that appears on hover
  * @returns
  */
-export default function ToolButton({ label, active, image, toolTip, onClick }: Props) {
+export default function ToolButton({ id, label, active, image, toolTip, onClick }: Props) {
   let lastTouchTime = 0;
 
   const handleClick = () => {
@@ -26,6 +27,7 @@ export default function ToolButton({ label, active, image, toolTip, onClick }: P
 
   return (
     <button
+      id={id}
       onClick={handleClick}
       className={`${styles.button} ${toolTip && styles.tooltip} ${active && styles.selected}`}
       data-tooltip={toolTip}
