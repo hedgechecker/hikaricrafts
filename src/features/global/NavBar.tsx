@@ -1,9 +1,8 @@
 import { useState } from "react";
 import styles from "./styles/NavBar.module.css";
 import { Link } from "react-router-dom";
-import shoppingBox from '/src/assets/shopping-box.svg';
 interface NavBarProps {
-  selected: number;
+  selected: string;
 }
 
 export default function NavBar({ selected }: NavBarProps) {
@@ -35,7 +34,7 @@ export default function NavBar({ selected }: NavBarProps) {
         <Link to="/" onClick={closeMobile} className={`${styles.logo}`}>
           HikariCraft
         </Link>
-        <img src={shoppingBox} className={styles.cart} />
+        <img src="./icons/shopping-box.svg" className={styles.cart} />
 
         {/* HAMBURGER BUTTON */}
         <button
@@ -51,7 +50,7 @@ export default function NavBar({ selected }: NavBarProps) {
         <div className={`${styles.links} ${mobileOpen ? styles.showMobile : ''}`}>
           {/* Etuis Dropdown */}
           <div
-            className={`${styles.elem} ${selected === 1 ? styles.selected : ''} ${styles.dropdown}`}
+            className={`${styles.elem} ${selected === 'etuis' ? styles.selected : ''} ${styles.dropdown}`}
             onClick={() => handleDropdown('etuis')}
           >
             Etuis ▾
@@ -72,7 +71,7 @@ export default function NavBar({ selected }: NavBarProps) {
 
           {/* Koffer Dropdown */}
           <div
-            className={`${styles.elem} ${selected === 2 ? styles.selected : ''} ${styles.dropdown}`}
+            className={`${styles.elem} ${selected === 'cases' ? styles.selected : ''} ${styles.dropdown}`}
             onClick={() => handleDropdown('koffer')}
           >
             Koffer ▾
@@ -88,18 +87,28 @@ export default function NavBar({ selected }: NavBarProps) {
             )}
           </div>
 
-          <Link
-            to="/kumiko"
-            onClick={closeMobile}
-            className={`${styles.elem} ${selected === 5 ? styles.selected : ''}`}
+          {/* Koffer Dropdown */}
+          <div
+            className={`${styles.elem} ${selected === 'wallArt' ? styles.selected : ''} ${styles.dropdown}`}
+            onClick={() => handleDropdown('wallArt')}
           >
-            Kumiko(experimentell)
-          </Link>
+            Wandkunst ▾
+            {openDropdown === 'wallArt' && (
+              <div className={styles.dropdownContent}>
+                <Link to="/wireArt" onClick={closeMobile}>
+                  Geometrische Kunst
+                </Link>
+                <Link to="/kumiko" onClick={closeMobile}>
+                  Kumiko
+                </Link>
+              </div>
+            )}
+          </div>
 
           <a
             href="/kontakt"
             onClick={closeMobile}
-            className={`${styles.elem} ${selected === 4 ? styles.selected : ''}`}
+            className={`${styles.elem} ${selected === 'contact' ? styles.selected : ''}`}
           >
             Kontakt
           </a>
@@ -112,7 +121,7 @@ export default function NavBar({ selected }: NavBarProps) {
             <Link
               to="/login"
               onClick={closeMobile}
-              className={`${styles.elem} ${selected === 5 ? styles.selected : ''}`}
+              className={`${styles.elem} ${selected === 'login' ? styles.selected : ''}`}
             >
               Login
             </Link>

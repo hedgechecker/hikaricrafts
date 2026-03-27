@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 import type {
   Product,
   ProductOption,
@@ -7,8 +7,8 @@ import type {
   ProductVariation,
   ProductVariationOptionValue,
   Image,
-} from "../../server/node_modules/@prisma/client";
-import ProductWithVariations from "./ProductWithVariations";
+} from '../../../server/node_modules/@prisma/client';
+import SingleProduct from '../../pages/Product/SingleProduct';
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -38,12 +38,12 @@ export default function AllProductsPage() {
       .then((data) => setProducts(data));
   }, []);
 
-  if (products.length === 0) return <div>Loading...</div>;
+  if (products.length === 0) return <div>No Pruducts Found</div>;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "3rem" }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
       {products.map((product) => (
-        <ProductWithVariations key={product.id} id={product.id} />
+        <SingleProduct key={product.id} id={product.id} />
       ))}
     </div>
   );

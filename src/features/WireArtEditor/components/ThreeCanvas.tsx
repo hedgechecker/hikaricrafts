@@ -1,7 +1,7 @@
 import { useContext, useEffect, useRef, type Dispatch, type SetStateAction } from 'react';
 import styles from './styles/ThreeCanvas.module.css';
 import { ThreeEditor } from '../core/ThreeEditor';
-import { TutorialContext } from './tutorial/tutorialProvider';
+import { TutorialContext } from './tutorial/TutorialProvider';
 
 interface Props {
   setEngine: Dispatch<SetStateAction<ThreeEditor | null>>;

@@ -1,6 +1,6 @@
 import { useContext, useState, useEffect } from 'react';
 import { tutorialSteps } from './tutorialStep';
-import { TutorialContext } from './tutorialProvider';
+import { TutorialContext } from './TutorialProvider';
 import styles from './tutorialOverlay.module.css';
 
 export function TutorialOverlay() {

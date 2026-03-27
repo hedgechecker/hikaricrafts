@@ -4,7 +4,7 @@ import ThreeCanvas from './ThreeCanvas';
 import styles from './styles/EditorLayout.module.css';
 import SideBar from './Sidebar';
 import { ThreeEditor } from '../core/ThreeEditor';
-import {  TutorialProvider } from './tutorial/tutorialProvider';
+import {  TutorialProvider } from './tutorial/TutorialProvider';
 import { TutorialOverlay } from './tutorial/TutorialOverlay';
 
 /**
