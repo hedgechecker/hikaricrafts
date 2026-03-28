@@ -12,6 +12,7 @@ export default function NavBar({ selected }: NavBarProps) {
 
   const handleDropdown = (name: string) => {
     setOpenDropdown(openDropdown === name ? null : name);
+    console.log(openDropdown)
   };
 
   const closeMobile = () => {
@@ -38,7 +39,7 @@ export default function NavBar({ selected }: NavBarProps) {
 
         {/* HAMBURGER BUTTON */}
         <button
-          className={`${styles.hamburger} ${mobileOpen ? styles.open : ''}`}
+          className={`${styles.hamburger} ${mobileOpen ? styles.open : ""}`}
           onClick={() => setMobileOpen(!mobileOpen)}
         >
           <span />
@@ -47,14 +48,17 @@ export default function NavBar({ selected }: NavBarProps) {
         </button>
 
         {/* MAIN NAV */}
-        <div className={`${styles.links} ${mobileOpen ? styles.showMobile : ''}`}>
+        <div
+          className={`${styles.links} ${mobileOpen ? styles.showMobile : ""}`}
+        >
           {/* Etuis Dropdown */}
           <div
-            className={`${styles.elem} ${selected === 'etuis' ? styles.selected : ''} ${styles.dropdown}`}
-            onClick={() => handleDropdown('etuis')}
+            className={`${styles.elem} ${selected === "etuis" ? styles.selected : ""} ${styles.dropdown}`}
+            onClick={() => handleDropdown("etuis")}
+            tabIndex={0}
           >
             Etuis ▾
-            {openDropdown === 'etuis' && (
+            {openDropdown === "etuis" && (
               <div className={styles.dropdownContent}>
                 <Link to="/oboereedsetui" onClick={closeMobile}>
                   Rohretui für Oboe
@@ -71,11 +75,12 @@ export default function NavBar({ selected }: NavBarProps) {
 
           {/* Koffer Dropdown */}
           <div
-            className={`${styles.elem} ${selected === 'cases' ? styles.selected : ''} ${styles.dropdown}`}
-            onClick={() => handleDropdown('koffer')}
+            className={`${styles.elem} ${selected === "cases" ? styles.selected : ""} ${styles.dropdown}`}
+            onClick={() => handleDropdown("koffer")}
+            tabIndex={0}
           >
             Koffer ▾
-            {openDropdown === 'koffer' && (
+            {openDropdown === "koffer" && (
               <div className={styles.dropdownContent}>
                 <Link to="/piccoloCase" onClick={closeMobile}>
                   Piccolo Koffer
@@ -87,13 +92,14 @@ export default function NavBar({ selected }: NavBarProps) {
             )}
           </div>
 
-          {/* Koffer Dropdown */}
+          {/* WallArt Dropdown */}
           <div
-            className={`${styles.elem} ${selected === 'wallArt' ? styles.selected : ''} ${styles.dropdown}`}
-            onClick={() => handleDropdown('wallArt')}
+            className={`${styles.elem} ${selected === "wallArt" ? styles.selected : ""} ${styles.dropdown}`}
+            onClick={() => handleDropdown("wallArt")}
+            tabIndex={0}
           >
             Wandkunst ▾
-            {openDropdown === 'wallArt' && (
+            {openDropdown === "wallArt" && (
               <div className={styles.dropdownContent}>
                 <Link to="/wireArt" onClick={closeMobile}>
                   Geometrische Kunst
@@ -108,7 +114,7 @@ export default function NavBar({ selected }: NavBarProps) {
           <a
             href="/kontakt"
             onClick={closeMobile}
-            className={`${styles.elem} ${selected === 'contact' ? styles.selected : ''}`}
+            className={`${styles.elem} ${selected === "contact" ? styles.selected : ""}`}
           >
             Kontakt
           </a>
@@ -121,7 +127,7 @@ export default function NavBar({ selected }: NavBarProps) {
             <Link
               to="/login"
               onClick={closeMobile}
-              className={`${styles.elem} ${selected === 'login' ? styles.selected : ''}`}
+              className={`${styles.elem} ${selected === "login" ? styles.selected : ""}`}
             >
               Login
             </Link>

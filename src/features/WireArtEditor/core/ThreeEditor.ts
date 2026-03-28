@@ -25,8 +25,6 @@ import { OrthographicCamera } from 'three';
 //Import SVG?
 //Highlight Line length input correctly
 
-//check points 0/1 connections
-//get all polygons
 //check convex hull
 //check minsize
 //check minSideHeight

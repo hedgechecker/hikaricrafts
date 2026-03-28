@@ -1,7 +1,6 @@
-import { useContext, useEffect, useRef, type Dispatch, type SetStateAction } from 'react';
+import { useEffect, useRef, type Dispatch, type SetStateAction } from 'react';
 import styles from './styles/ThreeCanvas.module.css';
 import { ThreeEditor } from '../core/ThreeEditor';
-import { TutorialContext } from './tutorial/TutorialProvider';
 
 interface Props {
   setEngine: Dispatch<SetStateAction<ThreeEditor | null>>;
@@ -41,13 +40,8 @@ export default function ThreeCanvas({ setEngine }: Props) {
   }, []);
 
 
-  const tutorial = useContext(TutorialContext);
 
   return (
-    <>
-      {' '}
-      <button onClick={tutorial?.start}>Start Tutorial</button>
       <div ref={mountRef} className={styles.container} />
-    </>
   );
 }

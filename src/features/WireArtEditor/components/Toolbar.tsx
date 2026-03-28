@@ -1,13 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
-import ImageUploader from './ImageUploader';
-import ToolButton from '../../global/ToolButton';
-import styles from './styles/Toolbar.module.css';
-import { useNavigate } from 'react-router-dom';
-import { useDialog } from '../../global/useDialog';
-import type { Settings } from '../models/Settings';
-import type { ThreeEditor } from '../core/ThreeEditor';
-import { useEditorStore } from '../core/EditorStore';
-import type { ToolType } from '../tools/Tool';
+import { useEffect, useRef, useState } from "react";
+import ImageUploader from "./ImageUploader";
+import ToolButton from "../../global/ToolButton";
+import styles from "./styles/Toolbar.module.css";
+import { useNavigate } from "react-router-dom";
+import { useDialog } from "../../global/useDialog";
+import type { Settings } from "../models/Settings";
+import type { ThreeEditor } from "../core/ThreeEditor";
+import { useEditorStore } from "../core/EditorStore";
+import type { ToolType } from "../tools/Tool";
 
 interface Props {
   engine: ThreeEditor;
@@ -28,7 +28,7 @@ interface Props {
 export default function Toolbar({ engine }: Props) {
   const navigate = useNavigate();
 
-  const [active, setActive] = useState<ToolType>('move');
+  const [active, setActive] = useState<ToolType>("move");
   const [saved, setSaved] = useState(false);
   const { showDialog, dialogComponent } = useDialog();
 
@@ -59,11 +59,12 @@ export default function Toolbar({ engine }: Props) {
    */
   const handleSave = async () => {
     if (saved) return;
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (!token) {
       await showDialog({
-        type: 'alert',
-        message: 'Sie sind nicht angemeldet, Änderungen werden nur lokal gespeichert ',
+        type: "alert",
+        message:
+          "Sie sind nicht angemeldet, Änderungen werden nur lokal gespeichert ",
       });
     }
     engine.save();
@@ -74,38 +75,35 @@ export default function Toolbar({ engine }: Props) {
     }, 2000);
   };
 
-  const handleExport = () => {
-    engine.exportSVG();
-  };
-
   /**
    * * Global keyboard shortcut:
    * Ctrl/Cmd + S triggers save.
    */
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
         e.preventDefault();
         handleSave();
       }
     }
 
     function handleClickOutside(e: MouseEvent) {
-      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
-        setSettingsOpen(false);
-      }
+      const settingsbtn = document.getElementById("settingsButton");
+      if (settingsbtn && settingsbtn.contains(e.target as Node)) return;
+      if (settingsRef.current && settingsRef.current.contains(e.target as Node))
+        return;
+
+      setSettingsOpen(false);
     }
 
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener("pointerdown", handleClickOutside);
+    document.addEventListener("keydown", onKeyDown);
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener("pointerdown", handleClickOutside);
+      document.removeEventListener("keydown", onKeyDown);
     };
   }, []);
-
-
 
   return (
     <div className={styles.toolbar} id="toolbar">
@@ -115,33 +113,33 @@ export default function Toolbar({ engine }: Props) {
       <ToolButton
         label="Zurück zum Anfang"
         image="/icons/back-arrow.png"
-        onClick={() => navigate('/')}
+        onClick={() => navigate("/")}
       />
 
       {/* Tool selection */}
-      <div className={styles.toolSection}>
+      <div className={styles.toolSection} id ="tools">
         <ToolButton
           label=""
           image="/icons/move.png"
           toolTip="Elemente bewegen"
-          active={active === 'move'}
-          onClick={() => changeTool('move')}
+          active={active === "move"}
+          onClick={() => changeTool("move")}
         />
 
         <ToolButton
           label=""
           image="/icons/single-point.png"
           toolTip="Einen Punkt zeichnen"
-          active={active === 'point'}
-          onClick={() => changeTool('point')}
+          active={active === "point"}
+          onClick={() => changeTool("point")}
         />
 
         <ToolButton
           label=""
           image="/icons/line.png"
           toolTip="Eine Linie zeichnen"
-          active={active === 'line'}
-          onClick={() => changeTool('line')}
+          active={active === "line"}
+          onClick={() => changeTool("line")}
           id="linetool"
         />
 
@@ -149,8 +147,8 @@ export default function Toolbar({ engine }: Props) {
           label=""
           image="/icons/eraser.png"
           toolTip="Elemente löschen"
-          active={active === 'delete'}
-          onClick={() => changeTool('delete')}
+          active={active === "delete"}
+          onClick={() => changeTool("delete")}
         />
 
         <ToolButton
@@ -172,22 +170,23 @@ export default function Toolbar({ engine }: Props) {
       <div className={styles.toolSection}>
         {/* Save project */}
         <ToolButton
-          label={saved ? '' : ''}
-          image={saved ? '/icons/check.png' : '/icons/save.png'}
+          label={saved ? "" : ""}
+          image={saved ? "/icons/check.png" : "/icons/save.png"}
           toolTip="Projekt speichern"
           onClick={handleSave}
         />
 
-        {/* Export project */}
+        {/* Export project
         <ToolButton
           label=""
           image="/icons/export.png"
           toolTip="Projekt als SVG Datei exportieren"
-          onClick={handleExport}
-        />
+          onClick={engine.exportSVG()}
+        /> */}
 
         {/* Toggle settings panel */}
         <ToolButton
+          id="settingsButton"
           label=""
           image="/icons/setting.png"
           toolTip="Sichtbarkeiten ändern"
@@ -199,8 +198,8 @@ export default function Toolbar({ engine }: Props) {
           label="Überprüfen"
           image="/icons/check.png"
           toolTip="Inhalt checken"
-          active={active === 'verify'}
-          onClick={() => changeTool('verify')}
+          active={active === "verify"}
+          onClick={() => changeTool("verify")}
         />
 
         {/* Settings menu */}
@@ -212,7 +211,7 @@ export default function Toolbar({ engine }: Props) {
               <input
                 type="checkbox"
                 checked={settings?.showPoints}
-                onChange={(e) => updateSetting('showPoints', e.target.checked)}
+                onChange={(e) => updateSetting("showPoints", e.target.checked)}
               />
               Punkte anzeigen
             </label>
@@ -221,7 +220,7 @@ export default function Toolbar({ engine }: Props) {
               <input
                 type="checkbox"
                 checked={settings?.showImage}
-                onChange={(e) => updateSetting('showImage', e.target.checked)}
+                onChange={(e) => updateSetting("showImage", e.target.checked)}
               />
               Hintergrundbild anzeigen
             </label>
@@ -230,7 +229,7 @@ export default function Toolbar({ engine }: Props) {
               <input
                 type="checkbox"
                 checked={settings?.showGrid}
-                onChange={(e) => updateSetting('showGrid', e.target.checked)}
+                onChange={(e) => updateSetting("showGrid", e.target.checked)}
               />
               Gitter anzeigen
             </label>
@@ -239,7 +238,7 @@ export default function Toolbar({ engine }: Props) {
               <input
                 type="checkbox"
                 checked={settings?.snapToGrid}
-                onChange={(e) => updateSetting('snapToGrid', e.target.checked)}
+                onChange={(e) => updateSetting("snapToGrid", e.target.checked)}
               />
               Punkte am Gitter ausrichten
             </label>
@@ -249,7 +248,7 @@ export default function Toolbar({ engine }: Props) {
               <input
                 type="color"
                 value={settings?.lineColor}
-                onChange={(e) => updateSetting('lineColor', e.target.value)}
+                onChange={(e) => updateSetting("lineColor", e.target.value)}
               />
             </label>
 
@@ -258,7 +257,7 @@ export default function Toolbar({ engine }: Props) {
               <input
                 type="color"
                 value={settings?.pointColor}
-                onChange={(e) => updateSetting('pointColor', e.target.value)}
+                onChange={(e) => updateSetting("pointColor", e.target.value)}
               />
             </label>
           </div>

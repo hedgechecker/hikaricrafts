@@ -1,11 +1,11 @@
-import { useContext, useState, useEffect } from 'react';
-import { tutorialSteps } from './tutorialStep';
-import { TutorialContext } from './TutorialProvider';
-import styles from './tutorialOverlay.module.css';
+import { useContext, useState, useEffect, useRef } from "react";
+import { tutorialSteps } from "./tutorialStep";
+import { TutorialContext } from "./TutorialProvider";
+import styles from "./tutorialOverlay.module.css";
 
 export function TutorialOverlay() {
-  // Always call hooks first
   const context = useContext(TutorialContext);
+
   const [rect, setRect] = useState<{
     top: number;
     left: number;
@@ -13,9 +13,11 @@ export function TutorialOverlay() {
     height: number;
   } | null>(null);
 
+  const tooltipRef = useRef<HTMLDivElement | null>(null);
+  const [tooltipPos, setTooltipPos] = useState({ top: 0, left: 0 });
+
   const step = context && tutorialSteps[context.stepIndex];
 
-  // Function to update the element's bounding rect
   const updateRect = () => {
     if (!step) {
       setRect(null);
@@ -29,38 +31,72 @@ export function TutorialOverlay() {
     }
 
     const computed = window.getComputedStyle(element);
-    const borderTop = parseFloat(computed.borderTopWidth || '0');
-    const borderBottom = parseFloat(computed.borderBottomWidth || '0');
-    const borderLeft = parseFloat(computed.borderLeftWidth || '0');
-    const borderRight = parseFloat(computed.borderRightWidth || '0');
+    const borderTop = parseFloat(computed.borderTopWidth || "0");
+    const borderBottom = parseFloat(computed.borderBottomWidth || "0");
+    const borderLeft = parseFloat(computed.borderLeftWidth || "0");
+    const borderRight = parseFloat(computed.borderRightWidth || "0");
 
     const bounding = element.getBoundingClientRect();
 
     setRect({
-      top: bounding.top ,
-      left: bounding.left ,
+      top: bounding.top,
+      left: bounding.left,
       width: bounding.width - borderLeft - borderRight,
       height: bounding.height - borderTop - borderBottom,
     });
   };
 
-  // Always register effect hooks
   useEffect(() => {
-    if (!step) return; // effect logic is safe
-    updateRect(); // initial
-    window.addEventListener('resize', updateRect);
-    window.addEventListener('scroll', updateRect, true);
+    if (!step) return;
+    updateRect();
+
+    window.addEventListener("resize", updateRect);
+    window.addEventListener("scroll", updateRect, true);
 
     return () => {
-      window.removeEventListener('resize', updateRect);
-      window.removeEventListener('scroll', updateRect, true);
+      window.removeEventListener("resize", updateRect);
+      window.removeEventListener("scroll", updateRect, true);
     };
   }, [step?.target]);
 
-  // Early return for UI only
+  useEffect(() => {
+    if (!rect || !tooltipRef.current) return;
+
+    const tooltip = tooltipRef.current;
+    const tooltipRect = tooltip.getBoundingClientRect();
+
+    const spacing = 10;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    let top = rect.top + rect.height + spacing; // default: below
+    let left = rect.left;
+
+    if (top + tooltipRect.height > viewportHeight) {
+      top = rect.top - tooltipRect.height - spacing;
+    }
+
+    if (left + tooltipRect.width > viewportWidth) {
+      left = viewportWidth - tooltipRect.width - 10;
+    }
+    if (left < 10) {
+      left = 10;
+    }
+
+    if (top < 10) {
+      top = 10;
+    }
+
+    setTooltipPos({
+      top: top + window.scrollY,
+      left: left + window.scrollX,
+    });
+  }, [rect]);
+
+
   if (!context || !context.active || !step || !rect) return null;
 
-  const { next } = context;
+  const { next, prev } = context;
 
   return (
     <>
@@ -77,14 +113,16 @@ export function TutorialOverlay() {
       />
 
       <div
+        ref={tooltipRef}
         className={styles.tooltip}
         style={{
-          top: rect.top + rect.height + window.scrollY + 10,
-          left: rect.left + window.scrollX,
+          top: tooltipPos.top,
+          left: tooltipPos.left,
         }}
       >
         <p>{step.content}</p>
-        <button onClick={next}>Next</button>
+        <button onClick={prev}>Zurück</button>
+        <button onClick={next}>Weiter</button>
       </div>
     </>
   );

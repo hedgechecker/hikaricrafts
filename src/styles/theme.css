@@ -1,15 +1,15 @@
 :root {
   /* 🎨 Colors - Wood Inspired */
-  --color-primary: #8B5E3C;         /* Main wood tone (oak) */
-  --color-primary-dark: #5A3A22;    /* Deep walnut */
-  --color-primary-light: #DAB58F;   /* Light maple */
-  --color-accent: #000000;          /* Olive green accent */
-  --color-background: #FAF7F2;      /* Warm beige background */
-  --color-surface: #FFFDF9;         /* Light surface for cards */
-  --color-text-primary: #693d16;    /* Dark brown text */
-  --color-text-secondary: #6B4E34;  /* Softer text */
-  --color-border: #a57931;          /* Neutral border */
-  --color-warning: #680000;         /* Warning for important info */
+  --color-primary: #8B5E3C;       
+  --color-primary-dark: #5A3A22;  
+  --color-primary-light: #DAB58F; 
+  --color-accent: #000000;        
+  --color-background: #FAF7F2;    
+  --color-surface: #FFFDF9;       
+  --color-text-primary: #693d16;  
+  --color-text-secondary: #6B4E34;
+  --color-border: #a57931;        
+  --color-warning: #680000;       
 
   /* ✍️ Typography */
   --font-family-base: "Lora", serif;

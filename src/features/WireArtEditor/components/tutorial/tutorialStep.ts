@@ -1,6 +1,6 @@
 type TutorialStep = {
   id: string;
-  target: string; // CSS selector or ref key
+  target: string;
   content: string;
   placement?: 'top' | 'bottom' | 'left' | 'right';
   action?: 'click' | 'wait' | 'custom';
@@ -9,16 +9,14 @@ type TutorialStep = {
 export const tutorialSteps: TutorialStep[] = [
   {
     id: 'toolbar',
-    target: '#toolbar',
+    target: '#tools',
     content: 'Hier sehen Sie alle Werkzeuge, die Sie zur verfügung haben',
-    action: 'click',
   },
   {
     id: 'sidebar',
     target: '#sidebar',
     content:
       'Hier sehen Sie all ihre erstellten Projekte, nachdem Sie sich angemeldet haben. Aber auch ohne Anmeldung wird ihr aktuelles Projekt lokal gespeichert',
-    action: 'click',
   },
   {
     id: 'linetool',

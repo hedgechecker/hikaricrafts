@@ -1,0 +1,57 @@
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.wrapper{
+  background: var(--color-background);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  font-size: var(--font-size-lg);
+}
+
+.buttonContainer{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+.confirmButton{
+  padding: var(--space-xs);
+  font-size: var(--font-size-md);
+  cursor: pointer;
+  border: none;
+  background: var(--color-primary);
+  color: var(--color-background);
+  border-radius: var(--radius-sm);
+}
+
+.cancelButton{
+  padding: var(--space-xs);
+  font-size: var(--font-size-md);
+  cursor: pointer;
+  border: none;
+  background: var(--color-warning);
+  color: var(--color-background);
+  border-radius: var(--radius-sm);
+}
+
+.input{
+  width: 100%;
+  padding: var(--space-sm);
+  font-size: 14px;
+  margin-top: var(--space-sm);
+}
