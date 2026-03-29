@@ -22,13 +22,6 @@ import { EditorStore } from './EditorStore';
 import type { ToolType } from '../tools/Tool';
 import { OrthographicCamera } from 'three';
 
-//Import SVG?
-//Highlight Line length input correctly
-
-//check convex hull
-//check minsize
-//check minSideHeight
-//check lineIntersections
 export class ThreeEditor {
   private pointRenderer: PointRenderer;
   private lineRenderer: LineRenderer;
@@ -101,6 +94,9 @@ export class ThreeEditor {
     this.model.lines.clear();
     this.model.images.clear();
     this.hasChanges = false;
+
+    this.toolManager.setActiveTool("line");
+    this.store.setTool("line");
 
     if (!data) {
       const project = this.storage.getEmptyProject();
@@ -222,6 +218,7 @@ export class ThreeEditor {
   }
   setActiveTool(type: ToolType) {
     this.toolManager.setActiveTool(type);
+    this.store.setTool(type);
   }
 
   setSettings(settings: Settings) {

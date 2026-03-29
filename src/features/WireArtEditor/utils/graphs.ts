@@ -1,8 +1,11 @@
-import * as THREE from 'three';
-import type { LineData } from '../models/Line';
-import type { PointData } from '../models/Point';
+import * as THREE from "three";
+import type { LineData } from "../models/Line";
+import type { PointData } from "../models/Point";
 
-export function buildAdjList(points: Map<string, PointData>, lines: Map<string, LineData>) {
+export function buildAdjList(
+  points: Map<string, PointData>,
+  lines: Map<string, LineData>,
+) {
   let adjList: Map<string, Set<string>> = new Map();
 
   // Initialize adjacency list with all points
@@ -40,7 +43,11 @@ export function findLineIntersections(
   points: Map<string, PointData>,
   lines: Map<string, LineData>,
 ) {
-  const invalidLines: string[] = [];
+  const intersections: {
+    point: THREE.Vector2;
+    line1Id: string;
+    line2Id: string;
+  }[] = [];
 
   const lineArray = Array.from(lines.values());
 
@@ -63,24 +70,47 @@ export function findLineIntersections(
       const p3 = points.get(l2.startPointId)!;
       const p4 = points.get(l2.endPointId)!;
 
-      if (segmentsIntersect(p1, p2, p3, p4)) {
-        invalidLines.push(l1.id, l2.id);
+      const intersection = getSegmentIntersection(
+        new THREE.Vector2(p1.x, p1.y),
+        new THREE.Vector2(p2.x, p2.y),
+        new THREE.Vector2(p3.x, p3.y),
+        new THREE.Vector2(p4.x, p4.y),
+      );
+
+      if (intersection) {
+        intersections.push({
+          point: intersection,
+          line1Id: l1.id,
+          line2Id: l2.id,
+        });
       }
     }
   }
-  return invalidLines;
+
+  return intersections;
 }
 
-export function segmentsIntersect(a: PointData, b: PointData, c: PointData, d: PointData) {
-  const orient = (p: PointData, q: PointData, r: PointData) =>
-    (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x);
+export function getSegmentIntersection(
+  a: THREE.Vector2,
+  b: THREE.Vector2,
+  c: THREE.Vector2,
+  d: THREE.Vector2,
+): THREE.Vector2 | null {
+  const denominator = (a.x - b.x) * (c.y - d.y) - (a.y - b.y) * (c.x - d.x);
 
-  const o1 = orient(a, b, c);
-  const o2 = orient(a, b, d);
-  const o3 = orient(c, d, a);
-  const o4 = orient(c, d, b);
+  if (denominator === 0) return null;
 
-  return o1 * o2 < 0 && o3 * o4 < 0;
+  const t =
+    ((a.x - c.x) * (c.y - d.y) - (a.y - c.y) * (c.x - d.x)) / denominator;
+
+  const u =
+    ((a.x - c.x) * (a.y - b.y) - (a.y - c.y) * (a.x - b.x)) / denominator;
+
+  if (t >= 0 && t <= 1 && u >= 0 && u <= 1) {
+    return new THREE.Vector2(a.x + t * (b.x - a.x), a.y + t * (b.y - a.y));
+  }
+
+  return null;
 }
 
 export function findPoygons(
@@ -91,7 +121,8 @@ export function findPoygons(
   const visited = new Set<string>();
   const polygons: string[][] = [];
 
-  const getAngle = (a: PointData, b: PointData) => Math.atan2(b.y - a.y, b.x - a.x);
+  const getAngle = (a: PointData, b: PointData) =>
+    Math.atan2(b.y - a.y, b.x - a.x);
 
   const sortedNeighbors = new Map<string, string[]>();
 
@@ -215,7 +246,12 @@ export function insetPolygon(
     const offsetP2 = p1.clone().add(n2.multiplyScalar(inset));
     const offsetDir2 = d2.clone();
 
-    const intersect = lineIntersection(offsetP1, offsetDir1, offsetP2, offsetDir2);
+    const intersect = lineIntersection(
+      offsetP1,
+      offsetDir1,
+      offsetP2,
+      offsetDir2,
+    );
 
     if (intersect) result.push(intersect);
   }
@@ -223,6 +259,10 @@ export function insetPolygon(
   return result;
 }
 
-export function insetPolygons(polygons: string[][], points: Map<string, PointData>, inset: number) {
+export function insetPolygons(
+  polygons: string[][],
+  points: Map<string, PointData>,
+  inset: number,
+) {
   return polygons.map((poly) => insetPolygon(poly, points, inset));
 }

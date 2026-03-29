@@ -6,12 +6,14 @@ type Listener = () => void;
 interface EditorState {
   project: Project | null;
   settings: Settings | null;
+  tool: ToolType;
 }
 
 export class EditorStore {
   private state: EditorState = {
     project: null,
     settings: null,
+    tool: "line",
   };
 
   private listeners: Listener[] = [];
@@ -37,6 +39,11 @@ export class EditorStore {
     this.emit();
   }
 
+  setTool(tool: ToolType) {
+    this.state.tool = tool;
+    this.emit();
+  }
+
   updateSettings(settings: Settings) {
     this.state.settings = settings;
     this.emit();
@@ -44,6 +51,7 @@ export class EditorStore {
 }
 
 import { useEffect, useState } from 'react';
+import type { ToolType } from '../tools/Tool';
 
 export function useEditorStore(store: EditorStore) {
   const [state, setState] = useState(store.getState());

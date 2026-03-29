@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import styles from './styles/Sidebar.module.css';
 import type { ThreeEditor } from '../core/ThreeEditor';
 import ToolButton from '../../global/ToolButton';
-import { useDialog } from '../../global/useDialog';
 import { useNavigate } from 'react-router-dom';
 import { useEditorStore } from '../core/EditorStore';
+import { showDialog } from '../../global/dialogController';
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -44,7 +44,6 @@ export default function SideBar({ engine }: Props) {
   const { project } = useEditorStore(engine.getStore());
   const selectedProject = project? (project.id? project.id : -1) : null;
 
-  const { showDialog, dialogComponent } = useDialog();
   const navigate = useNavigate();
 
   // Load projects from API once when the sidebar mounts
@@ -174,7 +173,6 @@ export default function SideBar({ engine }: Props) {
 
   return (
     <div className={styles.wrapper} id='sidebar'>
-      {dialogComponent}
       <div
         key={-1}
         className={`${styles.projectItem} ${-1 === selectedProject ? styles.selected : ''}`}

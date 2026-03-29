@@ -30,7 +30,7 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
     hasAsked.current = true;
 
     const run = async () => {
-      //if (localStorage.getItem("tutorial-seen")) return;
+      if (localStorage.getItem("tutorial-seen")) return;
 
       const result = await showDialog({
         type: "confirm",

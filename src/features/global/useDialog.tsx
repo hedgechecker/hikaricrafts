@@ -6,6 +6,10 @@ export function useDialog() {
     type: DialogType;
     message: string;
     defaultValue?: string;
+
+    confirmText?: string;
+    cancelText?: string;
+
     resolve: (value: boolean | string) => void;
   } | null>(null);
 
@@ -13,6 +17,8 @@ export function useDialog() {
     type: DialogType;
     message: string;
     defaultValue?: string;
+    confirmText?: string;
+    cancelText?: string;
   }): Promise<boolean | string> => {
     return new Promise((resolve) => {
       setState({ ...options, resolve });
@@ -31,6 +37,8 @@ export function useDialog() {
       type={state.type}
       message={state.message}
       defaultValue={state.defaultValue}
+      confirmText={state.confirmText}
+      cancelText={state.cancelText}
       onClose={handleClose}
     />
   ) : null;

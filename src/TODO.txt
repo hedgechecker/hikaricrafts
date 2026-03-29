@@ -4,3 +4,10 @@ Keyboard anleitung
 Select a range of patterns to move them
 basket info
 basket site
+
+Import SVG?
+
+check convex hull
+check minsize
+check minSideHeight
+complete tutorial

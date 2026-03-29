@@ -3,11 +3,11 @@ import ImageUploader from "./ImageUploader";
 import ToolButton from "../../global/ToolButton";
 import styles from "./styles/Toolbar.module.css";
 import { useNavigate } from "react-router-dom";
-import { useDialog } from "../../global/useDialog";
 import type { Settings } from "../models/Settings";
 import type { ThreeEditor } from "../core/ThreeEditor";
 import { useEditorStore } from "../core/EditorStore";
 import type { ToolType } from "../tools/Tool";
+import { showDialog } from "../../global/dialogController";
 
 interface Props {
   engine: ThreeEditor;
@@ -27,14 +27,11 @@ interface Props {
  */
 export default function Toolbar({ engine }: Props) {
   const navigate = useNavigate();
-
-  const [active, setActive] = useState<ToolType>("move");
   const [saved, setSaved] = useState(false);
-  const { showDialog, dialogComponent } = useDialog();
 
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement | null>(null);
-  const { settings } = useEditorStore(engine.getStore());
+  const { settings, tool } = useEditorStore(engine.getStore());
 
   /**
    * Update a single editor setting.
@@ -47,7 +44,6 @@ export default function Toolbar({ engine }: Props) {
   }
 
   const changeTool = (tool: ToolType) => {
-    setActive(tool);
     engine.setActiveTool(tool);
   };
 
@@ -107,7 +103,6 @@ export default function Toolbar({ engine }: Props) {
 
   return (
     <div className={styles.toolbar} id="toolbar">
-      {dialogComponent}
 
       {/* Navigation */}
       <ToolButton
@@ -122,7 +117,7 @@ export default function Toolbar({ engine }: Props) {
           label=""
           image="/icons/move.png"
           toolTip="Elemente bewegen"
-          active={active === "move"}
+          active={tool === "move"}
           onClick={() => changeTool("move")}
         />
 
@@ -130,7 +125,7 @@ export default function Toolbar({ engine }: Props) {
           label=""
           image="/icons/single-point.png"
           toolTip="Einen Punkt zeichnen"
-          active={active === "point"}
+          active={tool === "point"}
           onClick={() => changeTool("point")}
         />
 
@@ -138,7 +133,7 @@ export default function Toolbar({ engine }: Props) {
           label=""
           image="/icons/line.png"
           toolTip="Eine Linie zeichnen"
-          active={active === "line"}
+          active={tool === "line"}
           onClick={() => changeTool("line")}
           id="linetool"
         />
@@ -147,7 +142,7 @@ export default function Toolbar({ engine }: Props) {
           label=""
           image="/icons/eraser.png"
           toolTip="Elemente löschen"
-          active={active === "delete"}
+          active={tool === "delete"}
           onClick={() => changeTool("delete")}
         />
 
@@ -198,7 +193,7 @@ export default function Toolbar({ engine }: Props) {
           label="Überprüfen"
           image="/icons/check.png"
           toolTip="Inhalt checken"
-          active={active === "verify"}
+          active={tool === "verify"}
           onClick={() => changeTool("verify")}
         />
 

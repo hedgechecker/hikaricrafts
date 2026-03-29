@@ -71,9 +71,6 @@ export class TransformGizmo {
 
   setVisible(visible:boolean){
     this.visible = visible;
-    this.handles.forEach((handle) => {
-      handle.visible = visible;
-    });
   }
   getHovered() {
     return this.hovered;
@@ -82,7 +79,7 @@ export class TransformGizmo {
   update(image: ImageRenderData | null) {
     if (!image) {
       this.handles.forEach((h) => {
-        h.visible = this.visible;
+        h.visible = false;
       });
       return;
     }

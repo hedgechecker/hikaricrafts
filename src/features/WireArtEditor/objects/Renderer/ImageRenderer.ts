@@ -1,8 +1,8 @@
-import * as THREE from 'three';
-import { TransformGizmo } from '../TransformGizmo';
-import type { ImageData } from '../../models/Image';
-import type { SceneManager } from '../SceneManager';
-import { BaseRenderer, type RenderData } from './BaseRenderer';
+import * as THREE from "three";
+import { TransformGizmo } from "../TransformGizmo";
+import type { ImageData } from "../../models/Image";
+import type { SceneManager } from "../SceneManager";
+import { BaseRenderer, type RenderData } from "./BaseRenderer";
 
 export interface ImageRenderData extends RenderData {
   data: ImageData;
@@ -19,8 +19,8 @@ export class ImageRenderer extends BaseRenderer<ImageRenderData, ImageData> {
     this.gizmo = new TransformGizmo();
 
     this.gizmo.handles.forEach((handle) => {
-      this.sceneManager.scene.add(handle);
       handle.visible = false;
+      this.sceneManager.scene.add(handle);
     });
 
     this.gizmo.setVisible(false);
@@ -34,6 +34,14 @@ export class ImageRenderer extends BaseRenderer<ImageRenderData, ImageData> {
   }
   protected updateFromData(data: ImageData) {
     this.updateImage(data);
+  }
+
+  remove(id: string) {
+    super.remove(id);
+    if (this.objects.size < 1) {
+      this.gizmo.update(null);
+      this.gizmo.setVisible(false);
+    }
   }
 
   updateScale(zoom: number) {
@@ -90,18 +98,25 @@ export class ImageRenderer extends BaseRenderer<ImageRenderData, ImageData> {
   }
 
   addImage(image: ImageData) {
+    this.gizmo.update(null);
     const loader = new THREE.TextureLoader();
 
     loader.load(image.url, (texture) => {
       const group = new THREE.Group();
 
       const aspect = texture.image.width / texture.image.height;
-      const geometry = new THREE.PlaneGeometry(image.height * aspect, image.height);
+      const geometry = new THREE.PlaneGeometry(
+        image.height * aspect,
+        image.height,
+      );
       const material = new THREE.MeshBasicMaterial({ map: texture });
       const mesh = new THREE.Mesh(geometry, material);
-      mesh.name = 'visual';
+      mesh.name = "visual";
 
-      const hitGeometry = new THREE.PlaneGeometry(image.height * aspect, image.height);
+      const hitGeometry = new THREE.PlaneGeometry(
+        image.height * aspect,
+        image.height,
+      );
       const hitMaterial = new THREE.MeshBasicMaterial({
         transparent: true,
         opacity: 0, // invisible
@@ -109,7 +124,7 @@ export class ImageRenderer extends BaseRenderer<ImageRenderData, ImageData> {
       });
 
       const hitbox = new THREE.Mesh(hitGeometry, hitMaterial);
-      hitbox.name = 'hitbox';
+      hitbox.name = "hitbox";
 
       group.add(mesh);
       group.add(hitbox);
@@ -122,7 +137,7 @@ export class ImageRenderer extends BaseRenderer<ImageRenderData, ImageData> {
         data: image,
         isHovered: false,
         isSelected: false,
-        isInValid: false
+        isInValid: false,
       };
       this.objects.set(image.id, data);
       if (this.visible) this.sceneManager.scene.add(data.mesh);
@@ -138,19 +153,18 @@ export class ImageRenderer extends BaseRenderer<ImageRenderData, ImageData> {
     img.data = { ...data };
 
     img.mesh.children.forEach((child) => {
-      if (child.name == 'visual' && child instanceof THREE.Mesh) {
+      if (child.name == "visual" && child instanceof THREE.Mesh) {
         child.geometry.dispose();
-        child.geometry = new THREE.PlaneGeometry(img.height * img.aspect, img.height);
+        child.geometry = new THREE.PlaneGeometry(
+          img.height * img.aspect,
+          img.height,
+        );
       }
     });
     //Set Height
     img.mesh.rotation.z = data.rotation;
 
     this.updateScale(this.zoom);
-
-    const image = this.objects.get(data.id);
-    if (!image) return;
-    this.gizmo.update(image);
   }
 
   handleHover(event: MouseEvent): boolean {
@@ -162,10 +176,12 @@ export class ImageRenderer extends BaseRenderer<ImageRenderData, ImageData> {
     mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     raycaster.setFromCamera(mouse, this.sceneManager.camera);
 
+    const handleHits = raycaster.intersectObjects(
+      this.gizmo.getHitboxes(),
+      true,
+    );
 
-    const handleHits = raycaster.intersectObjects(this.gizmo.getHitboxes(), true);
-
-    if (handleHits.length) {
+    if (this.visible && handleHits.length) {
       this.gizmo.setVisible(true);
       this.gizmo.setHovered(handleHits[0].object.parent?.userData.type);
       this.setHovered(this.gizmo.parent!.data.id);
