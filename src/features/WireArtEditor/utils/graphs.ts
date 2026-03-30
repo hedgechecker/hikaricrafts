@@ -32,7 +32,17 @@ export function buildAdjList(
 export function findIsolatedPoints(adjList: Map<string, Set<string>>) {
   const invalidIds: string[] = [];
   for (const [id, neighbors] of adjList) {
-    if (neighbors.size < 2) {
+    if (neighbors.size  == 0) {
+      invalidIds.push(id);
+    }
+  }
+  return invalidIds;
+}
+
+export function findSingleConnectionPoints(adjList: Map<string, Set<string>>) {
+  const invalidIds: string[] = [];
+  for (const [id, neighbors] of adjList) {
+    if (neighbors.size == 1) {
       invalidIds.push(id);
     }
   }
@@ -44,7 +54,7 @@ export function findLineIntersections(
   lines: Map<string, LineData>,
 ) {
   const intersections: {
-    point: THREE.Vector2;
+    point: THREE.Vector3;
     line1Id: string;
     line2Id: string;
   }[] = [];
@@ -69,19 +79,24 @@ export function findLineIntersections(
       const p2 = points.get(l1.endPointId)!;
       const p3 = points.get(l2.startPointId)!;
       const p4 = points.get(l2.endPointId)!;
+      if(!p1 || !p2 || !p3 || !p4){
+        console.log(p1,p2,p3,p4);
+        continue;}
 
-      const intersection = getSegmentIntersection(
+      const result = getSegmentIntersection(
         new THREE.Vector2(p1.x, p1.y),
         new THREE.Vector2(p2.x, p2.y),
         new THREE.Vector2(p3.x, p3.y),
         new THREE.Vector2(p4.x, p4.y),
       );
 
-      if (intersection) {
-        intersections.push({
-          point: intersection,
-          line1Id: l1.id,
-          line2Id: l2.id,
+      if (result) {
+        result.forEach((point) => {
+          intersections.push({
+            point,
+            line1Id: l1.id,
+            line2Id: l2.id,
+          });
         });
       }
     }
@@ -95,10 +110,18 @@ export function getSegmentIntersection(
   b: THREE.Vector2,
   c: THREE.Vector2,
   d: THREE.Vector2,
-): THREE.Vector2 | null {
+): THREE.Vector3[] | null {
   const denominator = (a.x - b.x) * (c.y - d.y) - (a.y - b.y) * (c.x - d.x);
 
-  if (denominator === 0) return null;
+  //Handle parallel / collinear
+  if (Math.abs(denominator) < 1e-6) {
+    // check collinearity
+    if (isCollinear(a, b, c)) {
+      const overlap = getCollinearOverlap(a, b, c, d);
+      return overlap.length ? overlap : null;
+    }
+    return null;
+  }
 
   const t =
     ((a.x - c.x) * (c.y - d.y) - (a.y - c.y) * (c.x - d.x)) / denominator;
@@ -107,17 +130,58 @@ export function getSegmentIntersection(
     ((a.x - c.x) * (a.y - b.y) - (a.y - c.y) * (a.x - b.x)) / denominator;
 
   if (t >= 0 && t <= 1 && u >= 0 && u <= 1) {
-    return new THREE.Vector2(a.x + t * (b.x - a.x), a.y + t * (b.y - a.y));
+    return [new THREE.Vector3(a.x + t * (b.x - a.x), a.y + t * (b.y - a.y), 0)];
   }
 
   return null;
 }
 
+function getCollinearOverlap(
+  a: THREE.Vector2,
+  b: THREE.Vector2,
+  c: THREE.Vector2,
+  d: THREE.Vector2,
+): THREE.Vector3[] {
+  const points = [a, b, c, d];
+
+  // project onto dominant axis
+  const useX = Math.abs(a.x - b.x) > Math.abs(a.y - b.y);
+
+  points.sort((p1, p2) => (useX ? p1.x - p2.x : p1.y - p2.y));
+
+  // middle segment is the overlap (if any)
+  const pStart = points[1];
+  const pEnd = points[2];
+
+  // check if they actually overlap
+  const overlaps = useX
+    ? Math.max(Math.min(a.x, b.x), Math.min(c.x, d.x)) <=
+      Math.min(Math.max(a.x, b.x), Math.max(c.x, d.x))
+    : Math.max(Math.min(a.y, b.y), Math.min(c.y, d.y)) <=
+      Math.min(Math.max(a.y, b.y), Math.max(c.y, d.y));
+
+  if (!overlaps) return [];
+
+  return [
+    new THREE.Vector3(pStart.x, pStart.y, 0),
+    new THREE.Vector3(pEnd.x, pEnd.y, 0),
+  ];
+}
+
+
+function isCollinear(
+  a: THREE.Vector2,
+  b: THREE.Vector2,
+  c: THREE.Vector2,
+  eps = 1e-6,
+) {
+  return Math.abs((b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)) < eps;
+}
 export function findPoygons(
   points: Map<string, PointData>,
   lines: Map<string, LineData>,
-  adjList: Map<string, Set<string>>,
 ) {
+  const adjList = buildAdjList(points,lines);
   const visited = new Set<string>();
   const polygons: string[][] = [];
 
@@ -140,6 +204,7 @@ export function findPoygons(
 
   const nextEdge = (a: string, b: string) => {
     const neighbors = sortedNeighbors.get(b)!;
+    if(!neighbors) {console.log(b, neighbors)}
     const idx = neighbors.indexOf(a);
     const next = neighbors[(idx - 1 + neighbors.length) % neighbors.length];
     return [b, next];

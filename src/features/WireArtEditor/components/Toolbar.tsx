@@ -103,19 +103,18 @@ export default function Toolbar({ engine }: Props) {
 
   return (
     <div className={styles.toolbar} id="toolbar">
-
       {/* Navigation */}
       <ToolButton
         label="Zurück zum Anfang"
-        image="/icons/back-arrow.png"
+        image="/icons/back-arrow.svg"
         onClick={() => navigate("/")}
       />
 
       {/* Tool selection */}
-      <div className={styles.toolSection} id ="tools">
+      <div className={styles.toolSection} id="tools">
         <ToolButton
           label=""
-          image="/icons/move.png"
+          image="/icons/move.svg"
           toolTip="Elemente bewegen"
           active={tool === "move"}
           onClick={() => changeTool("move")}
@@ -123,7 +122,7 @@ export default function Toolbar({ engine }: Props) {
 
         <ToolButton
           label=""
-          image="/icons/single-point.png"
+          image="/icons/single-point.svg"
           toolTip="Einen Punkt zeichnen"
           active={tool === "point"}
           onClick={() => changeTool("point")}
@@ -131,7 +130,7 @@ export default function Toolbar({ engine }: Props) {
 
         <ToolButton
           label=""
-          image="/icons/line.png"
+          image="/icons/line.svg"
           toolTip="Eine Linie zeichnen"
           active={tool === "line"}
           onClick={() => changeTool("line")}
@@ -140,7 +139,7 @@ export default function Toolbar({ engine }: Props) {
 
         <ToolButton
           label=""
-          image="/icons/eraser.png"
+          image="/icons/eraser.svg"
           toolTip="Elemente löschen"
           active={tool === "delete"}
           onClick={() => changeTool("delete")}
@@ -148,7 +147,7 @@ export default function Toolbar({ engine }: Props) {
 
         <ToolButton
           label=""
-          image="/icons/undo.png"
+          image="/icons/undo.svg"
           toolTip="Rückgängig machen"
           onClick={() => {
             engine.undo();
@@ -157,7 +156,7 @@ export default function Toolbar({ engine }: Props) {
 
         <ToolButton
           label=""
-          image="/icons/redo.png"
+          image="/icons/redo.svg"
           toolTip="Wiederherstellen"
           onClick={() => engine.redo()}
         />
@@ -166,24 +165,32 @@ export default function Toolbar({ engine }: Props) {
         {/* Save project */}
         <ToolButton
           label={saved ? "" : ""}
-          image={saved ? "/icons/check.png" : "/icons/save.png"}
+          image={saved ? "/icons/check.svg" : "/icons/save.svg"}
           toolTip="Projekt speichern"
           onClick={handleSave}
         />
 
-        {/* Export project
+        {/* Export project*/}
         <ToolButton
           label=""
-          image="/icons/export.png"
-          toolTip="Projekt als SVG Datei exportieren"
-          onClick={engine.exportSVG()}
-        /> */}
+          image="/icons/export.svg"
+          toolTip="Projekt als Datei exportieren"
+          onClick={() => engine.exportProject()}
+        />
+
+        {/* Export project*/}
+        <ToolButton
+          label=""
+          image="/icons/import.svg"
+          toolTip="Datei als Projekt importieren"
+          onClick={() => engine.importProject()}
+        />
 
         {/* Toggle settings panel */}
         <ToolButton
           id="settingsButton"
           label=""
-          image="/icons/setting.png"
+          image="/icons/setting.svg"
           toolTip="Sichtbarkeiten ändern"
           onClick={() => setSettingsOpen(!settingsOpen)}
         />
@@ -191,8 +198,8 @@ export default function Toolbar({ engine }: Props) {
         {/* Verify */}
         <ToolButton
           label="Überprüfen"
-          image="/icons/check.png"
-          toolTip="Inhalt checken"
+          image="/icons/preview.svg"
+          toolTip="Vorschau erstellen"
           active={tool === "verify"}
           onClick={() => changeTool("verify")}
         />

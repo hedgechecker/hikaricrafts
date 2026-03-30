@@ -1,18 +1,12 @@
-import { useEffect, useState } from 'react';
-import styles from './styles/Sidebar.module.css';
-import type { ThreeEditor } from '../core/ThreeEditor';
-import ToolButton from '../../global/ToolButton';
-import { useNavigate } from 'react-router-dom';
-import { useEditorStore } from '../core/EditorStore';
-import { showDialog } from '../../global/dialogController';
+import { useEffect, useState } from "react";
+import styles from "./styles/Sidebar.module.css";
+import type { ThreeEditor } from "../core/ThreeEditor";
+import ToolButton from "../../global/ToolButton";
+import { useNavigate } from "react-router-dom";
+import { useEditorStore } from "../core/EditorStore";
+import { showDialog } from "../../global/dialogController";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
-
-interface Project {
-  id: number;
-  name: string;
-  isPublic: boolean;
-}
 
 interface Props {
   engine: ThreeEditor;
@@ -34,15 +28,17 @@ export default function SideBar({ engine }: Props) {
   //UI State
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editingName, setEditingName] = useState('');
+  const [editingName, setEditingName] = useState("");
 
   // authentication state
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(!!localStorage.getItem('token'));
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(
+    !!localStorage.getItem("token"),
+  );
 
   // project data
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<{ id: number; name: string }[]>([]);
   const { project } = useEditorStore(engine.getStore());
-  const selectedProject = project? (project.id? project.id : -1) : null;
+  const selectedProject = project ? (project.id ? project.id : -1) : null;
 
   const navigate = useNavigate();
 
@@ -61,15 +57,15 @@ export default function SideBar({ engine }: Props) {
       setOpenMenuId(null);
       setEditingId(null);
     }
-    document.addEventListener('click', handleClickOutside);
+    document.addEventListener("click", handleClickOutside);
     return () => {
-      document.removeEventListener('click', handleClickOutside);
+      document.removeEventListener("click", handleClickOutside);
     };
   }, []);
 
   // Fetch all projects available to the current user (private + public)
   async function loadProjects() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
 
     const res = await fetch(`${BASE_URL}/wireArtProjects`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -83,11 +79,12 @@ export default function SideBar({ engine }: Props) {
 
   // Prevent losing unsaved work before switching projects
   async function handleProjectClick(id: number) {
-    if(!engine)return;
+    if (!engine) return;
     if (engine.hasChanges) {
       const result = await showDialog({
-        type: 'confirm',
-        message: 'Das Projekt hat ungespeicherte Änderungen, wollen sie diese Verwerfen?',
+        type: "confirm",
+        message:
+          "Das Projekt hat ungespeicherte Änderungen, wollen sie diese Verwerfen?",
       });
       if (!result) {
         return;
@@ -97,15 +94,15 @@ export default function SideBar({ engine }: Props) {
   }
 
   // Rename a project via API and refresh the project list
-  async function submitRename(project: Project) {
+  async function submitRename(id: number) {
     if (!editingName.trim()) return;
 
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
 
-    const res = await fetch(`${BASE_URL}/wireArtProjects/${project.id}`, {
-      method: 'PUT',
+    const res = await fetch(`${BASE_URL}/wireArtProjects/${id}`, {
+      method: "PUT",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify({ name: editingName }),
@@ -120,18 +117,18 @@ export default function SideBar({ engine }: Props) {
   }
 
   // Delete a project after user confirmation
-  async function handleDelete(project: Project) {
+  async function handleDelete(id: number) {
     const result = await showDialog({
-      type: 'confirm',
-      message: 'Wollen Sie sicher dieses Projekt unwiderruflich löschen?',
+      type: "confirm",
+      message: "Wollen Sie sicher dieses Projekt unwiderruflich löschen?",
     });
     if (!result) {
       return;
     }
 
-    const token = localStorage.getItem('token');
-    const res = await fetch(`${BASE_URL}/wireArtProjects/${project.id}`, {
-      method: 'DELETE',
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${BASE_URL}/wireArtProjects/${id}`, {
+      method: "DELETE",
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
 
@@ -147,21 +144,22 @@ export default function SideBar({ engine }: Props) {
   // Open a new project after user confirmation
   const handleNewProject = async () => {
     if (!engine) return;
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     setIsLoggedIn(!!token);
     if (!token) {
       const result = await showDialog({
-        type: 'confirm',
+        type: "confirm",
         message:
-          'Sie sind nicht angemeldet, alle aktuellen Änderungen werden verworfen, sicher neues Projekt erstellen? ',
+          "Sie sind nicht angemeldet, alle aktuellen Änderungen werden verworfen, sicher neues Projekt erstellen? ",
       });
       if (!result) {
         return;
       }
     } else if (engine.hasChanges) {
       const result = await showDialog({
-        type: 'confirm',
-        message: 'Das Projekt hat ungespeicherte Änderungen, wollen sie diese Verwerfen?',
+        type: "confirm",
+        message:
+          "Das Projekt hat ungespeicherte Änderungen, wollen sie diese Verwerfen?",
       });
       if (!result) {
         return;
@@ -172,26 +170,37 @@ export default function SideBar({ engine }: Props) {
   };
 
   return (
-    <div className={styles.wrapper} id='sidebar'>
+    <div className={styles.wrapper} id="sidebar">
       <div
         key={-1}
-        className={`${styles.projectItem} ${-1 === selectedProject ? styles.selected : ''}`}
+        className={`${styles.projectItem} ${-1 === selectedProject ? styles.selected : ""}`}
         onClick={handleNewProject}
       >
-        {' '}
-        <span className={styles.projectName}>{'Neues Projekt erstellen'}</span>
-        <div className={styles.menuWrapper}> <img src="/icons/add.png" style={{ height: '28px', width: '28px' }}></img> </div>
+        {" "}
+        <span className={styles.projectName}>{"Neues Projekt erstellen"}</span>
+        <div className={styles.menuWrapper}>
+          {" "}
+          <img
+            src="/icons/add.svg"
+            style={{ height: "28px", width: "28px" }}
+          ></img>{" "}
+        </div>
       </div>
 
       {isLoggedIn && <h3>Deine Projekte</h3>}
-      {!isLoggedIn && <ToolButton label="Anmelden" onClick={() => navigate('/login')}></ToolButton>}
+      {!isLoggedIn && (
+        <ToolButton
+          label="Anmelden"
+          onClick={() => navigate("/login")}
+        ></ToolButton>
+      )}
       {/* Project list */}
       {projects
-        .filter((p) => !p.isPublic)
+        //.filter((p) => !p.isPublic)
         .map((project) => (
           <div
             key={project.id}
-            className={`${styles.projectItem} ${project.id === selectedProject ? styles.selected : ''}`}
+            className={`${styles.projectItem} ${project.id === selectedProject ? styles.selected : ""}`}
             onClick={() => {
               if (!editingId) handleProjectClick(project.id);
             }}
@@ -205,25 +214,34 @@ export default function SideBar({ engine }: Props) {
                 onChange={(e) => setEditingName(e.target.value)}
                 onClick={(e) => e.stopPropagation()}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') submitRename(project);
-                  if (e.key === 'Escape') setEditingId(null);
+                  if (e.key === "Enter") submitRename(project.id);
+                  if (e.key === "Escape") setEditingId(null);
                 }}
-                onBlur={() => submitRename(project)}
+                onBlur={() => submitRename(project.id)}
               />
             ) : (
-              <span className={styles.projectName}>{project.name || 'Unbenanntes Projekt'}</span>
+              <span className={styles.projectName}>
+                {project.name || "Unbenanntes Projekt"}
+              </span>
             )}
 
             {/* MENU */}
-            <div className={styles.menuWrapper} onClick={(e) => e.stopPropagation()}>
+            <div
+              className={styles.menuWrapper}
+              onClick={(e) => e.stopPropagation()}
+            >
               <button
                 className={styles.menuButton}
-                onClick={() => setOpenMenuId(openMenuId === project.id ? null : project.id)}
+                onClick={() =>
+                  setOpenMenuId(openMenuId === project.id ? null : project.id)
+                }
               >
                 ⋯
               </button>
 
-              <div className={`${styles.dropdown} ${openMenuId === project.id ? styles.show : ''}`}>
+              <div
+                className={`${styles.dropdown} ${openMenuId === project.id ? styles.show : ""}`}
+              >
                 <div
                   className={styles.dropdownItem}
                   onClick={() => {
@@ -237,7 +255,7 @@ export default function SideBar({ engine }: Props) {
 
                 <div
                   className={`${styles.dropdownItem} ${styles.delete}`}
-                  onClick={() => handleDelete(project)}
+                  onClick={() => handleDelete(project.id)}
                 >
                   Löschen
                 </div>

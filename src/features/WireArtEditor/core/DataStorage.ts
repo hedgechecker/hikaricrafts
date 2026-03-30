@@ -1,6 +1,9 @@
-import type { Project } from '../models/Project';
+import type { Project } from "../models/Project";
+import CryptoJS from "crypto-js";
+
 const BASE_URL = import.meta.env.VITE_API_URL;
-const LOCALSTORAGE_KEY = 'Project';
+const LOCALSTORAGE_KEY = "Project";
+const CRYPT_KEY = "ernieUndBert"
 
 export class DataStorage {
   /**
@@ -12,7 +15,7 @@ export class DataStorage {
       lines: [],
       images: [],
       id: null,
-      name: '',
+      name: "",
       version: 0,
       settings: {
         showPoints: true,
@@ -20,8 +23,8 @@ export class DataStorage {
         showGrid: true,
         showImage: true,
         snapToGrid: true,
-        lineColor: '#000000',
-        pointColor: '#999999',
+        lineColor: "#000000",
+        pointColor: "#999999",
       },
     };
   }
@@ -50,10 +53,10 @@ export class DataStorage {
    * Returns the saved project (including generated id).
    */
   async saveGlobal(project: Project): Promise<Project | null> {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
 
     if (!token) {
-      console.log('User not Logged In: No Global Storage');
+      console.log("User not Logged In: No Global Storage");
       return null;
     }
 
@@ -63,7 +66,7 @@ export class DataStorage {
       return success ? project : null;
     }
 
-    console.log('Creating new project');
+    console.log("Creating new project");
 
     const data = {
       points: project.points,
@@ -73,9 +76,9 @@ export class DataStorage {
     };
 
     const res = await fetch(`${BASE_URL}/wireArtProjects`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
@@ -86,7 +89,7 @@ export class DataStorage {
     });
 
     if (!res.ok) {
-      console.error('Failed to create project');
+      console.error("Failed to create project");
       return null;
     }
 
@@ -96,7 +99,6 @@ export class DataStorage {
       ...project,
       id: created.id,
     };
-
   }
   /**
    *
@@ -104,10 +106,10 @@ export class DataStorage {
    * @returns if Updating was successfull
    */
   async updateGlobal(project: Project): Promise<boolean> {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
 
     if (!project.id) {
-      console.error('Cannot update project without id');
+      console.error("Cannot update project without id");
       return false;
     }
 
@@ -119,9 +121,9 @@ export class DataStorage {
     };
 
     const response = await fetch(`${BASE_URL}/wireArtProjects/${project.id}`, {
-      method: 'PUT',
+      method: "PUT",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
@@ -133,27 +135,27 @@ export class DataStorage {
     });
 
     if (!response.ok) {
-      console.error('Failed to update project');
+      console.error("Failed to update project");
       return false;
     }
 
     const updatedProject = await response.json();
-    console.log('Project updated:', updatedProject);
+    console.log("Project updated:", updatedProject);
     return true;
   }
 
   async loadGlobal(id: number): Promise<Project | null> {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
 
     const response = await fetch(`${BASE_URL}/wireArtProjects/${id}`, {
-      method: 'GET',
+      method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
 
     if (!response.ok) {
-      console.error('Failed to load project');
+      console.error("Failed to load project");
       return null;
     }
 
@@ -170,5 +172,65 @@ export class DataStorage {
       images: data.images,
       settings: data.settings,
     };
+  }
+
+  userExport(project: Project) {
+    console.log(project);
+
+    const json = JSON.stringify(project);
+
+    const encrypted = CryptoJS.AES.encrypt(json, CRYPT_KEY).toString();
+
+    const blob = new Blob([encrypted], { type: "text/plain" });
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${project.name || "project"}.art`;
+    a.click();
+
+    URL.revokeObjectURL(url);
+  }
+
+  async userImport(): Promise<Project> {
+
+    return new Promise((resolve, reject) => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".art";
+
+      input.style.display = "none";
+      document.body.appendChild(input);
+
+      input.onchange = async () => {
+        const file = input.files?.[0];
+        if (!file) {
+          document.body.removeChild(input);
+          return reject(new Error("No file selected"));
+        }
+
+        try {
+          const text = await file.text();
+
+          const bytes = CryptoJS.AES.decrypt(text, CRYPT_KEY);
+          const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+
+          if (!decrypted) {
+            throw new Error("Invalid or corrupted file");
+          }
+
+          const project: Project = JSON.parse(decrypted);
+
+          resolve(project);
+        } catch (err) {
+          reject(err);
+        } finally {
+          document.body.removeChild(input);
+        }
+      };
+
+      // triggers file picker
+      input.click();
+    });
   }
 }

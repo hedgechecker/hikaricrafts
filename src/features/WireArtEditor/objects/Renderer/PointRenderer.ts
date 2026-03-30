@@ -15,7 +15,7 @@ export class PointRenderer extends BaseRenderer<PointRenderData, PointData> {
   private readonly baseRadius = 0.09;
   private readonly hitRadius = 0.2; // bigger for easier hover
 
-  private color = '#999999';
+  private color = "#999999";
 
   protected getId(data: PointData) {
     return data.id;
@@ -36,8 +36,12 @@ export class PointRenderer extends BaseRenderer<PointRenderData, PointData> {
       const isInValid = object.isInValid;
 
       object.mesh.children.forEach((child) => {
-        if ((isHovered || isSelected) && child.name != 'hitbox') {
-          child.scale.set(size * this.hoverThickness, size * this.hoverThickness, 1);
+        if ((isHovered || isSelected) && child.name != "hitbox") {
+          child.scale.set(
+            size * this.hoverThickness,
+            size * this.hoverThickness,
+            1,
+          );
         } else {
           child.scale.set(size, size, 1);
         }
@@ -76,8 +80,8 @@ export class PointRenderer extends BaseRenderer<PointRenderData, PointData> {
 
     const outline = new THREE.LineSegments(edges, outlineMaterial);
 
-    circle.name = 'visual';
-    outline.name = 'outline';
+    circle.name = "visual";
+    outline.name = "outline";
 
     const hitGeometry = new THREE.CircleGeometry(this.hitRadius, 32);
 
@@ -88,7 +92,7 @@ export class PointRenderer extends BaseRenderer<PointRenderData, PointData> {
     });
 
     const hitbox = new THREE.Mesh(hitGeometry, hitMaterial);
-    hitbox.name = 'hitbox';
+    hitbox.name = "hitbox";
     const size = this.baseThickness / this.zoom;
     circle.scale.set(size, size, 1);
     outline.scale.set(size, size, 1);
@@ -101,7 +105,12 @@ export class PointRenderer extends BaseRenderer<PointRenderData, PointData> {
 
     if (this.visible) this.sceneManager.scene.add(group);
 
-    this.objects.set(id, { mesh: group, isSelected: false, isHovered: false, isInValid: false });
+    this.objects.set(id, {
+      mesh: group,
+      isSelected: false,
+      isHovered: false,
+      isInValid: false,
+    });
     return group;
   }
 
@@ -128,6 +137,25 @@ export class PointRenderer extends BaseRenderer<PointRenderData, PointData> {
     return null;
   }
 
+  getClosestPoint(id: string) {
+    let closest = null;
+    let minDist = Number.MAX_SAFE_INTEGER;
+    const point = this.objects.get(id);
+    if(!point) return;
+    const x = point.mesh.position.x;
+    const y = point.mesh.position.y;
+    this.objects.forEach((p, pid) => {
+      if(pid == id) return;
+      const x2 = p.mesh.position.x;
+      const y2 = p.mesh.position.y;
+      if((x-x2)*(x-x2) + (y-y2)*(y-y2) < minDist){
+        minDist = (x - x2) * (x - x2) + (y - y2) * (y - y2);
+        closest = pid;
+      }
+    });
+    return closest;
+  }
+
   setColorAll(color: string) {
     if (this.color == color) return;
     this.color = color;
@@ -142,19 +170,23 @@ export class PointRenderer extends BaseRenderer<PointRenderData, PointData> {
 
     const point = this.objects.get(id);
     if (!point) return;
-    const visual = point.mesh.getObjectByName('visual');
-    const outline = point.mesh.getObjectByName('outline');
+    const visual = point.mesh.getObjectByName("visual");
+    const outline = point.mesh.getObjectByName("outline");
 
     if (visual && (visual as THREE.Mesh).material) {
-      ((visual as THREE.Mesh).material as THREE.Material & { color: THREE.Color }).color.copy(
-        newColor,
-      );
+      (
+        (visual as THREE.Mesh).material as THREE.Material & {
+          color: THREE.Color;
+        }
+      ).color.copy(newColor);
     }
 
     if (outline && (outline as THREE.Mesh).material) {
-      ((outline as THREE.Mesh).material as THREE.Material & { color: THREE.Color }).color.copy(
-        newColor,
-      );
+      (
+        (outline as THREE.Mesh).material as THREE.Material & {
+          color: THREE.Color;
+        }
+      ).color.copy(newColor);
     }
   }
 

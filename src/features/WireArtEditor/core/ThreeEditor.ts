@@ -66,9 +66,12 @@ export class ThreeEditor {
       cursorManager: this.cursorManager,
       model: this.model,
     };
-    this.toolManager = new ToolManager(this.sceneManager.renderer.domElement, toolContext);
+    this.toolManager = new ToolManager(
+      this.sceneManager.renderer.domElement,
+      toolContext,
+    );
 
-    window.addEventListener('keydown', this.onKeyDown);
+    window.addEventListener("keydown", this.onKeyDown);
     this.load(this.storage.loadFromLocal());
     this.start();
     const project = this.getProject();
@@ -177,7 +180,6 @@ export class ThreeEditor {
   start() {
     let lastZoom = 0;
     const animate = () => {
-
       this.sceneManager.update();
       const { renderer, scene, camera } = this.sceneManager;
       //console.log(camera.position);
@@ -228,19 +230,19 @@ export class ThreeEditor {
       (Object.keys(settings) as (keyof Settings)[]).forEach((key) => {
         if (settings[key] !== oldSettings[key]) {
           switch (key) {
-            case 'showGrid':
+            case "showGrid":
               this.gridRenderer.setVisible(settings.showGrid);
               break;
-            case 'showImage':
+            case "showImage":
               this.imageRenderer.setVisible(settings.showImage);
               break;
-            case 'showPoints':
+            case "showPoints":
               this.pointRenderer.setVisible(settings.showPoints);
               break;
-            case 'pointColor':
+            case "pointColor":
               this.pointRenderer.setColorAll(settings.pointColor);
               break;
-            case 'lineColor':
+            case "lineColor":
               this.lineRenderer.setColorAll(settings.lineColor);
               break;
           }
@@ -260,18 +262,29 @@ export class ThreeEditor {
   exportSVG() {
     SVGExporter.simpleExport(this.model, this.project);
   }
+  exportProject() {
+    console.log(this.project);
+    this.storage.userExport(this.project);
+  }
+  async importProject() {
+    const project = await this.storage.userImport();
+    this.load(project);
+    this.store.setProject(project);
+    this.hasChanges = true;
+    console.log(project);
+  }
 
   private onKeyDown = async (e: KeyboardEvent) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+    if ((e.ctrlKey || e.metaKey) && e.key === "z") {
       this.undo();
     }
 
-    if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+    if ((e.ctrlKey || e.metaKey) && e.key === "y") {
       e.preventDefault();
       this.redo();
     }
 
-    if (e.key === 'Delete' || e.key === 'Backspace') {
+    if (e.key === "Delete" || e.key === "Backspace") {
       const hoveredPoint = this.pointRenderer.getHovered();
       if (hoveredPoint) {
         this.executeCommand(new DeletePointCommand(hoveredPoint));
@@ -294,7 +307,7 @@ export class ThreeEditor {
     if (this.animationFrameId !== null) {
       cancelAnimationFrame(this.animationFrameId);
     }
-    window.removeEventListener('keydown', this.onKeyDown);
+    window.removeEventListener("keydown", this.onKeyDown);
     this.toolManager.dispose();
     this.sceneManager.dispose();
   }

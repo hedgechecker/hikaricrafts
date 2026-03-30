@@ -377,8 +377,12 @@ app.get('/wireArtProjects', optionalAuth, async (req, res) => {
     where: {
       OR: whereConditions,
     },
+    select: {
+      id: true,
+      name: true,
+    },
     orderBy: {
-      updatedAt: 'desc',
+      updatedAt: "desc",
     },
   });
 

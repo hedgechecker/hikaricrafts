@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import ToolButton from '../../global/ToolButton';
+import imageCompression from "browser-image-compression";
 
 interface Props {
   onImageSelected: (image: string) => void;
@@ -17,17 +18,28 @@ export default function ImageUploader({ onImageSelected }: Props) {
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        onImageSelected(reader.result);
-      }
-    };
-    reader.readAsDataURL(file);
+    try {
+      const options = {
+        maxSizeMB: 0.5,
+        maxWidthOrHeight: 1000,
+        useWebWorker: true,
+      };
+
+      const compressedFile = await imageCompression(file, options);
+
+      // Convert to base64 if needed
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        onImageSelected(reader.result as string);
+      };
+      reader.readAsDataURL(compressedFile); 
+    } catch (error) {
+      console.error("Compression failed:", error);
+    }
   };
 
   return (
@@ -45,7 +57,7 @@ export default function ImageUploader({ onImageSelected }: Props) {
       <ToolButton
         label="Bild laden"
         onClick={handleButtonClick}
-        image="/icons/image.png"
+        image="/icons/image.svg"
         toolTip="Ein neues Hintergrundbild öffnen"
       />
     </>

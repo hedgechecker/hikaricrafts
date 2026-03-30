@@ -4,6 +4,9 @@ import { AddPointCommand } from "../commands/AddPointCommand";
 import { generateId } from "../utils/id";
 import { splitLine } from "../utils/commands";
 import { findLineIntersections } from "../utils/graphs";
+import { DeleteLineCommand } from "../commands/DeleteLineCommand";
+import { AddLineCommand } from "../commands/AddLineCommand";
+import { CompositeCommand } from "../commands/CompositeCommand";
 
 /**
  * Manages the Placement of Points
@@ -33,7 +36,7 @@ export class PointTool implements Tool {
     if (
       Math.pow(event.x - this.downPos.x, 2) +
         Math.pow(event.y - this.downPos.y, 2) >
-      0.5
+      1
     )
       return;
     let worldPos = this.context.sceneManager.getWorldPosition(event);
@@ -43,13 +46,54 @@ export class PointTool implements Tool {
       new THREE.Vector2(worldPos.x, worldPos.y),
     );
     if (intersection) {
+      console.log("intersection");
       const l1 = this.context.model.lines.get(intersection.line1Id);
       const l2 = this.context.model.lines.get(intersection.line2Id);
-      if(!l1 || !l2) return;
-      const cmd = splitLine(worldPos, l1, this.context.pointRenderer, l2);
-      if (cmd) {
-        this.context.executeCommand(cmd.command);
-      }
+      if (!l1 || !l2) return;
+
+      const cmds = [];
+      cmds.push(new DeleteLineCommand(l1.id));
+      cmds.push(new DeleteLineCommand(l2.id));
+      const pointId = generateId();
+      cmds.push(
+        new AddPointCommand({
+          id: pointId,
+          x: intersection.point.x,
+          y: intersection.point.y,
+          z: 0,
+        }),
+      );
+      cmds.push(
+        new AddLineCommand({
+          id: l1.id,
+          startPointId: l1.startPointId,
+          endPointId: pointId,
+        }),
+      );
+      cmds.push(
+        new AddLineCommand({
+          id: generateId(),
+          startPointId: pointId,
+          endPointId: l1.endPointId,
+        }),
+      );
+      cmds.push(
+        new AddLineCommand({
+          id: l2.id,
+          startPointId: l2.startPointId,
+          endPointId: pointId,
+        }),
+      );
+      cmds.push(
+        new AddLineCommand({
+          id: generateId(),
+          startPointId: pointId,
+          endPointId: l2.endPointId,
+        }),
+      );
+
+      this.context.executeCommand(new CompositeCommand(cmds));
+
       this.context.pointRenderer.handleHover(event);
       return;
     }
@@ -91,20 +135,11 @@ export class PointTool implements Tool {
 
   getClosestIntersection(worldPos: THREE.Vector2, threshold = 0.2) {
     let closest: {
-      point: THREE.Vector2;
+      point: THREE.Vector3;
       line1Id: string;
       line2Id: string;
     } | null = null;
     let minDist = threshold;
-
-    // const intersections = [
-    //   ...new Set(
-    //     findLineIntersections(
-    //       this.context.model.points,
-    //       this.context.model.lines,
-    //     ).map((i) => [i.point.x, i.point.y]),
-    //   ),
-    // ];
 
     const intersections = findLineIntersections(
       this.context.model.points,
@@ -112,8 +147,8 @@ export class PointTool implements Tool {
     );
 
     for (let i = 0; i < intersections.length; i++) {
-      const inter =intersections.at(i);
-      if(!inter) continue;
+      const inter = intersections.at(i);
+      if (!inter) continue;
       let x = inter.point.x;
       let y = inter.point.y;
       const p = new THREE.Vector2(x, y);

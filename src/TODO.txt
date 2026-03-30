@@ -7,7 +7,9 @@ basket site
 
 Import SVG?
 
+Scale Tool
 check convex hull
 check minsize
 check minSideHeight
 complete tutorial
+fix image movement

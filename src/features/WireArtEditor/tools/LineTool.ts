@@ -1,17 +1,19 @@
-import * as THREE from 'three';
-import type { Tool, ToolContext } from './Tool';
-import { AddPointCommand } from '../commands/AddPointCommand';
-import { AddLineCommand } from '../commands/AddLineCommand';
-import { generateId } from '../utils/id';
-import { Line2 } from 'three/examples/jsm/lines/Line2.js';
-import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
-import { LineGeometry } from 'three/examples/jsm/Addons.js';
-import { projectPointToSegment, snapAngle } from '../utils/math';
-import { InputOverlay } from './InputOverlay';
-import { splitLine } from '../utils/commands';
-import type { LineData } from '../models/Line';
-import { CompositeCommand } from '../commands/CompositeCommand';
-import type { Command } from '../commands/Command';
+import * as THREE from "three";
+import type { Tool, ToolContext } from "./Tool";
+import { AddPointCommand } from "../commands/AddPointCommand";
+import { AddLineCommand } from "../commands/AddLineCommand";
+import { generateId } from "../utils/id";
+import { Line2 } from "three/examples/jsm/lines/Line2.js";
+import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
+import { LineGeometry } from "three/examples/jsm/Addons.js";
+import { projectPointToSegment, snapAngle } from "../utils/math";
+import { InputOverlay } from "./InputOverlay";
+import { splitLine } from "../utils/commands";
+import type { LineData } from "../models/Line";
+import { CompositeCommand } from "../commands/CompositeCommand";
+import type { Command } from "../commands/Command";
+import { findLineIntersections } from "../utils/graphs";
+import { DeleteLineCommand } from "../commands/DeleteLineCommand";
 
 /**
  * Manages the Placement of Points
@@ -31,12 +33,13 @@ export class LineTool implements Tool {
   constructor(context: ToolContext) {
     this.context = context;
 
-    this.inputOverlay = new InputOverlay(this.context.sceneManager.dom.parentElement!, () =>
-      this.handleMouseMove(),
+    this.inputOverlay = new InputOverlay(
+      this.context.sceneManager.dom.parentElement!,
+      () => this.handleMouseMove(),
     );
 
-    window.addEventListener('keydown', this.onKeyDown);
-    window.addEventListener('keyup', this.onKeyUp);
+    window.addEventListener("keydown", this.onKeyDown);
+    window.addEventListener("keyup", this.onKeyUp);
   }
 
   onPointerDown(event: PointerEvent): void {
@@ -52,18 +55,22 @@ export class LineTool implements Tool {
       return;
     }
     if (event.button !== 0) return;
-    if (Math.pow(event.x - this.downPos.x, 2) + Math.pow(event.y - this.downPos.y, 2) > 0.5) return;
-
+    if (
+      Math.pow(event.x - this.downPos.x, 2) +
+        Math.pow(event.y - this.downPos.y, 2) >
+      1.5
+    )
+      return;
 
     this.worldPos.copy(this.context.sceneManager.getWorldPosition(event));
     let snapCandidate = this.getBestSnappingCandidate(this.worldPos);
 
-    if (event.pointerType != 'touch') {
+    if (event.pointerType != "touch") {
       this.inputOverlay.reset();
       this.inputOverlay.show(event.clientX, event.clientY);
       this.inputOverlay.focus();
     }
-    
+
     let selectedPointId: string | null = null;
     let commands: Command[] = [];
 
@@ -71,9 +78,68 @@ export class LineTool implements Tool {
     if (snapCandidate.pointId) {
       selectedPointId = snapCandidate.pointId;
     }
+
+    if (snapCandidate.intersection) {
+      console.log("intersection");
+      const l1 = this.context.model.lines.get(
+        snapCandidate.intersection.line1Id,
+      );
+      const l2 = this.context.model.lines.get(
+        snapCandidate.intersection.line2Id,
+      );
+      if (!l1 || !l2) return;
+
+      commands.push(new DeleteLineCommand(l1.id));
+      commands.push(new DeleteLineCommand(l2.id));
+      const pointId = generateId();
+      commands.push(
+        new AddPointCommand({
+          id: pointId,
+          x: snapCandidate.intersection.point.x,
+          y: snapCandidate.intersection.point.y,
+          z: 0,
+        }),
+      );
+      commands.push(
+        new AddLineCommand({
+          id: l1.id,
+          startPointId: l1.startPointId,
+          endPointId: pointId,
+        }),
+      );
+      commands.push(
+        new AddLineCommand({
+          id: generateId(),
+          startPointId: pointId,
+          endPointId: l1.endPointId,
+        }),
+      );
+      commands.push(
+        new AddLineCommand({
+          id: l2.id,
+          startPointId: l2.startPointId,
+          endPointId: pointId,
+        }),
+      );
+      commands.push(
+        new AddLineCommand({
+          id: generateId(),
+          startPointId: pointId,
+          endPointId: l2.endPointId,
+        }),
+      );
+
+      selectedPointId = pointId;
+    }
+
     //if a Line gets clicked split it
     else if (snapCandidate.line) {
-      const cmd = splitLine(this.worldPos, snapCandidate.line, this.context.pointRenderer);
+      let cmd = splitLine(
+        this.worldPos,
+        snapCandidate.line,
+        this.context.pointRenderer,
+      );
+
       if (cmd) {
         commands.push(cmd.command);
         selectedPointId = cmd.pointId;
@@ -82,7 +148,9 @@ export class LineTool implements Tool {
     //when clicking at an empty world Position
     else if (snapCandidate.position) {
       selectedPointId = generateId();
-      commands.push(new AddPointCommand({ id: selectedPointId, ...snapCandidate.position }));
+      commands.push(
+        new AddPointCommand({ id: selectedPointId, ...snapCandidate.position }),
+      );
     }
 
     //Line between lastPoint and current Point
@@ -90,7 +158,10 @@ export class LineTool implements Tool {
       this.lastPointId &&
       selectedPointId &&
       selectedPointId !== this.lastPointId &&
-      !this.context.lineRenderer.hasLineBetween(this.lastPointId, selectedPointId)
+      !this.context.lineRenderer.hasLineBetween(
+        this.lastPointId,
+        selectedPointId,
+      )
     ) {
       commands.push(
         new AddLineCommand({
@@ -102,10 +173,11 @@ export class LineTool implements Tool {
     }
 
     //add Point and Line Together
-    if(commands.length>0)this.context.executeCommand(new CompositeCommand(commands));
+    if (commands.length > 0)
+      this.context.executeCommand(new CompositeCommand(commands));
 
     this.lastPointId = selectedPointId;
-    if (!this.previewLine && event.pointerType != 'touch') {
+    if (!this.previewLine && event.pointerType != "touch") {
       this.createPreviewLine();
     }
   }
@@ -113,7 +185,6 @@ export class LineTool implements Tool {
   onPointerMove(event: PointerEvent) {
     if (!this.lastPointId) this.inputOverlay.hide();
     this.worldPos.copy(this.context.sceneManager.getWorldPosition(event));
-    //this.context.sceneManager.cameraController.setPanEnabled((this.previewLine != null)? false:true);
 
     this.handleHover(event);
     this.handleMouseMove();
@@ -129,11 +200,17 @@ export class LineTool implements Tool {
 
     //snap to the Possible Candidates
     if (snapCandidate.pointId) {
-      const pos = this.context.pointRenderer.getWorldPosition(snapCandidate.pointId);
+      const pos = this.context.pointRenderer.getWorldPosition(
+        snapCandidate.pointId,
+      );
       if (pos) endPosition = pos;
     } else if (snapCandidate.line) {
-      const a = this.context.pointRenderer.getWorldPosition(snapCandidate.line.startPointId);
-      const b = this.context.pointRenderer.getWorldPosition(snapCandidate.line.endPointId);
+      const a = this.context.pointRenderer.getWorldPosition(
+        snapCandidate.line.startPointId,
+      );
+      const b = this.context.pointRenderer.getWorldPosition(
+        snapCandidate.line.endPointId,
+      );
       if (a && b) endPosition = projectPointToSegment(this.worldPos, a, b);
     } else if (snapCandidate.position) {
       endPosition = snapCandidate.position;
@@ -154,11 +231,17 @@ export class LineTool implements Tool {
       this.inputOverlay.setAngle((angleDeg + 360) % 360);
     }
 
-    this.previewLine.geometry.setFromPoints([start.clone(), endPosition.clone()]);
+    this.previewLine.geometry.setFromPoints([
+      start.clone(),
+      endPosition.clone(),
+    ]);
   }
 
   private createPreviewLine() {
-    const geometry = new LineGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
+    const geometry = new LineGeometry().setFromPoints([
+      new THREE.Vector3(),
+      new THREE.Vector3(),
+    ]);
 
     const material = new LineMaterial({
       color: 0x000000,
@@ -196,7 +279,9 @@ export class LineTool implements Tool {
   private getConnectedPositions() {
     if (!this.lastPointId) return [];
     let positions: THREE.Vector3[] = [];
-    const connectedPoints = this.context.lineRenderer.getConnectedPoints(this.lastPointId);
+    const connectedPoints = this.context.lineRenderer.getConnectedPoints(
+      this.lastPointId,
+    );
     for (const point of connectedPoints) {
       const otherPos = this.context.pointRenderer.getWorldPosition(point);
       if (otherPos) positions.push(otherPos);
@@ -207,44 +292,122 @@ export class LineTool implements Tool {
   /**Snapping Logic Most Important to least Important:
     1. Snap to User Input Values
     2. Snap to existing Points
-    3. Snap to existing Lines
-    4. Snap to next grid Point
-    5. Snap Angle 
-    6. return given Position
+    3. Snap to Line Intersections
+    4. Snap to existing Lines
+    5. Snap to next grid Point
+    6. Snap Angle 
+    7. return given Position
   **/
   private getBestSnappingCandidate(worldPos: THREE.Vector3): {
     pointId: string | null;
     line: LineData | null;
+    intersection: { point: THREE.Vector3; line1Id: string; line2Id: string } | null;
     position: THREE.Vector3 | null;
   } {
     //1 Snap to User Input Values
     const hasUserInputLength =
-      (this.inputOverlay.manualAngle || this.inputOverlay.manualLength) && this.lastPointId;
+      (this.inputOverlay.manualAngle || this.inputOverlay.manualLength) &&
+      this.lastPointId;
     if (hasUserInputLength) {
-      return { pointId: null, line: null, position: this.calculateUserInputLine() };
+      return {
+        pointId: null,
+        line: null,
+        intersection: null,
+        position: this.calculateUserInputLine(),
+      };
     }
     //2 Snap to existing Points
     const hoveredPoint = this.context.pointRenderer.getHovered();
-    if (hoveredPoint) return { pointId: hoveredPoint, line: null, position: null };
-    //3 Snap to existing Lines
+    if (hoveredPoint)
+      return {
+        pointId: hoveredPoint,
+        line: null,
+        intersection: null,
+        position: null,
+      };
+
+    // 3 Snap to Line Intersections
+    const intersection = this.getClosestIntersection(worldPos);
+    if (intersection) {
+      return {
+        pointId: null,
+        line: null,
+        intersection: intersection,
+        position: null,
+      };
+    }
+    //4 Snap to existing Lines
     const hoveredLine = this.context.lineRenderer.getHovered();
     if (hoveredLine) {
       const line = this.context.model.lines.get(hoveredLine);
-      if (line) return { pointId: null, line: line, position: null };
+      if (line)
+        return {
+          pointId: null,
+          line: line,
+          intersection: null,
+          position: null,
+        };
     }
-    //4 Snap to next grid Point
+    //5 Snap to next grid Point
     const snapGridPoint = this.context.gridRenderer.getHoveredGrid();
     if (snapGridPoint) {
-      return { pointId: null, line: null, position: snapGridPoint };
+      return {
+        pointId: null,
+        line: null,
+        intersection: null,
+        position: snapGridPoint,
+      };
     }
-    //5 Snap Angle
+    //6 Snap Angle
     if (this.isShiftPressed && this.lastPointId) {
-      const last = this.context.pointRenderer.getWorldPosition(this.lastPointId);
-      if (last) worldPos = snapAngle(last, worldPos, this.getConnectedPositions());
-      return { pointId: null, line: null, position: worldPos };
+      const last = this.context.pointRenderer.getWorldPosition(
+        this.lastPointId,
+      );
+      if (last)
+        worldPos = snapAngle(last, worldPos, this.getConnectedPositions());
+      return {
+        pointId: null,
+        line: null,
+        intersection: null,
+        position: worldPos,
+      };
     }
-    //6 return given Position
-    return { pointId: null, line: null, position: worldPos };
+    //7 return given Position
+    return {
+      pointId: null,
+      line: null,
+      intersection: null,
+      position: worldPos,
+    };
+  }
+
+  getClosestIntersection(worldPos: THREE.Vector3, threshold = 0.2) {
+    let closest: {
+      point: THREE.Vector3;
+      line1Id: string;
+      line2Id: string;
+    } | null = null;
+    let minDist = threshold;
+
+    const intersections = findLineIntersections(
+      this.context.model.points,
+      this.context.model.lines,
+    );
+
+    for (let i = 0; i < intersections.length; i++) {
+      const inter = intersections.at(i);
+      if (!inter) continue;
+      let x = inter.point.x;
+      let y = inter.point.y;
+      const p = new THREE.Vector2(x, y);
+      const dist = p.distanceTo(worldPos);
+      if (dist < minDist) {
+        minDist = dist;
+        closest = inter;
+      }
+    }
+
+    return closest;
   }
 
   /**
@@ -268,7 +431,9 @@ export class LineTool implements Tool {
     }
     // enforce manual length
     if (this.inputOverlay.manualLength) {
-      endPosition = start.clone().add(dir.multiplyScalar(this.inputOverlay.manualLength));
+      endPosition = start
+        .clone()
+        .add(dir.multiplyScalar(this.inputOverlay.manualLength));
     } else {
       endPosition = start.clone().add(dir.multiplyScalar(distance));
     }
@@ -277,13 +442,13 @@ export class LineTool implements Tool {
   }
 
   private onKeyDown = (event: KeyboardEvent) => {
-    if (event.key === 'Shift') this.isShiftPressed = true;
-    if (event.key === 'Escape') this.cancelLine();
-    if (event.key === 'Tab') this.inputOverlay.switchInput(event);
+    if (event.key === "Shift") this.isShiftPressed = true;
+    if (event.key === "Escape") this.cancelLine();
+    if (event.key === "Tab") this.inputOverlay.switchInput(event);
   };
 
   private onKeyUp = (event: KeyboardEvent) => {
-    if (event.key === 'Shift') this.isShiftPressed = false;
+    if (event.key === "Shift") this.isShiftPressed = false;
   };
 
   dispose() {
@@ -295,18 +460,18 @@ export class LineTool implements Tool {
     this.context.pointRenderer.setHovered(null);
     this.context.lineRenderer.setHovered(null);
     this.context.gridRenderer.setHovered(null);
-    this.context.cursorManager.setCursor('default');
+    this.context.cursorManager.setCursor("default");
 
     if (this.context.pointRenderer.handleHover(event)) {
-      this.context.cursorManager.setCursor('pointer');
+      this.context.cursorManager.setCursor("pointer");
       return;
     }
     if (this.context.lineRenderer.handleHover(event)) {
-      this.context.cursorManager.setCursor('pointer');
+      this.context.cursorManager.setCursor("pointer");
       return;
     }
     if (this.context.gridRenderer.handleHover(event)) {
-      this.context.cursorManager.setCursor('crosshair');
+      this.context.cursorManager.setCursor("crosshair");
       return;
     }
   }
