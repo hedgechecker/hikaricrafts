@@ -239,6 +239,9 @@ export class ThreeEditor {
             case "showPoints":
               this.pointRenderer.setVisible(settings.showPoints);
               break;
+            case "showLines":
+              this.lineRenderer.setVisible(settings.showLines);
+              break;
             case "pointColor":
               this.pointRenderer.setColorAll(settings.pointColor);
               break;

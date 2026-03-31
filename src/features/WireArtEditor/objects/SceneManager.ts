@@ -1,8 +1,8 @@
-import * as THREE from 'three';
-import { CameraController } from './CameraController';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import * as THREE from "three";
+import { CameraController } from "./CameraController";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
-type CameraMode = '2D' | '3D';
+type CameraMode = "2D" | "3D";
 
 export class SceneManager {
   scene: THREE.Scene;
@@ -12,7 +12,7 @@ export class SceneManager {
   perspectiveCamera: THREE.PerspectiveCamera;
 
   controller!: CameraController | OrbitControls;
-  mode: CameraMode = '2D';
+  mode: CameraMode = "2D";
 
   renderer: THREE.WebGLRenderer;
   dom: HTMLCanvasElement;
@@ -59,35 +59,36 @@ export class SceneManager {
 
     // active camera
     this.camera = this.orthoCamera;
-    this.setCameraMode('2D');
+    this.setCameraMode("2D");
 
-  
-    window.addEventListener('resize', this.onResize);
-    this.renderer.domElement.addEventListener('contextmenu', (e) => e.preventDefault());
+    window.addEventListener("resize", this.onResize);
+    this.renderer.domElement.addEventListener("contextmenu", (e) =>
+      e.preventDefault(),
+    );
   }
 
   createOverlay(container: HTMLDivElement) {
-    const overlay = document.createElement('div');
+    const overlay = document.createElement("div");
 
-    overlay.style.position = 'absolute';
-    overlay.style.top = container.offsetTop + container.clientTop + 'px';
-    overlay.style.left = container.offsetLeft + container.clientLeft + 'px';
-    overlay.style.width = container.clientWidth + 'px';
-    overlay.style.height = container.clientHeight + 'px';
+    overlay.style.position = "absolute";
+    overlay.style.top = container.offsetTop + container.clientTop + "px";
+    overlay.style.left = container.offsetLeft + container.clientLeft + "px";
+    overlay.style.width = container.clientWidth + "px";
+    overlay.style.height = container.clientHeight + "px";
 
-    overlay.style.pointerEvents = 'none';
-    overlay.style.zIndex = '10';
+    overlay.style.pointerEvents = "none";
+    overlay.style.zIndex = "10";
 
     // ---- GRID SIZE LABEL ----
-    const gridLabel = document.createElement('div');
-    gridLabel.style.position = 'absolute';
-    gridLabel.style.padding = '4px 8px';
-    gridLabel.style.background = 'rgba(0,0,0,0.6)';
-    gridLabel.style.color = '#fff';
-    gridLabel.style.fontFamily = 'monospace';
-    gridLabel.style.fontSize = 'var(--font-size-lg)';
-    gridLabel.style.borderRadius = '4px';
-    gridLabel.style.width = 'max-content';
+    const gridLabel = document.createElement("div");
+    gridLabel.style.position = "absolute";
+    gridLabel.style.padding = "4px 8px";
+    gridLabel.style.background = "rgba(0,0,0,0.6)";
+    gridLabel.style.color = "#fff";
+    gridLabel.style.fontFamily = "monospace";
+    gridLabel.style.fontSize = "var(--font-size-lg)";
+    gridLabel.style.borderRadius = "4px";
+    gridLabel.style.width = "max-content";
 
     overlay.appendChild(gridLabel);
 
@@ -102,10 +103,11 @@ export class SceneManager {
     const height = this.container.clientHeight;
     const aspect = width / height;
 
-    const referenceWidth = 1200; // "desktop baseline"
-    const scale = width / referenceWidth;
+    // const referenceWidth = 300; // "desktop baseline"
+    // const scale = width / referenceWidth;
+    //const frustumSize = scale * width;
 
-    const frustumSize = 20 * scale;
+    const frustumSize = 5;
 
     if (this.camera instanceof THREE.OrthographicCamera) {
       this.camera.left = (-frustumSize * aspect) / 2;
@@ -121,9 +123,9 @@ export class SceneManager {
     this.renderer.setSize(width, height);
 
     const rect = this.container.getBoundingClientRect();
-    this.overlay.style.position = 'absolute';
-    this.overlay.style.top = rect.top + 'px';
-    this.overlay.style.left = rect.left + 'px';
+    this.overlay.style.position = "absolute";
+    this.overlay.style.top = rect.top + "px";
+    this.overlay.style.left = rect.left + "px";
   };
 
   update() {
@@ -132,7 +134,7 @@ export class SceneManager {
     }
     if (this.camera instanceof THREE.OrthographicCamera) {
       this.camera.updateProjectionMatrix();
-    } else if(this.camera instanceof THREE.PerspectiveCamera){
+    } else if (this.camera instanceof THREE.PerspectiveCamera) {
       this.camera.updateProjectionMatrix();
     }
   }
@@ -154,7 +156,7 @@ export class SceneManager {
       this.renderer.domElement.parentNode.removeChild(this.renderer.domElement);
     }
 
-    window.removeEventListener('resize', this.onResize);
+    window.removeEventListener("resize", this.onResize);
   }
 
   getWorldPosition(event: MouseEvent): THREE.Vector3 {
@@ -176,7 +178,7 @@ export class SceneManager {
 
     this.mode = mode;
 
-    if (mode === '2D') {
+    if (mode === "2D") {
       this.camera = this.orthoCamera;
     } else {
       this.perspectiveCamera.position.set(0, 0, 10);
@@ -186,7 +188,7 @@ export class SceneManager {
       this.perspectiveCamera.updateMatrixWorld(true);
 
       this.camera = this.perspectiveCamera;
-      this.renderer.render(this.scene,this.camera)
+      this.renderer.render(this.scene, this.camera);
     }
 
     // Smooth transition
@@ -194,11 +196,11 @@ export class SceneManager {
 
     // Dispose old controller
     if (this.controller) {
-      if ('dispose' in this.controller) this.controller.dispose();
+      if ("dispose" in this.controller) this.controller.dispose();
     }
 
     // Create correct controller
-    if (mode === '2D') {
+    if (mode === "2D") {
       this.controller = new CameraController(this.orthoCamera, this.dom);
     } else {
       const controls = new OrbitControls(this.perspectiveCamera, this.dom);

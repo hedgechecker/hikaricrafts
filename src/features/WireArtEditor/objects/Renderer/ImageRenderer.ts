@@ -153,7 +153,7 @@ export class ImageRenderer extends BaseRenderer<ImageRenderData, ImageData> {
     img.data = { ...data };
 
     img.mesh.children.forEach((child) => {
-      if (child.name == "visual" && child instanceof THREE.Mesh) {
+      if (child instanceof THREE.Mesh) {
         child.geometry.dispose();
         child.geometry = new THREE.PlaneGeometry(
           img.height * img.aspect,
@@ -163,7 +163,7 @@ export class ImageRenderer extends BaseRenderer<ImageRenderData, ImageData> {
     });
     //Set Height
     img.mesh.rotation.z = data.rotation;
-
+    this.gizmo.update(img);
     this.updateScale(this.zoom);
   }
 
@@ -181,7 +181,7 @@ export class ImageRenderer extends BaseRenderer<ImageRenderData, ImageData> {
       true,
     );
 
-    if (this.visible && handleHits.length) {
+    if (handleHits.length) {
       this.gizmo.setVisible(true);
       this.gizmo.setHovered(handleHits[0].object.parent?.userData.type);
       this.setHovered(this.gizmo.parent!.data.id);

@@ -2,7 +2,6 @@
 .center {
   display: flex;
   align-items: center;
-  height: 100%;
   width: 100%;
   user-select: none;
   -webkit-user-select: none;
@@ -12,6 +11,8 @@
 
 .wrapper {
   flex-direction: column;
+  min-height: 0;
+  height: 100%;
 }
 
 .center {
@@ -19,6 +20,8 @@
   padding: var(--space-md);
   flex-direction: row;
   gap: var(--space-md);
+  
+  height: 100%;
 }
 
 @media screen and (max-width: 900px) {

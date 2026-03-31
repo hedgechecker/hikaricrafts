@@ -1,9 +1,9 @@
-type DragMode = 'none' | 'move' | 'resize' | 'rotate';
+type DragMode = "none" | "move" | "resize" | "rotate";
 
-import * as THREE from 'three';
-import type { Tool, ToolContext } from './Tool';
-import { UpdateImageCommand } from '../commands/UpdateImageCommand';
-import type { ImageData } from '../models/Image';
+import * as THREE from "three";
+import type { Tool, ToolContext } from "./Tool";
+import { UpdateImageCommand } from "../commands/UpdateImageCommand";
+import type { ImageData } from "../models/Image";
 
 /**
  * Handles the Transformation of Images supports Scaling, Moving and Rotation
@@ -16,8 +16,8 @@ export class TransformTool implements Tool {
 
   private startData: ImageData | null = null;
   private currentData: ImageData = {
-    id: '',
-    url: '',
+    id: "",
+    url: "",
     x: 0,
     y: 0,
     z: 0,
@@ -26,7 +26,7 @@ export class TransformTool implements Tool {
   };
   private dragOffset = new THREE.Vector2();
 
-  dragMode: DragMode = 'none';
+  dragMode: DragMode = "none";
   dragging = false;
 
   constructor(context: ToolContext) {
@@ -42,18 +42,18 @@ export class TransformTool implements Tool {
     const handle = this.context.imageRenderer.getHoveredHandle();
     const hovered = this.context.imageRenderer.getHovered();
     if (!hovered) return;
-    const data = this.context.model.images.get(hovered);  
+    const data = this.context.model.images.get(hovered);
 
     if (!data) return;
 
     if (handle) {
-      if (handle == 'rotate') {
-        this.dragMode = 'rotate';
+      if (handle == "rotate") {
+        this.dragMode = "rotate";
       } else {
-        this.dragMode = 'resize';
+        this.dragMode = "resize";
       }
     } else {
-      this.dragMode = 'move';
+      this.dragMode = "move";
     }
 
     this.selectedImage = hovered;
@@ -61,27 +61,29 @@ export class TransformTool implements Tool {
     this.currentData = { ...this.startData };
 
     this.dragging = true;
-    this.dragOffset.copy(this.worldPos).sub({ x: this.startData.x, y: this.startData.y });
+    this.dragOffset
+      .copy(this.worldPos)
+      .sub({ x: this.startData.x, y: this.startData.y });
 
     this.context.imageRenderer.setSelected([this.selectedImage]);
     this.context.sceneManager.setPanEnabled(false);
-    this.context.cursorManager.setCursor('grabbing');
+    this.context.cursorManager.setCursor("grabbing");
   }
 
   onPointerMove = (event: PointerEvent) => {
-    if(this.dragMode == 'none')this.handleHover(event);
+    if (this.dragMode == "none") this.handleHover(event);
     if (!this.dragging || !this.selectedImage || !this.startData) return;
     this.worldPos.copy(this.context.sceneManager.getWorldPosition(event));
 
     // MOVE IMAGE
-    if (this.dragMode === 'move') {
+    if (this.dragMode === "move") {
       this.currentData.x = this.worldPos.x - this.dragOffset.x;
       this.currentData.y = this.worldPos.y - this.dragOffset.y;
       this.context.imageRenderer.updateImage(this.currentData);
     }
 
     // RESIZE IMAGE
-    if (this.dragMode === 'resize') {
+    if (this.dragMode === "resize") {
       const dx = this.worldPos.x - this.startData.x;
       const dy = this.worldPos.y - this.startData.y;
 
@@ -94,31 +96,43 @@ export class TransformTool implements Tool {
 
       this.currentData.height = newHeight;
       this.context.imageRenderer.updateImage(this.currentData);
-      this.context.cursorManager.setCursor('ne-resize');
+      this.context.cursorManager.setCursor("ne-resize");
     }
 
     //ROTATE IMAGE
-    if (this.dragMode === 'rotate') {
+    if (this.dragMode === "rotate") {
       const dx = this.worldPos.x - this.startData.x;
       const dy = this.worldPos.y - this.startData.y;
+      let angle = Math.atan2(dy, dx);
 
-      const angle = Math.atan2(dy, dx);
-      this.currentData.rotation = angle - Math.PI/2;
+      //Snap when close to angle
+      const snapStep = Math.PI / 4;
+      const threshold = 0.05;
+      const snapped = Math.round(angle / snapStep) * snapStep;
+
+      if (Math.abs(angle - snapped) < threshold) {
+        angle = snapped;
+      }
+
+      this.currentData.rotation = angle - Math.PI / 2;
 
       this.context.imageRenderer.updateImage(this.currentData);
     }
-    
   };
 
   onPointerUp = (event: PointerEvent) => {
-    if (this.selectedImage && this.startData && this.startData != this.currentData) {
+    if (
+      this.selectedImage &&
+      this.startData &&
+      this.startData != this.currentData
+    ) {
       this.context.executeCommand(new UpdateImageCommand(this.currentData));
     }
 
     this.selectedImage = null;
     this.dragging = false;
-    this.dragMode = 'none';
-    this.context.cursorManager.setCursor('default');
+    this.dragMode = "none";
+    this.context.cursorManager.setCursor("default");
     this.context.imageRenderer.setSelected([]);
     this.handleHover(event);
   };
@@ -126,10 +140,12 @@ export class TransformTool implements Tool {
   //Enable Hover only for Images
   handleHover(event: PointerEvent) {
     this.context.imageRenderer.setHovered(null);
-    this.context.cursorManager.setCursor(this.selectedImage ? 'grabbing' : 'default');
+    this.context.cursorManager.setCursor(
+      this.selectedImage ? "grabbing" : "default",
+    );
 
     if (this.context.imageRenderer.handleHover(event)) {
-      this.context.cursorManager.setCursor('pointer');
+      this.context.cursorManager.setCursor("pointer");
       return;
     }
   }

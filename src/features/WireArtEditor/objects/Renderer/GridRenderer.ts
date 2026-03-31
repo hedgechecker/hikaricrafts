@@ -139,6 +139,7 @@ export class GridRenderer extends BaseRenderer<GridRenderData, number> {
   }
 
   snapToGrid(worldPos: THREE.Vector3) {
+    if(!this.visible) return null;
     const step = this.getGridStep();
 
     const snappedX = Math.round(worldPos.x / step) * step;

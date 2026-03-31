@@ -174,7 +174,7 @@ export default function Toolbar({ engine }: Props) {
         <ToolButton
           label=""
           image="/icons/export.svg"
-          toolTip="Projekt als Datei exportieren"
+          toolTip="Projekt herunterladen"
           onClick={() => engine.exportProject()}
         />
 
@@ -182,7 +182,7 @@ export default function Toolbar({ engine }: Props) {
         <ToolButton
           label=""
           image="/icons/import.svg"
-          toolTip="Datei als Projekt importieren"
+          toolTip="Projekt aus Datei importieren"
           onClick={() => engine.importProject()}
         />
 
@@ -234,15 +234,6 @@ export default function Toolbar({ engine }: Props) {
                 onChange={(e) => updateSetting("showGrid", e.target.checked)}
               />
               Gitter anzeigen
-            </label>
-
-            <label>
-              <input
-                type="checkbox"
-                checked={settings?.snapToGrid}
-                onChange={(e) => updateSetting("snapToGrid", e.target.checked)}
-              />
-              Punkte am Gitter ausrichten
             </label>
 
             <label>
