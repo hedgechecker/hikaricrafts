@@ -22,8 +22,7 @@ export function splitLine(
   pointManager: PointRenderer,
   line2?: LineData,
 ) {
-
-  if(line2){
+  if (line2) {
     const aPos = pointManager.getWorldPosition(line.startPointId)!;
     const bPos = pointManager.getWorldPosition(line.endPointId)!;
     const cPos = pointManager.getWorldPosition(line2.startPointId)!;
@@ -34,12 +33,12 @@ export function splitLine(
       new THREE.Vector2(cPos.x, cPos.y),
       new THREE.Vector2(dPos.x, dPos.y),
     );
-    if(!endPos) return null;
+    if (!endPos) return null;
     const newPointId = generateId();
     const newPoint = {
       id: newPointId,
-      x: endPos.x,
-      y: endPos.y,
+      x: endPos[0].x,
+      y: endPos[0].y,
       z: 0,
     };
 
