@@ -1,6 +1,12 @@
 import * as THREE from "three";
+import { Vector2 } from "three";
 import type { LineData } from "../models/Line";
 import type { PointData } from "../models/Point";
+
+export type Vertex = {
+  id: string;
+  position: Vector2;
+};
 
 export function buildAdjList(
   points: Map<string, PointData>,
@@ -32,7 +38,7 @@ export function buildAdjList(
 export function findIsolatedPoints(adjList: Map<string, Set<string>>) {
   const invalidIds: string[] = [];
   for (const [id, neighbors] of adjList) {
-    if (neighbors.size  == 0) {
+    if (neighbors.size == 0) {
       invalidIds.push(id);
     }
   }
@@ -79,15 +85,16 @@ export function findLineIntersections(
       const p2 = points.get(l1.endPointId)!;
       const p3 = points.get(l2.startPointId)!;
       const p4 = points.get(l2.endPointId)!;
-      if(!p1 || !p2 || !p3 || !p4){
-        console.log(p1,p2,p3,p4);
-        continue;}
+      if (!p1 || !p2 || !p3 || !p4) {
+        console.log(p1, p2, p3, p4);
+        continue;
+      }
 
       const result = getSegmentIntersection(
-        new THREE.Vector2(p1.x, p1.y),
-        new THREE.Vector2(p2.x, p2.y),
-        new THREE.Vector2(p3.x, p3.y),
-        new THREE.Vector2(p4.x, p4.y),
+        new Vector2(p1.x, p1.y),
+        new Vector2(p2.x, p2.y),
+        new Vector2(p3.x, p3.y),
+        new Vector2(p4.x, p4.y),
       );
 
       if (result) {
@@ -106,10 +113,10 @@ export function findLineIntersections(
 }
 
 export function getSegmentIntersection(
-  a: THREE.Vector2,
-  b: THREE.Vector2,
-  c: THREE.Vector2,
-  d: THREE.Vector2,
+  a: Vector2,
+  b: Vector2,
+  c: Vector2,
+  d: Vector2,
 ): THREE.Vector3[] | null {
   const denominator = (a.x - b.x) * (c.y - d.y) - (a.y - b.y) * (c.x - d.x);
 
@@ -137,10 +144,10 @@ export function getSegmentIntersection(
 }
 
 function getCollinearOverlap(
-  a: THREE.Vector2,
-  b: THREE.Vector2,
-  c: THREE.Vector2,
-  d: THREE.Vector2,
+  a: Vector2,
+  b: Vector2,
+  c: Vector2,
+  d: Vector2,
 ): THREE.Vector3[] {
   const points = [a, b, c, d];
 
@@ -168,22 +175,19 @@ function getCollinearOverlap(
   ];
 }
 
-
-function isCollinear(
-  a: THREE.Vector2,
-  b: THREE.Vector2,
-  c: THREE.Vector2,
-  eps = 1e-6,
-) {
+function isCollinear(a: Vector2, b: Vector2, c: Vector2, eps = 1e-6) {
   return Math.abs((b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)) < eps;
 }
+
+
+
 export function findPoygons(
   points: Map<string, PointData>,
   lines: Map<string, LineData>,
 ) {
-  const adjList = buildAdjList(points,lines);
+  const adjList = buildAdjList(points, lines);
   const visited = new Set<string>();
-  const polygons: string[][] = [];
+  const polygons: Vertex[][] = [];
 
   const getAngle = (a: PointData, b: PointData) =>
     Math.atan2(b.y - a.y, b.x - a.x);
@@ -204,31 +208,30 @@ export function findPoygons(
 
   const nextEdge = (a: string, b: string) => {
     const neighbors = sortedNeighbors.get(b)!;
-    if(!neighbors) {console.log(b, neighbors)}
     const idx = neighbors.indexOf(a);
     const next = neighbors[(idx - 1 + neighbors.length) % neighbors.length];
     return [b, next];
   };
 
-  for (const line of lines) {
-    const start = line[1].startPointId;
-    const end = line[1].endPointId;
-
-    for (const [a, b] of [
-      [start, end],
-      [end, start],
-    ]) {
+  for (const [a, neighbors] of adjList) {
+    for (const b of neighbors) {
       const edgeKey = `${a}->${b}`;
       if (visited.has(edgeKey)) continue;
 
-      const face: string[] = [];
+      const face: Vertex[] = [];
 
       let currA = a;
       let currB = b;
 
       while (true) {
         visited.add(`${currA}->${currB}`);
-        face.push(currA);
+
+        const p = points.get(currA)!;
+
+        face.push({
+          id: currA,
+          position: new Vector2(p.x, p.y),
+        });
 
         const [na, nb] = nextEdge(currA, currB);
 
@@ -238,37 +241,94 @@ export function findPoygons(
         if (currA === a && currB === b) break;
       }
 
-      if (face.length >= 3) polygons.push(face);
+      if (face.length >= 3) {
+        polygons.push(face);
+      }
     }
   }
+  polygons.sort(
+    (a, b) => polygonArea(b) - polygonArea(a),
+  );
 
-  polygons.sort((a, b) => polygonArea(points, b) - polygonArea(points, a));
-  polygons.shift(); // remove outer face
+ const components = findComponents(adjList);
 
-  //this.previewOffsetPolygons(faces, 0.1);
-  return polygons;
+ const result: Vertex[][] = [];
+
+ for (const comp of components) {
+   const compSet = new Set(comp);
+
+   const compPolys = polygons.filter((p) =>
+     polygonBelongsToComponent(p, compSet),
+   );
+
+   if (compPolys.length === 0) continue;
+
+   // sort largest → smallest
+   compPolys.sort((a, b) => polygonArea(b) - polygonArea(a));
+
+   // 🔥 remove THIS component's outer face
+   compPolys.shift();
+
+   result.push(...compPolys);
+ }
+
+ return result;
 }
 
-export function polygonArea(points: Map<string, PointData>, polygon: string[]) {
+function polygonArea(poly: Vertex[]) {
   let area = 0;
 
-  for (let i = 0; i < polygon.length; i++) {
-    const p1 = points.get(polygon[i])!;
-    const p2 = points.get(polygon[(i + 1) % polygon.length])!;
+  for (let i = 0; i < poly.length; i++) {
+    const j = (i + 1) % poly.length;
 
-    area += p1.x * p2.y - p2.x * p1.y;
+    const a = poly[i].position;
+    const b = poly[j].position;
+
+    area += a.x * b.y - b.x * a.y;
   }
 
-  return Math.abs(area);
+  return Math.abs(area) * 0.5;
+}
+
+function findComponents(adjList: Map<string, Set<string>>) {
+  const visited = new Set<string>();
+  const components: string[][] = [];
+
+  for (const start of adjList.keys()) {
+    if (visited.has(start)) continue;
+
+    const stack = [start];
+    const comp: string[] = [];
+
+    while (stack.length) {
+      const node = stack.pop()!;
+      if (visited.has(node)) continue;
+
+      visited.add(node);
+      comp.push(node);
+
+      for (const n of adjList.get(node) || []) {
+        if (!visited.has(n)) stack.push(n);
+      }
+    }
+
+    components.push(comp);
+  }
+
+  return components;
+}
+
+function polygonBelongsToComponent(poly: Vertex[], comp: Set<string>) {
+  return comp.has(poly[0].id);
 }
 
 function lineIntersection(
-  p: THREE.Vector2,
-  r: THREE.Vector2,
-  q: THREE.Vector2,
-  s: THREE.Vector2,
-): THREE.Vector2 | null {
-  const cross = (a: THREE.Vector2, b: THREE.Vector2) => a.x * b.y - a.y * b.x;
+  p: Vector2,
+  r: Vector2,
+  q: Vector2,
+  s: Vector2,
+): Vector2 | null {
+  const cross = (a: Vector2, b: Vector2) => a.x * b.y - a.y * b.x;
 
   const rxs = cross(r, s);
   if (Math.abs(rxs) < 1e-8) return null; // parallel
@@ -279,30 +339,29 @@ function lineIntersection(
   return p.clone().add(r.clone().multiplyScalar(t));
 }
 
-export function insetPolygon(
-  polygon: string[],
-  points: Map<string, PointData>,
-  inset: number,
-): THREE.Vector2[] {
-  const result: THREE.Vector2[] = [];
+export function insetPolygon(polygon: Vertex[], inset: number): Vertex[] {
+  const result: Vertex[] = [];
   const n = polygon.length;
 
-  for (let i = 0; i < n; i++) {
-    const prev = points.get(polygon[(i - 1 + n) % n])!;
-    const curr = points.get(polygon[i])!;
-    const next = points.get(polygon[(i + 1) % n])!;
+  const clockwise = isClockwise(polygon);
+  const sign = clockwise ? -1 : 1;
 
-    const p0 = new THREE.Vector2(prev.x, prev.y);
-    const p1 = new THREE.Vector2(curr.x, curr.y);
-    const p2 = new THREE.Vector2(next.x, next.y);
+  for (let i = 0; i < n; i++) {
+    const v0 = polygon[(i - 1 + n) % n];
+    const v1 = polygon[i];
+    const v2 = polygon[(i + 1) % n];
+
+    const p0 = v0.position;
+    const p1 = v1.position;
+    const p2 = v2.position;
 
     // edge directions
     const d1 = p1.clone().sub(p0).normalize();
     const d2 = p2.clone().sub(p1).normalize();
 
-    // perpendicular (left normal)
-    const n1 = new THREE.Vector2(-d1.y, d1.x);
-    const n2 = new THREE.Vector2(-d2.y, d2.x);
+    // normals (correct orientation)
+    const n1 = new Vector2(-d1.y * sign, d1.x * sign);
+    const n2 = new Vector2(-d2.y * sign, d2.x * sign);
 
     // offset lines
     const offsetP1 = p1.clone().add(n1.multiplyScalar(inset));
@@ -318,16 +377,88 @@ export function insetPolygon(
       offsetDir2,
     );
 
-    if (intersect) result.push(intersect);
+    if (intersect) {
+      result.push({
+        id: v1.id, // 🔥 preserve original vertex ID
+        position: intersect, // new inset position
+      });
+    }
   }
 
   return result;
 }
 
-export function insetPolygons(
-  polygons: string[][],
-  points: Map<string, PointData>,
-  inset: number,
-) {
-  return polygons.map((poly) => insetPolygon(poly, points, inset));
+export function insetPolygons(polygons: Vertex[][], inset: number) {
+  return polygons.map((poly) => insetPolygon(poly, inset));
+}
+
+function isClockwise(polygon: Vertex[]) {
+  let sum = 0;
+
+  for (let i = 0; i < polygon.length; i++) {
+    const a = polygon[i].position;
+    const b = polygon[(i + 1) % polygon.length].position;
+    sum += (b.x - a.x) * (b.y + a.y);
+  }
+
+  return sum > 0;
+}
+
+export function isConcave(polygon: Vector2[]): boolean {
+  const n = polygon.length;
+  if (n < 4) return false; // triangles are always convex
+
+  let sign = 0;
+
+  for (let i = 0; i < n; i++) {
+    const a = polygon[i];
+    const b = polygon[(i + 1) % n];
+    const c = polygon[(i + 2) % n];
+
+    const ab = b.clone().sub(a);
+    const bc = c.clone().sub(b);
+
+    const cross = ab.x * bc.y - ab.y * bc.x;
+
+    if (cross !== 0) {
+      if (sign === 0) {
+        sign = Math.sign(cross);
+      } else if (Math.sign(cross) !== sign) {
+        return true;
+      }
+    }
+  }
+
+  return false; // convex
+}
+
+export function findConcaveVertices(polygon: Vertex[]): string[] {
+  const n = polygon.length;
+  const concaveIds: string[] = [];
+
+  let sign = 0;
+
+  for (let i = 0; i < n; i++) {
+    const a = polygon[i].position;
+    const b = polygon[(i + 1) % n].position;
+    const c = polygon[(i + 2) % n].position;
+
+    const ab = b.clone().sub(a);
+    const bc = c.clone().sub(b);
+
+    const cross = ab.x * bc.y - ab.y * bc.x;
+
+    if (cross !== 0) {
+      const currentSign = Math.sign(cross);
+
+      if (sign === 0) {
+        sign = currentSign;
+      } else if (currentSign !== sign) {
+        // 🔥 return the ID of the concave vertex (b)
+        concaveIds.push(polygon[(i + 1) % n].id);
+      }
+    }
+  }
+
+  return concaveIds;
 }

@@ -9,11 +9,15 @@ import type { LineData } from "../models/Line";
 import type { PointData } from "../models/Point";
 import {
   buildAdjList,
+  findConcaveVertices,
   findIsolatedPoints,
   findLineIntersections,
   findPoygons,
   findSingleConnectionPoints,
+  insetPolygon,
   insetPolygons,
+  isConcave,
+  type Vertex,
 } from "../utils/graphs";
 import { generateId } from "../utils/id";
 import type { Tool, ToolContext } from "./Tool";
@@ -30,6 +34,11 @@ export class VerifyTool implements Tool {
   private lines: Map<string, LineData>;
   private previewMeshes: THREE.Mesh[] = [];
 
+  // Vertex[] → Vector2[]
+  toPositions = (poly: Vertex[]) => poly.map((v) => v.position);
+  // Vertex[] → string[]
+  toIds = (poly: Vertex[]) => poly.map((v) => v.id);
+
   wasPointsVisible = true;
   wasLinesVisible = true;
   wasGridVisible = true;
@@ -44,11 +53,12 @@ export class VerifyTool implements Tool {
 
   async onClick() {
     this.clearPreview();
-
+    const scene = this.context.sceneManager.scene;
     this.points = this.context.model.points;
     this.lines = this.context.model.lines;
     this.adjList = buildAdjList(this.points, this.lines);
 
+    //1 Check Points
     let noConn = findIsolatedPoints(this.adjList);
     let singleConn = findSingleConnectionPoints(this.adjList);
 
@@ -67,7 +77,7 @@ export class VerifyTool implements Tool {
         });
 
         singleConn.forEach((id) => {
-          const pointId = this.context.pointRenderer.getClosestPoint(id);
+          const pointId = this.getClosestPoint(id);
           if (pointId)
             commands.push(
               new AddLineCommand({
@@ -84,6 +94,7 @@ export class VerifyTool implements Tool {
       }
     }
 
+    //2 Check Lines
     let intersects = findLineIntersections(this.points, this.lines);
     const uniqueIds = [
       ...new Set(intersects.flatMap((i) => [i.line1Id, i.line2Id])),
@@ -104,16 +115,42 @@ export class VerifyTool implements Tool {
       }
     }
 
+    //3 check polygons
     let polygons = findPoygons(this.points, this.lines);
-    let inset = insetPolygons(polygons, this.points, 0.1);
+    let invalidPolygons: Vertex[][] = [];
+    let invalidVertecies: string[] = [];
+    polygons.forEach((polygon) => {
+      if (isConcave(this.toPositions(polygon))) {
+        invalidPolygons.push(insetPolygon(polygon, 0.1));
+      }
+      invalidVertecies.push(...findConcaveVertices(polygon));
+    });
 
-    const scene = this.context.sceneManager.scene;
+    if (invalidPolygons.length > 0) {
+      const result = await showDialog({
+        type: "confirm",
+        message: "Polygons sollten Konvex sein",
+        cancelText: "Abbrechen",
+        confirmText: "Trotzdem Vorschau generieren",
+      });
+      if (result) {
+        //Do something to the meshes
+      } else {
+        const invalids = this.getPolygonMeshes(invalidPolygons, 0.5, 0x000000);
+        invalids.forEach((mesh) => {
+          mesh.position.z -= 1.0;
+          scene.add(mesh);
+          this.previewMeshes.push(mesh);
+        });
+        this.context.pointRenderer.setInvalid(invalidVertecies);
+        return;
+      }
+    }
+
+    let inset = insetPolygons(polygons, 0.1);
     const elems = this.getPolygonMeshes(inset, 1.8);
-    const back = this.getPolygonMeshes(
-      insetPolygons(polygons, this.points, 0),
-      0.3,
-      0x000000,
-    );
+    const back = this.getPolygonMeshes(polygons, 0.3, 0x000000);
+
     back.forEach((mesh) => {
       mesh.position.z += 1.0;
       scene.add(mesh);
@@ -136,7 +173,7 @@ export class VerifyTool implements Tool {
     //this.context.lineRenderer.setVisible(false);
   }
 
-  getPolygonMeshes(faces: THREE.Vector2[][], height = 1.8, color?: number) {
+  getPolygonMeshes(faces: Vertex[][], height = 1.8, color?: number) {
     let meshes = [];
     const texture = new THREE.TextureLoader().load("/textures/fichte.jpg");
     texture.wrapS = THREE.RepeatWrapping;
@@ -148,10 +185,10 @@ export class VerifyTool implements Tool {
 
       // Create shape from polygon
       const shape = new THREE.Shape();
-      shape.moveTo(face[0].x, face[0].y);
+      shape.moveTo(face[0].position.x, face[0].position.y);
 
       for (let i = 1; i < face.length; i++) {
-        shape.lineTo(face[i].x, face[i].y);
+        shape.lineTo(face[i].position.x, face[i].position.y);
       }
 
       shape.closePath();
@@ -182,7 +219,8 @@ export class VerifyTool implements Tool {
 
   splitLines() {
     const intersections = findLineIntersections(this.points, this.lines);
-    const commands: Command[] = [];
+    const deleteCommands: Command[] = [];
+    const addCommands: Command[] = [];
 
     const intersectionsByLine = new Map<string, THREE.Vector3[]>();
 
@@ -217,14 +255,13 @@ export class VerifyTool implements Tool {
       const id = generateId();
       pointMap.set(key, id);
 
-      commands.push(new AddPointCommand({ id, x: p.x, y: p.y, z: 0 }));
+      addCommands.push(new AddPointCommand({ id, x: p.x, y: p.y, z: 0 }));
 
       return id;
     };
 
     // Process each line
     intersectionsByLine.forEach((points, lineId) => {
-
       const line = this.context.model.lines.get(lineId);
       if (!line) return;
       const lineStart = this.context.pointRenderer.getWorldPosition(
@@ -240,7 +277,7 @@ export class VerifyTool implements Tool {
       // Include endpoints
       const allPoints = [lineStart, ...points, lineEnd];
 
-      // Remove duplicates (important!)
+      // Remove duplicates
       const unique = this.dedupePoints(allPoints);
 
       // Sort along line
@@ -258,13 +295,10 @@ export class VerifyTool implements Tool {
 
         const id1 = getOrCreatePointId(p1);
         const id2 = getOrCreatePointId(p2);
-        // commands.push(new AddPointCommand({id: id1, x: p1.x, y:p1.y, z:0}));
-        // commands.push(
-        //   new AddPointCommand({ id: id2, x: p2.x, y: p2.y, z: 0 }),
-        // );
-        commands.push(
+        const newLineId = generateId();
+        addCommands.push(
           new AddLineCommand({
-            id: generateId(),
+            id: newLineId,
             startPointId: id1,
             endPointId: id2,
           }),
@@ -272,10 +306,10 @@ export class VerifyTool implements Tool {
       }
 
       // Remove original line
-      commands.push(new DeleteLineCommand(lineId));
+      deleteCommands.push(new DeleteLineCommand(lineId));
     });
 
-    this.context.executeCommand(new CompositeCommand(commands));
+    this.context.executeCommand(new CompositeCommand([...deleteCommands, ...addCommands]));
   }
   dedupePoints(points: THREE.Vector3[]): THREE.Vector3[] {
     const result: THREE.Vector3[] = [];
@@ -304,6 +338,26 @@ export class VerifyTool implements Tool {
     } else {
       return (p.y - linestart.y) / dy;
     }
+  }
+  getClosestPoint(id: string) {
+    let closest = null;
+    let minDist = Number.MAX_SAFE_INTEGER;
+    const point = this.context.model.points.get(id);
+    if (!point) return;
+    this.context.model.points.forEach((p, pid) => {
+      if (pid == id || this.context.lineRenderer.hasLineBetween(pid, id)) return;
+      const x2 = p.x;
+      const y2 = p.y;
+      if (
+        (point.x - x2) * (point.x - x2) + (point.y - y2) * (point.y - y2) <
+        minDist
+      ) {
+        minDist =
+          (point.x - x2) * (point.x - x2) + (point.y - y2) * (point.y - y2);
+        closest = pid;
+      }
+    });
+    return closest;
   }
 
   clearPreview() {

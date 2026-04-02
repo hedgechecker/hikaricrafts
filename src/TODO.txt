@@ -8,8 +8,8 @@ basket site
 Import SVG?
 
 Scale Tool
-check convex hull
 check minsize
 check minSideHeight
+
 complete tutorial
-Landing Page    
+Landing Page

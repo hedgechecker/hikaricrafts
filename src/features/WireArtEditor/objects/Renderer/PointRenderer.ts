@@ -137,25 +137,6 @@ export class PointRenderer extends BaseRenderer<PointRenderData, PointData> {
     return null;
   }
 
-  getClosestPoint(id: string) {
-    let closest = null;
-    let minDist = Number.MAX_SAFE_INTEGER;
-    const point = this.objects.get(id);
-    if(!point) return;
-    const x = point.mesh.position.x;
-    const y = point.mesh.position.y;
-    this.objects.forEach((p, pid) => {
-      if(pid == id) return;
-      const x2 = p.mesh.position.x;
-      const y2 = p.mesh.position.y;
-      if((x-x2)*(x-x2) + (y-y2)*(y-y2) < minDist){
-        minDist = (x - x2) * (x - x2) + (y - y2) * (y - y2);
-        closest = pid;
-      }
-    });
-    return closest;
-  }
-
   setColorAll(color: string) {
     if (this.color == color) return;
     this.color = color;

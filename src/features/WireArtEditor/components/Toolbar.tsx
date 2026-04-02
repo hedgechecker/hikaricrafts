@@ -80,6 +80,18 @@ export default function Toolbar({ engine }: Props) {
       if ((e.ctrlKey || e.metaKey) && e.key === "s") {
         e.preventDefault();
         handleSave();
+      } else if (e.key === "1") {
+        e.preventDefault();
+        engine.setActiveTool("move");
+      } else if (e.key === "2") {
+        e.preventDefault();
+        engine.setActiveTool("point");
+      } else if (e.key === "3") {
+        e.preventDefault();
+        engine.setActiveTool("line");
+      } else if (e.key === "4") {
+        e.preventDefault();
+        engine.setActiveTool("delete");
       }
     }
 
@@ -105,7 +117,7 @@ export default function Toolbar({ engine }: Props) {
     <div className={styles.toolbar} id="toolbar">
       {/* Navigation */}
       <ToolButton
-        label="Zurück zum Anfang"
+        label="Zurück zur Übersicht"
         image="/icons/back-arrow.svg"
         onClick={() => navigate("/")}
       />

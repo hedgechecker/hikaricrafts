@@ -32,6 +32,7 @@ export class AddLineCommand implements Command {
         (s === this.data.startPointId && e === this.data.endPointId) ||
         (s === this.data.endPointId && e === this.data.startPointId)
       ) {
+        console.log("duplicate Line")
         return;
       }
     }
