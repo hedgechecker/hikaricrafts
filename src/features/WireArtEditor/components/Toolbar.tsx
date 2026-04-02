@@ -92,6 +92,9 @@ export default function Toolbar({ engine }: Props) {
       } else if (e.key === "4") {
         e.preventDefault();
         engine.setActiveTool("delete");
+      } else if(e.key == "5"){
+        e.preventDefault();
+        engine.setActiveTool("resize")
       }
     }
 
@@ -119,7 +122,7 @@ export default function Toolbar({ engine }: Props) {
       <ToolButton
         label="Zurück zur Übersicht"
         image="/icons/back-arrow.svg"
-        onClick={() => navigate("/")}
+        onClick={() => navigate("/wireart")}
       />
 
       {/* Tool selection */}
@@ -204,6 +207,7 @@ export default function Toolbar({ engine }: Props) {
           label=""
           image="/icons/setting.svg"
           toolTip="Sichtbarkeiten ändern"
+          active={settingsOpen}
           onClick={() => setSettingsOpen(!settingsOpen)}
         />
 
@@ -236,7 +240,7 @@ export default function Toolbar({ engine }: Props) {
                 checked={settings?.showImage}
                 onChange={(e) => updateSetting("showImage", e.target.checked)}
               />
-              Hintergrundbild anzeigen
+              Bilder anzeigen
             </label>
 
             <label>

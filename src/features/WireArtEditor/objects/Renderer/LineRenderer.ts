@@ -55,6 +55,7 @@ export class LineRenderer extends BaseRenderer<LineRenderData, LineData> {
 
     group.add(lineMesh);
     group.add(hitboxMesh);
+    group.visible = this.visible;
     this.sceneManager.scene.add(group);
 
     this.objects.set(id, {

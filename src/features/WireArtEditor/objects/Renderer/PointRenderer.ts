@@ -1,6 +1,6 @@
-import * as THREE from 'three';
-import type { PointData } from '../../models/Point';
-import { BaseRenderer } from './BaseRenderer';
+import * as THREE from "three";
+import type { PointData } from "../../models/Point";
+import { BaseRenderer } from "./BaseRenderer";
 
 interface PointRenderData {
   mesh: THREE.Group;
@@ -35,6 +35,8 @@ export class PointRenderer extends BaseRenderer<PointRenderData, PointData> {
       const isSelected = object.isSelected;
       const isInValid = object.isInValid;
 
+      object.mesh.visible = this.visible || isHovered || isSelected || isInValid;
+
       object.mesh.children.forEach((child) => {
         if ((isHovered || isSelected) && child.name != "hitbox") {
           child.scale.set(
@@ -42,6 +44,7 @@ export class PointRenderer extends BaseRenderer<PointRenderData, PointData> {
             size * this.hoverThickness,
             1,
           );
+          child.visible = true;
         } else {
           child.scale.set(size, size, 1);
         }
@@ -103,7 +106,8 @@ export class PointRenderer extends BaseRenderer<PointRenderData, PointData> {
     group.add(hitbox);
     group.userData.id = id;
 
-    if (this.visible) this.sceneManager.scene.add(group);
+    group.visible = this.visible;
+    this.sceneManager.scene.add(group);
 
     this.objects.set(id, {
       mesh: group,

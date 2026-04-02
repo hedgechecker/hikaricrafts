@@ -404,9 +404,9 @@ function isClockwise(polygon: Vertex[]) {
   return sum > 0;
 }
 
-export function isConcave(polygon: Vector2[]): boolean {
+export function isConcave(polygon: Vector2[], epsilon = 1e-6): boolean {
   const n = polygon.length;
-  if (n < 4) return false; // triangles are always convex
+  if (n < 4) return false;
 
   let sign = 0;
 
@@ -420,12 +420,14 @@ export function isConcave(polygon: Vector2[]): boolean {
 
     const cross = ab.x * bc.y - ab.y * bc.x;
 
-    if (cross !== 0) {
-      if (sign === 0) {
-        sign = Math.sign(cross);
-      } else if (Math.sign(cross) !== sign) {
-        return true;
-      }
+    if (Math.abs(cross) < epsilon) continue;
+
+    const currentSign = Math.sign(cross);
+
+    if (sign === 0) {
+      sign = currentSign;
+    } else if (currentSign !== sign) {
+      return true; // concave
     }
   }
 

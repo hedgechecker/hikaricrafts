@@ -28,7 +28,8 @@
   right: var(--space-md);
 
   background: var(--color-background);
-  border: var(--space-border) solid var(--color-border);
+  /* border: var(--space-border) solid var(--color-border); */
+  border: none;
   border-radius: var(--space-md);
 
   padding: var(--space-sm);

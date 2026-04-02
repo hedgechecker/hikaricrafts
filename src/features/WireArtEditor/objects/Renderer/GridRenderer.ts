@@ -65,7 +65,8 @@ export class GridRenderer extends BaseRenderer<GridRenderData, number> {
 
     this.objects.set('grid', data);
 
-    if(this.visible)this.sceneManager.scene.add(mesh);
+    data.mesh.visible = this.visible;
+    this.sceneManager.scene.add(mesh);
   }
 
   private createCustomGrid(divisions: number) {

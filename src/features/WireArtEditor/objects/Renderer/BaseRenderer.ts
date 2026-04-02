@@ -123,13 +123,8 @@ export abstract class BaseRenderer<T extends RenderData, TInput> {
   }
 
   setVisible(visible: boolean) {
-    if (visible === this.visible) return;
     this.objects.forEach((obj) => {
-      if (visible) {
-        this.sceneManager.scene.add(obj.mesh);
-      } else {
-        this.sceneManager.scene.remove(obj.mesh);
-      }
+      obj.mesh.visible = visible;
     });
 
     this.visible = visible;

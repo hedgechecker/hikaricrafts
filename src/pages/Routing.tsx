@@ -3,12 +3,13 @@ import App from './KumikoEditor/KumikoEditor.tsx';
 import Login from './Authentication/Login.tsx';
 import '../styles/theme.css';
 import { Register } from './Authentication/Register.tsx';
-import Feedback from './Landing/Feedback.tsx';
+import Feedback from './Contact/Feedback.tsx';
 
 import AllProductsPage from '../features/products/AllProducts.tsx';
 import SingleProduct from './Product/SingleProduct.tsx';
 import Contact from './Contact/Contact.tsx';
 import WireArtEditor from './WireArtEditor/WireArtEditor.tsx';
+import Overview from '../features/WireArtEditor/components/Overview.tsx';
 
 export default function Routing() {
   return (
@@ -17,14 +18,21 @@ export default function Routing() {
       <Route path="/all" element={<AllProductsPage />} />
       <Route path="/oboereedsetui" element={<SingleProduct key={1} id={1} />} />
       <Route path="/fluteCase" element={<SingleProduct key={2} id={2} />} />
-      <Route path="/klarinettreedsetui" element={<SingleProduct key={3} id={3} />} />
-      <Route path="/saxophonreedsetui" element={<SingleProduct key={4} id={4} />} />
+      <Route
+        path="/klarinettreedsetui"
+        element={<SingleProduct key={3} id={3} />}
+      />
+      <Route
+        path="/saxophonreedsetui"
+        element={<SingleProduct key={4} id={4} />}
+      />
       <Route path="/piccoloCase" element={<SingleProduct key={5} id={5} />} />
       <Route path="/kontakt" element={<Contact />} />
       <Route path="/kumiko" element={<App />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/wireart" element={<WireArtEditor />} />
+      <Route path="/wireart" element={<Overview />} />
+      <Route path="/wirearteditor" element={<WireArtEditor />} />
     </Routes>
   );
 }

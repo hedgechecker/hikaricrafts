@@ -2,7 +2,8 @@
   padding: var(--space-xs);
   background: var(--color-background);
   color: var(--color-accent);
-  border: var(--space-border) solid var(--color-border);
+  /* border: var(--space-border) solid var(--color-border); */
+  border: none;
   border-radius: var(--radius-md);
   cursor: pointer;
   font-size: var(--font-size-lg);
@@ -27,8 +28,8 @@
   background: rgba(0, 0, 0, 0.1);
 }
 .image {
-    width: 40px;
-    height: 40px;
+    width: 30px;
+    height: 30px;
 }
 .tooltip {
   position: relative;

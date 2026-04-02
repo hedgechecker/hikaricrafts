@@ -140,7 +140,8 @@ export class ImageRenderer extends BaseRenderer<ImageRenderData, ImageData> {
         isInValid: false,
       };
       this.objects.set(image.id, data);
-      if (this.visible) this.sceneManager.scene.add(data.mesh);
+      data.mesh.visible = this.visible;
+      this.sceneManager.scene.add(data.mesh);
       this.updateImage(image);
     });
   }

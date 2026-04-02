@@ -2,17 +2,17 @@ import { useState } from "react";
 import styles from "./styles/NavBar.module.css";
 import { Link } from "react-router-dom";
 interface NavBarProps {
-  selected: string;
+  selected: "etuis" | "cases" | "wallArt" | "contact" | "login" | "";
 }
 
 export default function NavBar({ selected }: NavBarProps) {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
+  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
 
   const handleDropdown = (name: string) => {
+    console.log(name)
     setOpenDropdown(openDropdown === name ? null : name);
-    console.log(openDropdown)
   };
 
   const closeMobile = () => {
@@ -22,7 +22,7 @@ export default function NavBar({ selected }: NavBarProps) {
 
   const handleLogout = () => {
     setIsLoggedIn(false);
-    localStorage.removeItem('token');
+    localStorage.removeItem("token");
     closeMobile();
   };
 
@@ -57,20 +57,18 @@ export default function NavBar({ selected }: NavBarProps) {
             onClick={() => handleDropdown("etuis")}
             tabIndex={0}
           >
-            Etuis ▾
-            {openDropdown === "etuis" && (
-              <div className={styles.dropdownContent}>
-                <Link to="/oboereedsetui" onClick={closeMobile}>
-                  Rohretui für Oboe
-                </Link>
-                <Link to="/klarinettreedsetui" onClick={closeMobile}>
-                  Klarinettenblättchen Etui
-                </Link>
-                <Link to="/saxophonreedsetui" onClick={closeMobile}>
-                  Saxophonblättchen Etui
-                </Link>
-              </div>
-            )}
+            Etuis
+            <div className={styles.dropdownContent}>
+              <Link to="/oboereedsetui" onClick={closeMobile}>
+                Rohretui für Oboe
+              </Link>
+              <Link to="/klarinettreedsetui" onClick={closeMobile}>
+                Klarinettenblättchen Etui
+              </Link>
+              <Link to="/saxophonreedsetui" onClick={closeMobile}>
+                Saxophonblättchen Etui
+              </Link>
+            </div>
           </div>
 
           {/* Koffer Dropdown */}
@@ -79,17 +77,15 @@ export default function NavBar({ selected }: NavBarProps) {
             onClick={() => handleDropdown("koffer")}
             tabIndex={0}
           >
-            Koffer ▾
-            {openDropdown === "koffer" && (
-              <div className={styles.dropdownContent}>
-                <Link to="/piccoloCase" onClick={closeMobile}>
-                  Piccolo Koffer
-                </Link>
-                <Link to="/fluteCase" onClick={closeMobile}>
-                  Querflöten Koffer
-                </Link>
-              </div>
-            )}
+            Koffer
+            <div className={styles.dropdownContent}>
+              <Link to="/piccoloCase" onClick={closeMobile}>
+                Piccolo Koffer
+              </Link>
+              <Link to="/fluteCase" onClick={closeMobile}>
+                Querflöten Koffer
+              </Link>
+            </div>
           </div>
 
           {/* WallArt Dropdown */}
@@ -98,17 +94,15 @@ export default function NavBar({ selected }: NavBarProps) {
             onClick={() => handleDropdown("wallArt")}
             tabIndex={0}
           >
-            Wandkunst ▾
-            {openDropdown === "wallArt" && (
-              <div className={styles.dropdownContent}>
-                <Link to="/wireArt" onClick={closeMobile}>
-                  Geometrische Kunst
-                </Link>
-                <Link to="/kumiko" onClick={closeMobile}>
-                  Kumiko
-                </Link>
-              </div>
-            )}
+            Wandkunst
+            <div className={styles.dropdownContent} id="wallart">
+              <Link to="/wireArt" onClick={closeMobile}>
+                Geometrische Kunst
+              </Link>
+              <Link to="/kumiko" onClick={closeMobile}>
+                Kumiko
+              </Link>
+            </div>
           </div>
 
           <a
