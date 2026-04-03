@@ -100,7 +100,7 @@ export default function NavBar({ selected }: NavBarProps) {
                 Geometrische Kunst
               </Link>
               <Link to="/kumiko" onClick={closeMobile}>
-                Kumiko
+                Kumiko(experimentell)
               </Link>
             </div>
           </div>

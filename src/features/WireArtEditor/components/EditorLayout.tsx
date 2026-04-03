@@ -22,7 +22,7 @@ export default function EditorLayout() {
 
   return (
     <TutorialProvider>
-      <div className={styles.wrapper}>
+      <div className={styles.wrapper} id="editor">
         {engine && <Toolbar engine={engine} />}
         {/* Update class to trigger resizing event*/}
         <div className={`${engine ? styles.center : ""}`}>

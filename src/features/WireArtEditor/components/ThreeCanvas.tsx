@@ -53,5 +53,5 @@ export default function ThreeCanvas({ setEngine }: Props) {
     }
   }, [tutorial]);
 
-  return <div ref={mountRef} className={styles.container} />;
+  return <div ref={mountRef} className={styles.container} id="canvas"/>;
 }

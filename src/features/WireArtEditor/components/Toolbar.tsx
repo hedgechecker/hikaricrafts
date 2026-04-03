@@ -123,6 +123,7 @@ export default function Toolbar({ engine }: Props) {
         label="Zurück zur Übersicht"
         image="/icons/back-arrow.svg"
         onClick={() => navigate("/wireart")}
+        id="backToOverview"
       />
 
       {/* Tool selection */}
@@ -133,6 +134,7 @@ export default function Toolbar({ engine }: Props) {
           toolTip="Elemente bewegen"
           active={tool === "move"}
           onClick={() => changeTool("move")}
+          id="movetool"
         />
 
         <ToolButton
@@ -141,6 +143,7 @@ export default function Toolbar({ engine }: Props) {
           toolTip="Einen Punkt zeichnen"
           active={tool === "point"}
           onClick={() => changeTool("point")}
+          id="pointtool"
         />
 
         <ToolButton
@@ -158,6 +161,14 @@ export default function Toolbar({ engine }: Props) {
           toolTip="Elemente löschen"
           active={tool === "delete"}
           onClick={() => changeTool("delete")}
+          id="deletetool"
+        />
+
+        {/* Upload background reference image */}
+        <ImageUploader
+          onImageSelected={(img) => {
+            engine.addBackgroundImage(img);
+          }}
         />
 
         <ToolButton
@@ -167,6 +178,7 @@ export default function Toolbar({ engine }: Props) {
           onClick={() => {
             engine.undo();
           }}
+          id="undoButton"
         />
 
         <ToolButton
@@ -174,6 +186,7 @@ export default function Toolbar({ engine }: Props) {
           image="/icons/redo.svg"
           toolTip="Wiederherstellen"
           onClick={() => engine.redo()}
+          id="redoButton"
         />
       </div>
       <div className={styles.toolSection}>
@@ -183,6 +196,7 @@ export default function Toolbar({ engine }: Props) {
           image={saved ? "/icons/check.svg" : "/icons/save.svg"}
           toolTip="Projekt speichern"
           onClick={handleSave}
+          id="saveButton"
         />
 
         {/* Export project*/}
@@ -191,6 +205,7 @@ export default function Toolbar({ engine }: Props) {
           image="/icons/export.svg"
           toolTip="Projekt herunterladen"
           onClick={() => engine.exportProject()}
+          id="exportButton"
         />
 
         {/* Export project*/}
@@ -199,6 +214,7 @@ export default function Toolbar({ engine }: Props) {
           image="/icons/import.svg"
           toolTip="Projekt aus Datei importieren"
           onClick={() => engine.importProject()}
+          id="importButton"
         />
 
         {/* Toggle settings panel */}
@@ -218,6 +234,7 @@ export default function Toolbar({ engine }: Props) {
           toolTip="Vorschau erstellen"
           active={tool === "verify"}
           onClick={() => changeTool("verify")}
+          id="verifytool"
         />
 
         {/* Settings menu */}
@@ -271,13 +288,6 @@ export default function Toolbar({ engine }: Props) {
             </label>
           </div>
         )}
-
-        {/* Upload background reference image */}
-        <ImageUploader
-          onImageSelected={(img) => {
-            engine.addBackgroundImage(img);
-          }}
-        />
       </div>
     </div>
   );

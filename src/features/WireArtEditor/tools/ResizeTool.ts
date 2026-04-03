@@ -2,6 +2,7 @@ import * as THREE from "three";
 import type { Tool, ToolContext } from "./Tool";
 import { UpdatePointCommand } from "../commands/UpdatePointCommand";
 import { CompositeCommand } from "../commands/CompositeCommand";
+import { computeBoundingRect } from "../utils/math";
 
 export class ResizeTool implements Tool {
   private context: ToolContext;
@@ -28,13 +29,13 @@ export class ResizeTool implements Tool {
 
     this.context.sceneManager.scene.add(this.handle);
 
-    this.rect = this.computeBoundingRect();
+    this.computeBoundingRect();
     this.updateHandlePosition();
   }
 
   onClick() {
     this.currentScale = 1;
-    this.rect = this.computeBoundingRect();
+    this.computeBoundingRect();
     this.context.sceneManager.scene.add(this.handle);
     this.updateHandlePosition();
   }
@@ -45,8 +46,7 @@ export class ResizeTool implements Tool {
     if (this.isHoveringHandle(event)) {
       this.isDragging = true;
 
-      this.rect = this.computeBoundingRect();
-      this.computeCenter();
+      this.computeBoundingRect();
 
       const worldPos = this.context.sceneManager.getWorldPosition(event);
 
@@ -118,26 +118,10 @@ export class ResizeTool implements Tool {
     }
   }
 
-  private computeCenter() {
+  private computeBoundingRect() {
+    this.rect = computeBoundingRect([...this.context.model.points.values()]);
     this.center.x = (this.rect.right - this.rect.left) / 2 + this.rect.left;
     this.center.y = (this.rect.top - this.rect.bottom) / 2 + this.rect.bottom;
-  }
-
-  private computeBoundingRect() {
-    const inf = Number.MAX_SAFE_INTEGER;
-    const points = this.context.model.points.values();
-    let left = inf,
-      right = -inf,
-      top = -inf,
-      bottom = inf;
-    for (const p of points) {
-      if (p.x > right) right = p.x;
-      if (p.x < left) left = p.x;
-      if (p.y > top) top = p.y;
-      if (p.y < bottom) bottom = p.y;
-    }
-    this.computeCenter();
-    return { top: top, bottom: bottom, right: right, left: left };
   }
 
   private applyScale(scale: number) {

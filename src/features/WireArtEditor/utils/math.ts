@@ -1,4 +1,5 @@
-import * as THREE from 'three';
+import * as THREE from "three";
+import type { PointData } from "../models/Point";
 
 /**
  * Projects a Point onto a given Segment
@@ -23,7 +24,6 @@ export function projectPointToSegment(
 
   return new THREE.Vector3().copy(a).add(ab.multiplyScalar(t));
 }
-
 
 /**
  * Calculates a best snapping angle out of:
@@ -70,7 +70,10 @@ export function snapAngle(
 
   for (const candidate of candidateAngles) {
     const diff = Math.abs(
-      THREE.MathUtils.euclideanModulo(baseAngle - candidate + Math.PI, Math.PI * 2) - Math.PI,
+      THREE.MathUtils.euclideanModulo(
+        baseAngle - candidate + Math.PI,
+        Math.PI * 2,
+      ) - Math.PI,
     );
 
     if (diff < smallestDiff) {
@@ -82,7 +85,13 @@ export function snapAngle(
   // 4. Apply snap
   return start
     .clone()
-    .add(new THREE.Vector3(Math.cos(bestAngle) * distance, Math.sin(bestAngle) * distance, 0));
+    .add(
+      new THREE.Vector3(
+        Math.cos(bestAngle) * distance,
+        Math.sin(bestAngle) * distance,
+        0,
+      ),
+    );
 }
 
 /**
@@ -94,11 +103,11 @@ export function snapAngle(
 export function parseMathInput(value: string): number | null {
   if (!value) return null;
 
-  let normalized = value.replace(/,/g, '.').trim();
-  normalized = normalized.replaceAll('m', '');
-  normalized = normalized.replace('°', '');
-  console.log(normalized)
-  
+  let normalized = value.replace(/,/g, ".").trim();
+  normalized = normalized.replaceAll("m", "");
+  normalized = normalized.replace("°", "");
+  console.log(normalized);
+
   // allow only numbers and math operators
   if (!/^[0-9+\-*/().\s]+$/.test(normalized)) {
     return null;
@@ -107,7 +116,7 @@ export function parseMathInput(value: string): number | null {
   try {
     const result = Function(`"use strict"; return (${normalized})`)();
 
-    if (typeof result !== 'number' || !isFinite(result)) {
+    if (typeof result !== "number" || !isFinite(result)) {
       return null;
     }
 
@@ -115,4 +124,19 @@ export function parseMathInput(value: string): number | null {
   } catch {
     return null;
   }
+}
+
+export function computeBoundingRect(points: PointData[]) {
+  const inf = Number.MAX_SAFE_INTEGER;
+  let left = inf,
+    right = -inf,
+    top = -inf,
+    bottom = inf;
+  for (const p of points) {
+    if (p.x > right) right = p.x;
+    if (p.x < left) left = p.x;
+    if (p.y > top) top = p.y;
+    if (p.y < bottom) bottom = p.y;
+  }
+  return { top: top, bottom: bottom, right: right, left: left };
 }

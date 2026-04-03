@@ -26,6 +26,7 @@ export function TutorialOverlay() {
 
     const element = document.querySelector(step.target);
     if (!element) {
+      console.log("The Element "+step.target+" specified by the TutorialStep "+step.id+" couldnt be found")
       setRect(null);
       return;
     }
@@ -121,7 +122,7 @@ export function TutorialOverlay() {
         }}
       >
         <p>{step.content}</p>
-        <button onClick={prev}>Zurück</button>
+        {(step.id != "start" )&& <button onClick={prev}>Zurück</button>}
         <button onClick={next}>Weiter</button>
       </div>
     </>

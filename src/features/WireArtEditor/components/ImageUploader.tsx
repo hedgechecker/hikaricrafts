@@ -59,6 +59,7 @@ export default function ImageUploader({ onImageSelected }: Props) {
         onClick={handleButtonClick}
         image="/icons/image.svg"
         toolTip="Ein neues Hintergrundbild öffnen"
+        id='addImageButton'
       />
     </>
   );

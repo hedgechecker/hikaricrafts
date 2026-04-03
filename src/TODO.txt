@@ -11,6 +11,7 @@ Scale Tool
 check minsize
 check minSideHeight
 
-complete tutorial
 Landing Page
 error handling
+error UI
+delete images

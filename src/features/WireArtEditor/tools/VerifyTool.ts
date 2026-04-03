@@ -20,6 +20,7 @@ import {
   type Vertex,
 } from "../utils/graphs";
 import { generateId } from "../utils/id";
+import { computeBoundingRect } from "../utils/math";
 import type { Tool, ToolContext } from "./Tool";
 import * as THREE from "three";
 
@@ -162,7 +163,19 @@ export class VerifyTool implements Tool {
       this.previewMeshes.push(mesh);
     });
 
+    const rect = computeBoundingRect([...this.context.model.points.values()]);
     this.context.sceneManager.setCameraMode("3D");
+    console.log((rect.left + rect.right) / 2, (rect.bottom + rect.top) / 2);
+    this.context.sceneManager.camera.position.set(
+      (rect.left + rect.right) / 2,
+      (rect.bottom + rect.top) / 2,
+      50,
+    );
+    this.context.sceneManager.camera.lookAt(
+      (rect.left + rect.right) / 2,
+      (rect.bottom + rect.top) / 2,
+      0,
+    );
     this.wasGridVisible = this.context.gridRenderer.getVisible();
     this.wasImageVisible = this.context.imageRenderer.getVisible();
     this.wasLinesVisible = this.context.lineRenderer.getVisible();
@@ -309,7 +322,9 @@ export class VerifyTool implements Tool {
       deleteCommands.push(new DeleteLineCommand(lineId));
     });
 
-    this.context.executeCommand(new CompositeCommand([...deleteCommands, ...addCommands]));
+    this.context.executeCommand(
+      new CompositeCommand([...deleteCommands, ...addCommands]),
+    );
   }
   dedupePoints(points: THREE.Vector3[]): THREE.Vector3[] {
     const result: THREE.Vector3[] = [];
@@ -345,7 +360,8 @@ export class VerifyTool implements Tool {
     const point = this.context.model.points.get(id);
     if (!point) return;
     this.context.model.points.forEach((p, pid) => {
-      if (pid == id || this.context.lineRenderer.hasLineBetween(pid, id)) return;
+      if (pid == id || this.context.lineRenderer.hasLineBetween(pid, id))
+        return;
       const x2 = p.x;
       const y2 = p.y;
       if (

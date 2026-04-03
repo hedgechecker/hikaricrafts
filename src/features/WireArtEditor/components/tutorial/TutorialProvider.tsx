@@ -5,6 +5,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { tutorialSteps } from "./tutorialStep";
 
 type TutorialContextType = {
   stepIndex: number;
@@ -34,7 +35,13 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
   };
   const stop = () => setActive(false);
 
-  const next = () => setStepIndex((i) => i + 1);
+  const next = () => {
+    setStepIndex((i) => i + 1);
+    if(tutorialSteps[stepIndex].id == "finish"){
+      const url = window.location.origin + window.location.pathname;
+      window.history.replaceState({}, document.title, url);
+    }
+  };
   const prev = () => setStepIndex((i) => i - 1);
 
   return (
