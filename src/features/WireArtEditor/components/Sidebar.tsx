@@ -96,21 +96,8 @@ export default function SideBar({ engine }: Props) {
   // Rename a project via API and refresh the project list
   async function submitRename(id: number) {
     if (!editingName.trim()) return;
-
-    const token = localStorage.getItem("token");
-
-    const res = await fetch(`${BASE_URL}/wireArtProjects/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify({ name: editingName }),
-    });
-
-    if (res.ok) {
-      await loadProjects();
-    }
+    await engine.renameProject(id, editingName);
+    await loadProjects();
 
     setEditingId(null);
     setOpenMenuId(null);

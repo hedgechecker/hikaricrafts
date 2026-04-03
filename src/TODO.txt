@@ -13,3 +13,4 @@ check minSideHeight
 
 complete tutorial
 Landing Page
+error handling

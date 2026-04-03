@@ -1,26 +1,26 @@
-import { PointRenderer } from '../objects/Renderer/PointRenderer';
-import { LineRenderer } from '../objects/Renderer/LineRenderer';
-import { SceneManager } from '../objects/SceneManager';
-import { ToolManager } from '../tools/ToolManager';
-import { CursorManager } from '../objects/CursorManager';
+import { PointRenderer } from "../objects/Renderer/PointRenderer";
+import { LineRenderer } from "../objects/Renderer/LineRenderer";
+import { SceneManager } from "../objects/SceneManager";
+import { ToolManager } from "../tools/ToolManager";
+import { CursorManager } from "../objects/CursorManager";
 
-import { DataStorage } from '../core/DataStorage';
-import { SceneModel } from '../models/SceneModel';
-import { type Project } from '../models/Project';
-import { CommandManager } from '../commands/CommandManager';
-import { DeletePointCommand } from '../commands/DeletePointCommand';
-import { DeleteLineCommand } from '../commands/DeleteLineCommand';
-import { SVGExporter } from '../core/SVGExporter';
-import type { Settings } from '../models/Settings';
-import { AddImageCommand } from '../commands/AddImageCommand';
-import { generateId } from '../utils/id';
-import { DeleteImageCommand } from '../commands/DeleteImageCommand';
-import { ImageRenderer } from '../objects/Renderer/ImageRenderer';
-import type { Command } from '../commands/Command';
-import { GridRenderer } from '../objects/Renderer/GridRenderer';
-import { EditorStore } from './EditorStore';
-import type { ToolType } from '../tools/Tool';
-import { OrthographicCamera } from 'three';
+import { DataStorage } from "../core/DataStorage";
+import { SceneModel } from "../models/SceneModel";
+import { type Project } from "../models/Project";
+import { CommandManager } from "../commands/CommandManager";
+import { DeletePointCommand } from "../commands/DeletePointCommand";
+import { DeleteLineCommand } from "../commands/DeleteLineCommand";
+import { SVGExporter } from "../core/SVGExporter";
+import type { Settings } from "../models/Settings";
+import { AddImageCommand } from "../commands/AddImageCommand";
+import { generateId } from "../utils/id";
+import { DeleteImageCommand } from "../commands/DeleteImageCommand";
+import { ImageRenderer } from "../objects/Renderer/ImageRenderer";
+import type { Command } from "../commands/Command";
+import { GridRenderer } from "../objects/Renderer/GridRenderer";
+import { EditorStore } from "./EditorStore";
+import type { ToolType } from "../tools/Tool";
+import { OrthographicCamera } from "three";
 
 export class ThreeEditor {
   private pointRenderer: PointRenderer;
@@ -170,11 +170,17 @@ export class ThreeEditor {
   }
 
   public redo() {
-    if (this.history.redo(this.model)) this.syncSceneFromModel();
+    if (this.history.redo(this.model)) {
+      this.syncSceneFromModel();
+      this.hasChanges = true;
+    }
   }
 
   public undo() {
-    if (this.history.undo(this.model)) this.syncSceneFromModel();
+    if (this.history.undo(this.model)) {
+      this.syncSceneFromModel();
+      this.hasChanges = true;
+    }
   }
 
   start() {
@@ -182,7 +188,6 @@ export class ThreeEditor {
     const animate = () => {
       this.sceneManager.update();
       const { renderer, scene, camera } = this.sceneManager;
-      //console.log(camera.position);
 
       renderer.render(scene, camera);
       if (camera instanceof OrthographicCamera) {
@@ -268,6 +273,10 @@ export class ThreeEditor {
   exportProject() {
     console.log(this.project);
     this.storage.userExport(this.project);
+  }
+  async renameProject(id: number, name: string) {
+    if (id == this.project.id) this.project.name = name;
+    await this.storage.renameProject(id, name);
   }
   async importProject() {
     const project = await this.storage.userImport();

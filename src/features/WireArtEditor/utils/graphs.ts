@@ -404,7 +404,7 @@ function isClockwise(polygon: Vertex[]) {
   return sum > 0;
 }
 
-export function isConcave(polygon: Vector2[], epsilon = 1e-6): boolean {
+export function isConcave(polygon: Vector2[], epsilon = 1e-4): boolean {
   const n = polygon.length;
   if (n < 4) return false;
 
@@ -434,31 +434,36 @@ export function isConcave(polygon: Vector2[], epsilon = 1e-6): boolean {
   return false; // convex
 }
 
-export function findConcaveVertices(polygon: Vertex[]): string[] {
+export function findConcaveVertices(
+  polygon: Vertex[],
+  epsilon = 1e-8,
+): string[] {
   const n = polygon.length;
   const concaveIds: string[] = [];
 
-  let sign = 0;
+  let referenceSign = 0;
+
+  const crossProduct = (a: any, b: any, c: any) => {
+    const ab = b.clone().sub(a);
+    const bc = c.clone().sub(b);
+    return ab.x * bc.y - ab.y * bc.x;
+  };
 
   for (let i = 0; i < n; i++) {
     const a = polygon[i].position;
     const b = polygon[(i + 1) % n].position;
     const c = polygon[(i + 2) % n].position;
 
-    const ab = b.clone().sub(a);
-    const bc = c.clone().sub(b);
+    const cross = crossProduct(a, b, c);
 
-    const cross = ab.x * bc.y - ab.y * bc.x;
+    if (Math.abs(cross) < epsilon) continue; // skip collinear points
 
-    if (cross !== 0) {
-      const currentSign = Math.sign(cross);
+    const currentSign = Math.sign(cross);
 
-      if (sign === 0) {
-        sign = currentSign;
-      } else if (currentSign !== sign) {
-        // 🔥 return the ID of the concave vertex (b)
-        concaveIds.push(polygon[(i + 1) % n].id);
-      }
+    if (referenceSign === 0) {
+      referenceSign = currentSign; // establish winding direction
+    } else if (currentSign !== referenceSign) {
+      concaveIds.push(polygon[(i + 1) % n].id);
     }
   }
 

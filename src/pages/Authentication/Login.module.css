@@ -30,10 +30,10 @@
 }
 
 .button {
-  padding: 12px;
+  padding: var(--space-sm);
   background: var(--color-accent);
   color: var(--color-background);
-  border: 1px solid var(--color-accent);
+  border: var(--space-border) solid var(--color-accent);
   border-radius: var(--radius-md);
   cursor: pointer;
   font-size: var(--font-size-md);
@@ -46,10 +46,10 @@
 }   
 
 .backButton{
-  padding: 12px;
+  padding: var(--space-sm);
   background: var(--color-background);
   color: var(--color-accent);
-  border: 1px solid var(--color-accent);
+  border: var(--space-border) solid var(--color-accent);
   border-radius: var(--radius-md);
   cursor: pointer;
   font-size: var(--font-size-md);

@@ -170,7 +170,7 @@ export class VerifyTool implements Tool {
     this.context.gridRenderer.setVisible(false);
     this.context.imageRenderer.setVisible(false);
     this.context.pointRenderer.setVisible(false);
-    //this.context.lineRenderer.setVisible(false);
+    this.context.lineRenderer.setVisible(false);
   }
 
   getPolygonMeshes(faces: Vertex[][], height = 1.8, color?: number) {
@@ -178,7 +178,7 @@ export class VerifyTool implements Tool {
     const texture = new THREE.TextureLoader().load("/textures/fichte.jpg");
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
-    texture.repeat.set(0.2, 0.2);
+    texture.repeat.set(0.1, 0.1);
 
     for (const face of faces) {
       if (face.length < 3) continue;
@@ -201,11 +201,11 @@ export class VerifyTool implements Tool {
 
       let material;
       if (color != undefined) {
-        material = new THREE.MeshBasicMaterial({
+        material = new THREE.MeshStandardMaterial({
           color: color,
         });
       } else {
-        material = new THREE.MeshBasicMaterial({
+        material = new THREE.MeshStandardMaterial({
           map: texture,
         });
       }

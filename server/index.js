@@ -367,7 +367,8 @@ app.post('/wireArtProjects', authRequired, async (req, res) => {
 });
 
 app.get('/wireArtProjects', optionalAuth, async (req, res) => {
-  const whereConditions = [{ isPublic: true }];
+  //const whereConditions = [{ isPublic: true }];
+  const whereConditions = [];
   
   if (req.user && req.user.id) {
     whereConditions.push({ userId: req.user.id });

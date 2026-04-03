@@ -5,7 +5,6 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { useDialog } from "../../../global/useDialog";
 
 type TutorialContextType = {
   stepIndex: number;
@@ -20,30 +19,13 @@ export const TutorialContext = createContext<TutorialContextType | null>(null);
 
 export function TutorialProvider({ children }: { children: ReactNode }) {
   const [stepIndex, setStepIndex] = useState(-1);
-  const [active, setActive] = useState(true);
-  const { showDialog, dialogComponent } = useDialog();
+  const [active, setActive] = useState(false);
 
   const hasAsked = useRef(false);
 
   useEffect(() => {
     if (hasAsked.current) return;
     hasAsked.current = true;
-
-    const run = async () => {
-      if (localStorage.getItem("tutorial-seen")) return;
-
-      const result = await showDialog({
-        type: "confirm",
-        message: "Wollen Sie ein Tutorial ansehen?",
-      });
-
-      if (result) {
-        start();
-        localStorage.setItem("tutorial-seen", "true");
-      }
-    };
-
-    run();
   }, []);
 
   const start = () => {
@@ -59,7 +41,7 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
     <TutorialContext.Provider
       value={{ stepIndex, start, stop, next, prev, active }}
     >
-      {children}{dialogComponent}
+      {children}
     </TutorialContext.Provider>
   );
 }

@@ -3,7 +3,7 @@ import CryptoJS from "crypto-js";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 const LOCALSTORAGE_KEY = "Project";
-const CRYPT_KEY = "ernieUndBert"
+const CRYPT_KEY = "ernieUndBert";
 
 export class DataStorage {
   /**
@@ -144,6 +144,23 @@ export class DataStorage {
     return true;
   }
 
+  async renameProject(id: number, name: string) {
+    const token = localStorage.getItem("token");
+
+    const res = await fetch(`${BASE_URL}/wireArtProjects/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ name: name }),
+    });
+    if(!res.ok){
+      console.log("Couldn't rename Project "+ id+ " to "+ name);
+    }
+
+  }
+
   async loadGlobal(id: number): Promise<Project | null> {
     const token = localStorage.getItem("token");
 
@@ -176,8 +193,9 @@ export class DataStorage {
 
   userExport(project: Project) {
     console.log(project);
-
-    const json = JSON.stringify(project);
+    const copy = project;
+    copy.id = null;
+    const json = JSON.stringify(copy);
 
     const encrypted = CryptoJS.AES.encrypt(json, CRYPT_KEY).toString();
 
@@ -193,7 +211,6 @@ export class DataStorage {
   }
 
   async userImport(): Promise<Project> {
-
     return new Promise((resolve, reject) => {
       const input = document.createElement("input");
       input.type = "file";
