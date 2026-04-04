@@ -22,27 +22,23 @@ export class DragTool implements Tool {
     this.transformTool = new TransformTool(context);
   }
 
+  onClick(): void {
+    this.transformTool.onClick();
+  }
+
   onPointerDown(event: PointerEvent) {
     this.handleHover(event);
     if (event.button !== 0) return;
 
-    // PRIORITY 1 → POINT
-    const hoveredPoint = this.context.pointRenderer.getHovered();
-    if (hoveredPoint) {
-      this.activeTool = 'point';
+    if (this.activeTool === "point") {
       this.moveTool.onPointerDown(event);
       return;
     }
 
-    // PRIORITY 2 → IMAGE
-    const hoveredImage = this.context.imageRenderer.getHovered();
-    if (hoveredImage) {
-      this.activeTool = 'image';
+    if (this.activeTool === "image") {
       this.transformTool.onPointerDown(event);
       return;
     }
-
-    this.activeTool = 'none';
   }
 
   onPointerMove(event: PointerEvent) {
@@ -79,7 +75,19 @@ export class DragTool implements Tool {
     this.context.pointRenderer.setHovered(null);
     this.context.imageRenderer.setHovered(null);
 
-    if (this.context.pointRenderer.handleHover(event)) return;
-    if (this.context.imageRenderer.handleHover(event)) return;
+    if (this.context.pointRenderer.handleHover(event)) {
+     this.activeTool = "point";
+     return; 
+    }
+    if (this.context.imageRenderer.handleHover(event) || this.context.gizmoRenderer.handleHover(event)) {
+     this.activeTool = "image";
+     return; 
+    }
+    this.activeTool = "none";
+  }
+
+  dispose(): void {
+    this.transformTool.dispose();
+    //this.moveTool.dispose();
   }
 }

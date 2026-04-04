@@ -1,6 +1,7 @@
 import type { Command } from '../commands/Command';
 import type { SceneModel } from '../models/SceneModel';
 import type { CursorManager } from '../objects/CursorManager';
+import type { GizmoRenderer } from '../objects/Renderer/GizmoRenderer';
 import type { GridRenderer } from '../objects/Renderer/GridRenderer';
 import type { ImageRenderer } from '../objects/Renderer/ImageRenderer';
 import type { LineRenderer } from '../objects/Renderer/LineRenderer';
@@ -25,5 +26,6 @@ export interface ToolContext {
   gridRenderer: GridRenderer;
   sceneManager: SceneManager;
   cursorManager: CursorManager;
+  gizmoRenderer: GizmoRenderer;
   readonly model: SceneModel;
 }

@@ -1,7 +1,5 @@
 import * as THREE from "three";
-import { TransformGizmo } from "../TransformGizmo";
 import type { ImageData } from "../../models/Image";
-import type { SceneManager } from "../SceneManager";
 import { BaseRenderer, type RenderData } from "./BaseRenderer";
 
 export interface ImageRenderData extends RenderData {
@@ -11,21 +9,6 @@ export interface ImageRenderData extends RenderData {
 }
 
 export class ImageRenderer extends BaseRenderer<ImageRenderData, ImageData> {
-  gizmo!: TransformGizmo;
-
-  constructor(sceneManager: SceneManager) {
-    super(sceneManager);
-
-    this.gizmo = new TransformGizmo();
-
-    this.gizmo.handles.forEach((handle) => {
-      handle.visible = false;
-      this.sceneManager.scene.add(handle);
-    });
-
-    this.gizmo.setVisible(false);
-  }
-
   protected getId(data: ImageData) {
     return data.id;
   }
@@ -36,22 +19,8 @@ export class ImageRenderer extends BaseRenderer<ImageRenderData, ImageData> {
     this.updateImage(data);
   }
 
-  remove(id: string) {
-    super.remove(id);
-    if (this.objects.size < 1) {
-      this.gizmo.update(null);
-      this.gizmo.setVisible(false);
-    }
-  }
-
   updateScale(zoom: number) {
     this.zoom = zoom;
-    const size = 1.0 / zoom;
-    this.gizmo.handles.forEach((handle) => {
-      handle.children.forEach((child) => {
-        child.scale.set(size, size, size);
-      });
-    });
   }
 
   getFirstHoverableImage(intersects: THREE.Intersection[]): string | null {
@@ -66,39 +35,38 @@ export class ImageRenderer extends BaseRenderer<ImageRenderData, ImageData> {
     return null;
   }
 
-  getHoveredHandle() {
-    return this.gizmo.getHovered();
-  }
+  getBoundingRect(id: string) {
+    const img = this.objects.get(id);
+    if (!img) return;
 
-  setHovered(id: string | null) {
-    if (this.hovered == id) return;
-    if (this.hovered) {
-      this.gizmo.setVisible(false);
-      this.gizmo.update(null);
-      const image = this.objects.get(this.hovered);
-      if (image) {
-        image.isHovered = false;
-      }
-    }
-    this.hovered = id;
+    const pos = img.mesh.position;
+    const width = img.height * img.aspect;
+    const height = img.height;
+    const rot = img.mesh.rotation.z;
 
-    if (this.hovered) {
-      const image = this.objects.get(this.hovered);
-      if (image) {
-        image.isHovered = true;
-        this.gizmo.setVisible(true);
-        this.gizmo.update(image);
-      }
-    }
-  }
+    const hw = width / 2;
+    const hh = height / 2;
 
-  setVisible(visible: boolean) {
-    super.setVisible(visible);
-    this.gizmo.setVisible(visible);
+    const cos = Math.cos(rot);
+    const sin = Math.sin(rot);
+
+    const rotate = (x: number, y: number) => {
+      return {
+        x: pos.x + x * cos - y * sin,
+        y: pos.y + x * sin + y * cos,
+      };
+    };
+
+    return {
+      topRight: rotate(hw, hh),
+      bottomRight: rotate(hw, -hh),
+      topLeft: rotate(-hw, hh),
+      bottomLeft: rotate(-hw, -hh),
+      center: { x: pos.x, y: pos.y },
+    };
   }
 
   addImage(image: ImageData) {
-    this.gizmo.update(null);
     const loader = new THREE.TextureLoader();
 
     loader.load(image.url, (texture) => {
@@ -164,7 +132,6 @@ export class ImageRenderer extends BaseRenderer<ImageRenderData, ImageData> {
     });
     //Set Height
     img.mesh.rotation.z = data.rotation;
-    this.gizmo.update(img);
     this.updateScale(this.zoom);
   }
 
@@ -177,23 +144,9 @@ export class ImageRenderer extends BaseRenderer<ImageRenderData, ImageData> {
     mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     raycaster.setFromCamera(mouse, this.sceneManager.camera);
 
-    const handleHits = raycaster.intersectObjects(
-      this.gizmo.getHitboxes(),
-      true,
-    );
-
-    if (handleHits.length) {
-      this.gizmo.setVisible(true);
-      this.gizmo.setHovered(handleHits[0].object.parent?.userData.type);
-      this.setHovered(this.gizmo.parent!.data.id);
-      return true;
-    }
-    this.gizmo.setHovered(null);
-
     const intersects = raycaster.intersectObjects(this.getHitboxes(), false);
     const hoveredImageId = this.getFirstHoverableImage(intersects);
     if (hoveredImageId) {
-      this.gizmo.setVisible(true);
       this.setHovered(hoveredImageId);
       return true;
     }

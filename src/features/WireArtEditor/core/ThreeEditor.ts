@@ -1,23 +1,29 @@
 import { PointRenderer } from "../objects/Renderer/PointRenderer";
 import { LineRenderer } from "../objects/Renderer/LineRenderer";
+import { ImageRenderer } from "../objects/Renderer/ImageRenderer";
+import { GridRenderer } from "../objects/Renderer/GridRenderer";
+import { GizmoRenderer } from "../objects/Renderer/GizmoRenderer";
+
+
 import { SceneManager } from "../objects/SceneManager";
 import { ToolManager } from "../tools/ToolManager";
 import { CursorManager } from "../objects/CursorManager";
+import { CommandManager } from "../commands/CommandManager";
 
 import { DataStorage } from "../core/DataStorage";
+import { SVGExporter } from "../core/SVGExporter";
+
 import { SceneModel } from "../models/SceneModel";
 import { type Project } from "../models/Project";
-import { CommandManager } from "../commands/CommandManager";
-import { DeletePointCommand } from "../commands/DeletePointCommand";
-import { DeleteLineCommand } from "../commands/DeleteLineCommand";
-import { SVGExporter } from "../core/SVGExporter";
 import type { Settings } from "../models/Settings";
+
 import { AddImageCommand } from "../commands/AddImageCommand";
-import { generateId } from "../utils/id";
 import { DeleteImageCommand } from "../commands/DeleteImageCommand";
-import { ImageRenderer } from "../objects/Renderer/ImageRenderer";
+import { DeleteLineCommand } from "../commands/DeleteLineCommand";
+import { DeletePointCommand } from "../commands/DeletePointCommand";
+
+import { generateId } from "../utils/id";
 import type { Command } from "../commands/Command";
-import { GridRenderer } from "../objects/Renderer/GridRenderer";
 import { EditorStore } from "./EditorStore";
 import type { ToolType } from "../tools/Tool";
 import { OrthographicCamera } from "three";
@@ -27,6 +33,7 @@ export class ThreeEditor {
   private lineRenderer: LineRenderer;
   private imageRenderer: ImageRenderer;
   private gridRenderer: GridRenderer;
+  private gizmoRenderer: GizmoRenderer;
   public sceneManager: SceneManager;
   private cursorManager: CursorManager;
 
@@ -55,6 +62,7 @@ export class ThreeEditor {
     this.lineRenderer = new LineRenderer(this.sceneManager, this.pointRenderer);
     this.imageRenderer = new ImageRenderer(this.sceneManager);
     this.gridRenderer = new GridRenderer(this.sceneManager);
+    this.gizmoRenderer = new GizmoRenderer(this.sceneManager);
 
     const toolContext = {
       executeCommand: (command: Command) => this.executeCommand(command),
@@ -64,6 +72,7 @@ export class ThreeEditor {
       gridRenderer: this.gridRenderer,
       sceneManager: this.sceneManager,
       cursorManager: this.cursorManager,
+      gizmoRenderer: this.gizmoRenderer,
       model: this.model,
     };
     this.toolManager = new ToolManager(
@@ -196,6 +205,7 @@ export class ThreeEditor {
           this.lineRenderer.updateScale(camera.zoom);
           this.imageRenderer.updateScale(camera.zoom);
           this.gridRenderer.updateScale(camera.zoom);
+          this.gizmoRenderer.updateScale(camera.zoom);
           lastZoom = camera.zoom;
         }
       }

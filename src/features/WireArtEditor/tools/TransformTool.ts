@@ -13,6 +13,7 @@ export class TransformTool implements Tool {
   private worldPos = new THREE.Vector3();
 
   private selectedImage: string | null = null;
+  private lastImage: string | null = null;
 
   private startData: ImageData | null = null;
   private currentData: ImageData = {
@@ -33,21 +34,48 @@ export class TransformTool implements Tool {
     this.context = context;
   }
 
+  onClick(): void {
+    this.context.gizmoRenderer.setVisible(true);
+    this.context.gizmoRenderer.addGizmo({
+      id: "1",
+      type: "resize",
+      pos: new THREE.Vector3(0, 0, 0),
+    });
+    this.context.gizmoRenderer.addGizmo({
+      id: "2",
+      type: "resize",
+      pos: new THREE.Vector3(0, 0, 0),
+    });
+    this.context.gizmoRenderer.addGizmo({
+      id: "3",
+      type: "resize",
+      pos: new THREE.Vector3(0, 0, 0),
+    });
+    this.context.gizmoRenderer.addGizmo({
+      id: "4",
+      type: "resize",
+      pos: new THREE.Vector3(0, 0, 0),
+    });
+    this.context.gizmoRenderer.addGizmo({
+      id: "5",
+      type: "rotate",
+      pos: new THREE.Vector3(0, 0, 0),
+    });
+  }
+
   //check for Hit with existing Image
   onPointerDown(event: PointerEvent) {
     this.handleHover(event);
-    if (event.button != 0) return; //only move on left click
+    if (event.button != 0 || !this.lastImage) return; //only move on left click
     this.worldPos.copy(this.context.sceneManager.getWorldPosition(event));
 
-    const handle = this.context.imageRenderer.getHoveredHandle();
-    const hovered = this.context.imageRenderer.getHovered();
-    if (!hovered) return;
-    const data = this.context.model.images.get(hovered);
-
+    const handle = this.context.gizmoRenderer.getHovered();
+    const data = this.context.model.images.get(this.lastImage);
     if (!data) return;
 
     if (handle) {
-      if (handle == "rotate") {
+      const type = this.context.gizmoRenderer.getType(handle);
+      if (type == "rotate") {
         this.dragMode = "rotate";
       } else {
         this.dragMode = "resize";
@@ -56,7 +84,7 @@ export class TransformTool implements Tool {
       this.dragMode = "move";
     }
 
-    this.selectedImage = hovered;
+    this.selectedImage = this.lastImage;
     this.startData = data;
     this.currentData = { ...this.startData };
 
@@ -72,6 +100,46 @@ export class TransformTool implements Tool {
 
   onPointerMove = (event: PointerEvent) => {
     if (this.dragMode == "none") this.handleHover(event);
+    const handle = this.context.gizmoRenderer.getHovered();
+    const hoveredImage = this.context.imageRenderer.getHovered();
+    if (hoveredImage || handle) {
+      this.context.gizmoRenderer.setVisible(true);
+      if (!this.lastImage) return;
+      const rect = this.context.imageRenderer.getBoundingRect(this.lastImage);
+      if (!rect) return;
+      this.context.gizmoRenderer.updateGizmo({
+        id: "1",
+        type: "resize",
+        pos: new THREE.Vector3(rect.topRight.x, rect.topRight.y, 0),
+      });
+      this.context.gizmoRenderer.updateGizmo({
+        id: "2",
+        type: "resize",
+        pos: new THREE.Vector3(rect.bottomRight.x, rect.bottomRight.y, 0),
+      });
+      this.context.gizmoRenderer.updateGizmo({
+        id: "3",
+        type: "resize",
+        pos: new THREE.Vector3(rect.bottomLeft.x, rect.bottomLeft.y, 0),
+      });
+      this.context.gizmoRenderer.updateGizmo({
+        id: "4",
+        type: "resize",
+        pos: new THREE.Vector3(rect.topLeft.x, rect.topLeft.y, 0),
+      });
+      this.context.gizmoRenderer.updateGizmo({
+        id: "5",
+        type: "rotate",
+        pos: new THREE.Vector3(
+          rect.topLeft.x + (rect.topRight.x - rect.topLeft.x) / 2,
+          rect.topLeft.y + (rect.topRight.y - rect.topLeft.y) / 2,
+          0,
+        ),
+      });
+    } else {
+      this.context.gizmoRenderer.setVisible(handle ? true : false);
+    }
+
     if (!this.dragging || !this.selectedImage || !this.startData) return;
     this.worldPos.copy(this.context.sceneManager.getWorldPosition(event));
 
@@ -140,13 +208,30 @@ export class TransformTool implements Tool {
   //Enable Hover only for Images
   handleHover(event: PointerEvent) {
     this.context.imageRenderer.setHovered(null);
+    this.context.gizmoRenderer.setHovered(null);
+
     this.context.cursorManager.setCursor(
       this.selectedImage ? "grabbing" : "default",
     );
 
-    if (this.context.imageRenderer.handleHover(event)) {
+    if (this.context.gizmoRenderer.handleHover(event)) {
       this.context.cursorManager.setCursor("pointer");
       return;
     }
+    if (this.context.imageRenderer.handleHover(event)) {
+      this.context.cursorManager.setCursor("pointer");
+      const hovered = this.context.imageRenderer.getHovered();
+      this.lastImage = hovered;
+      return;
+    }
+  }
+
+  dispose(): void {
+    this.context.gizmoRenderer.remove("1");
+    this.context.gizmoRenderer.remove("2");
+    this.context.gizmoRenderer.remove("3");
+    this.context.gizmoRenderer.remove("4");
+    this.context.gizmoRenderer.remove("5");
+    this.context.gizmoRenderer.setVisible(false);
   }
 }

@@ -7,10 +7,6 @@ import { computeBoundingRect } from "../utils/math";
 export class ResizeTool implements Tool {
   private context: ToolContext;
 
-  private raycaster = new THREE.Raycaster();
-  private mouse = new THREE.Vector2();
-
-  private handle: THREE.Mesh;
   private isDragging = false;
 
   private center = new THREE.Vector3(0, 0, 0);
@@ -22,13 +18,6 @@ export class ResizeTool implements Tool {
   constructor(context: ToolContext) {
     this.context = context;
 
-    // --- Create visible handle ---
-    const geometry = new THREE.SphereGeometry(0.2, 16, 16);
-    const material = new THREE.MeshBasicMaterial({ color: 0xffaa00 });
-    this.handle = new THREE.Mesh(geometry, material);
-
-    this.context.sceneManager.scene.add(this.handle);
-
     this.computeBoundingRect();
     this.updateHandlePosition();
   }
@@ -36,14 +25,23 @@ export class ResizeTool implements Tool {
   onClick() {
     this.currentScale = 1;
     this.computeBoundingRect();
-    this.context.sceneManager.scene.add(this.handle);
+    console.log(this.rect);
+    this.context.gizmoRenderer.setVisible(true);
+    this.context.gizmoRenderer.addGizmo({
+      id: "0",
+      type: "resize",
+      pos: new THREE.Vector3(0, 0, 0),
+    });
     this.updateHandlePosition();
+
   }
 
   onPointerDown(event: PointerEvent): void {
     if (!event.isPrimary || event.button !== 0) return;
 
-    if (this.isHoveringHandle(event)) {
+    const hovered = this.context.gizmoRenderer.getHovered();
+    console.log(hovered);
+    if (hovered) {
       this.isDragging = true;
 
       this.computeBoundingRect();
@@ -70,6 +68,7 @@ export class ResizeTool implements Tool {
   }
 
   onPointerMove(event: PointerEvent) {
+    this.handleHover(event);
     if (!event.isPrimary) return;
     if (this.isDragging) {
       const worldPos = this.context.sceneManager.getWorldPosition(event);
@@ -84,38 +83,27 @@ export class ResizeTool implements Tool {
 
       this.applyScale(scale);
       this.updateHandlePosition();
-    } else {
-      this.updateHover(event);
     }
   }
 
   private updateHandlePosition() {
-    const halfWidth = (this.rect.right - this.rect.left) / 2;
-    const halfHeight = (this.rect.top - this.rect.bottom) / 2;
+    const pos = new THREE.Vector3(this.rect.right, this.rect.top, 0);
+    const dir = new THREE.Vector3().subVectors(pos, this.center);
+    dir.multiplyScalar(this.currentScale);
 
-    this.handle.position.copy(new THREE.Vector3(halfWidth, halfHeight, 0).multiplyScalar(this.currentScale));
+    pos.copy(this.center).add(dir);
+    console.log(pos);
+
+    this.context.gizmoRenderer.updateGizmo({
+      id: "0",
+      type: "resize",
+      pos: pos,
+    });
   }
 
-  private isHoveringHandle(event: PointerEvent): boolean {
-    const rect = this.context.sceneManager.dom.getBoundingClientRect();
-
-    this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-    this.raycaster.setFromCamera(this.mouse, this.context.sceneManager.camera);
-    const hits = this.raycaster.intersectObject(this.handle);
-
-    return hits.length > 0;
-  }
-
-  private updateHover(event: PointerEvent) {
-    if (this.isHoveringHandle(event)) {
-      this.context.cursorManager.setCursor("pointer");
-      (this.handle.material as THREE.MeshBasicMaterial).color.set(0xffff00);
-    } else {
-      this.context.cursorManager.setCursor("default");
-      (this.handle.material as THREE.MeshBasicMaterial).color.set(0xffaa00);
-    }
+  private handleHover(event: PointerEvent) {
+    this.context.gizmoRenderer.setHovered(null);
+    this.context.gizmoRenderer.handleHover(event);
   }
 
   private computeBoundingRect() {
@@ -140,6 +128,7 @@ export class ResizeTool implements Tool {
   }
 
   dispose(): void {
-    this.context.sceneManager.scene.remove(this.handle);
+    this.context.gizmoRenderer.remove("0");
+    this.context.gizmoRenderer.setVisible(false);
   }
 }
