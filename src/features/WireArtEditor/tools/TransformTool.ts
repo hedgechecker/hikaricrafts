@@ -214,6 +214,10 @@ export class TransformTool implements Tool {
     });
   }
 
+  unattach(){
+
+  }
+
   //Enable Hover only for Images
   handleHover(event: PointerEvent) {
     this.context.cursorManager.setCursor(
@@ -222,12 +226,14 @@ export class TransformTool implements Tool {
 
     if (this.context.gizmoRenderer.handleHover(event)) {
       this.context.imageRenderer.setHovered(null);
+      this.context.gizmoRenderer.setVisible(true);
       this.context.cursorManager.setCursor("pointer");
       return;
     }
     if (this.context.imageRenderer.handleHover(event)) {
       this.context.cursorManager.setCursor("pointer");
       this.context.gizmoRenderer.setHovered(null);
+      this.context.gizmoRenderer.setVisible(true);
       const img = this.context.imageRenderer.getHovered();
       if (img) {
         const rect = this.context.imageRenderer.getBoundingRect(img);

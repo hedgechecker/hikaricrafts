@@ -27,21 +27,31 @@ export class DragTool implements Tool {
   }
 
   onPointerDown(event: PointerEvent) {
-    this.handleHover(event);
     if (event.button !== 0) return;
 
-    if (this.activeTool === "point") {
+    // Decide target ONCE
+    if (this.context.pointRenderer.handleHover(event)) {
+      this.activeTool = "point";
+      this.context.imageRenderer.setHovered(null);
       this.moveTool.onPointerDown(event);
       return;
     }
 
-    if (this.activeTool === "image") {
+    if (
+      this.context.imageRenderer.handleHover(event) ||
+      this.context.gizmoRenderer.handleHover(event)
+    ) {
+      this.activeTool = "image";
+      this.context.pointRenderer.setHovered(null);
       this.transformTool.onPointerDown(event);
       return;
     }
+
+    this.activeTool = "none";
   }
 
   onPointerMove(event: PointerEvent) {
+    this.handleHover(event);
     if (this.activeTool === "point") {
       this.moveTool.onPointerMove(event);
       return;
@@ -51,9 +61,6 @@ export class DragTool implements Tool {
       this.transformTool.onPointerMove(event);
       return;
     }
-
-    // Hover behavior when nothing is active
-    this.handleHover(event);
   }
 
   onPointerUp(event: PointerEvent) {
@@ -68,27 +75,25 @@ export class DragTool implements Tool {
     }
 
     this.activeTool = "none";
+    // this.context.gizmoRenderer.setVisible(false);
   }
 
   handleHover(event: PointerEvent) {
-    // Prefer point hover
-
     if (this.context.pointRenderer.handleHover(event)) {
-      this.activeTool = "point";
       this.context.imageRenderer.setHovered(null);
-
+      this.context.gizmoRenderer.setVisible(false);
       return;
     }
+
     if (
       this.context.imageRenderer.handleHover(event) ||
       this.context.gizmoRenderer.handleHover(event)
     ) {
       this.context.pointRenderer.setHovered(null);
+      //this.context.gizmoRenderer.setVisible(true);
 
-      this.activeTool = "image";
       return;
     }
-    this.activeTool = "none";
   }
 
   dispose(): void {

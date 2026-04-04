@@ -207,7 +207,7 @@ export class PointRenderer extends BaseRenderer<PointRenderData, PointData> {
   handleHover(event: MouseEvent): boolean {
     const worldPos = this.sceneManager.getWorldPosition(event);
     let hoveredPointId = null;
-    const thres = 0.5 / this.zoom;
+    const thres = 0.1 / this.zoom;
     for (const object of this.objects) {
       const pos = object[1].mesh.position;
       if (

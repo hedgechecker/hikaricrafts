@@ -154,6 +154,7 @@ export class SceneManager {
   update() {
     if (this.controller instanceof OrbitControls) {
       this.controller.update();
+      this.render();
     }
     this.camera.updateProjectionMatrix();
   }
