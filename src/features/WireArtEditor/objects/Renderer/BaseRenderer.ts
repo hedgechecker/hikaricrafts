@@ -1,5 +1,5 @@
-import * as THREE from 'three';
-import type { SceneManager } from '../SceneManager';
+import * as THREE from "three";
+import type { SceneManager } from "../SceneManager";
 
 export interface RenderData {
   mesh: THREE.Object3D;
@@ -20,17 +20,20 @@ export abstract class BaseRenderer<T extends RenderData, TInput> {
   protected visible = true;
 
   protected colorInValid = "#ff0000";
-  
+
+  protected mouse = new THREE.Vector2();
+  protected raycaster = new THREE.Raycaster();
 
   constructor(sceneManager: SceneManager) {
     this.sceneManager = sceneManager;
   }
 
-  abstract updateScale(zoom: number): void;
+  abstract updateScale(zoom: number, id?:string): void;
   protected abstract getId(data: TInput): string;
   protected abstract addFromData(data: TInput): void;
   protected abstract updateFromData(data: TInput): void;
 
+  
   has(id: string) {
     return this.objects.has(id);
   }
@@ -42,7 +45,7 @@ export abstract class BaseRenderer<T extends RenderData, TInput> {
   getHitboxes(): THREE.Object3D[] {
     let arr: THREE.Object3D<THREE.Object3DEventMap>[] = [];
     this.objects.forEach((object) => {
-      arr.push(object.mesh.getObjectByName('hitbox')!);
+      arr.push(object.mesh.getObjectByName("hitbox")!);
     });
     return arr;
   }
@@ -54,9 +57,11 @@ export abstract class BaseRenderer<T extends RenderData, TInput> {
   }
 
   setHovered(id: string | null) {
+    if(id == this.hovered)return;
     if (this.hovered) {
       const obj = this.objects.get(this.hovered);
       if (obj) obj.isHovered = false;
+      this.updateScale(this.zoom, this.hovered);
     }
 
     this.hovered = id;
@@ -64,9 +69,10 @@ export abstract class BaseRenderer<T extends RenderData, TInput> {
     if (this.hovered) {
       const obj = this.objects.get(this.hovered);
       if (obj) obj.isHovered = true;
+      this.updateScale(this.zoom, this.hovered);
     }
-
-    this.updateScale(this.zoom);
+    this.sceneManager.render();
+    //this.updateScale(this.zoom);
   }
 
   setSelected(ids: string[]) {
@@ -81,6 +87,7 @@ export abstract class BaseRenderer<T extends RenderData, TInput> {
       const obj = this.objects.get(id);
       if (obj) obj.isSelected = true;
     });
+    this.sceneManager.render();
   }
 
   setInvalid(ids: string[]) {
@@ -96,6 +103,7 @@ export abstract class BaseRenderer<T extends RenderData, TInput> {
       if (obj) obj.isInValid = true;
     });
     this.updateScale(this.zoom);
+    this.sceneManager.render();
   }
 
   remove(id: string) {
@@ -116,18 +124,21 @@ export abstract class BaseRenderer<T extends RenderData, TInput> {
     });
 
     this.objects.delete(id);
+    this.sceneManager.render();
   }
 
-  getVisible(){
+  getVisible() {
     return this.visible;
   }
 
   setVisible(visible: boolean) {
+    if(visible == this.visible)return;
     this.objects.forEach((obj) => {
       obj.mesh.visible = visible;
     });
 
     this.visible = visible;
+    this.sceneManager.render();
   }
 
   sync(data: TInput[]) {

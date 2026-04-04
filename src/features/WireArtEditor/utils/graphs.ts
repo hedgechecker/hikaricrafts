@@ -275,7 +275,7 @@ export function findPoygons(
  return result;
 }
 
-function polygonArea(poly: Vertex[]) {
+export function polygonArea(poly: Vertex[]) {
   let area = 0;
 
   for (let i = 0; i < poly.length; i++) {

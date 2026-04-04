@@ -1,8 +1,8 @@
-import type { Tool, ToolContext } from './Tool';
-import { MoveTool } from './MoveTool';
-import { TransformTool } from './TransformTool';
+import type { Tool, ToolContext } from "./Tool";
+import { MoveTool } from "./MoveTool";
+import { TransformTool } from "./TransformTool";
 
-type ActiveTool = 'none' | 'point' | 'image';
+type ActiveTool = "none" | "point" | "image";
 
 /**
  * Merges the MoveTool and TransformTool to handle the movement of both Images and Points
@@ -13,7 +13,7 @@ export class DragTool implements Tool {
   private moveTool: MoveTool;
   private transformTool: TransformTool;
 
-  private activeTool: ActiveTool = 'none';
+  private activeTool: ActiveTool = "none";
 
   constructor(context: ToolContext) {
     this.context = context;
@@ -42,12 +42,12 @@ export class DragTool implements Tool {
   }
 
   onPointerMove(event: PointerEvent) {
-    if (this.activeTool === 'point') {
+    if (this.activeTool === "point") {
       this.moveTool.onPointerMove(event);
       return;
     }
 
-    if (this.activeTool === 'image') {
+    if (this.activeTool === "image") {
       this.transformTool.onPointerMove(event);
       return;
     }
@@ -59,29 +59,34 @@ export class DragTool implements Tool {
   onPointerUp(event: PointerEvent) {
     this.context.sceneManager.setPanEnabled(true);
 
-    if (this.activeTool === 'point') {
+    if (this.activeTool === "point") {
       this.moveTool.onPointerUp();
     }
 
-    if (this.activeTool === 'image') {
+    if (this.activeTool === "image") {
       this.transformTool.onPointerUp(event);
     }
 
-    this.activeTool = 'none';
+    this.activeTool = "none";
   }
 
   handleHover(event: PointerEvent) {
     // Prefer point hover
-    this.context.pointRenderer.setHovered(null);
-    this.context.imageRenderer.setHovered(null);
 
     if (this.context.pointRenderer.handleHover(event)) {
-     this.activeTool = "point";
-     return; 
+      this.activeTool = "point";
+      this.context.imageRenderer.setHovered(null);
+
+      return;
     }
-    if (this.context.imageRenderer.handleHover(event) || this.context.gizmoRenderer.handleHover(event)) {
-     this.activeTool = "image";
-     return; 
+    if (
+      this.context.imageRenderer.handleHover(event) ||
+      this.context.gizmoRenderer.handleHover(event)
+    ) {
+      this.context.pointRenderer.setHovered(null);
+
+      this.activeTool = "image";
+      return;
     }
     this.activeTool = "none";
   }

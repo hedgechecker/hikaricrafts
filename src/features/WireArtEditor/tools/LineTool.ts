@@ -301,7 +301,11 @@ export class LineTool implements Tool {
   private getBestSnappingCandidate(worldPos: THREE.Vector3): {
     pointId: string | null;
     line: LineData | null;
-    intersection: { point: THREE.Vector3; line1Id: string; line2Id: string } | null;
+    intersection: {
+      point: THREE.Vector3;
+      line1Id: string;
+      line2Id: string;
+    } | null;
     position: THREE.Vector3 | null;
   } {
     //1 Snap to User Input Values
@@ -457,20 +461,25 @@ export class LineTool implements Tool {
 
   //Enable Hover for Points, Lines and Grid
   handleHover(event: PointerEvent) {
-    this.context.pointRenderer.setHovered(null);
-    this.context.lineRenderer.setHovered(null);
-    this.context.gridRenderer.setHovered(null);
     this.context.cursorManager.setCursor("default");
 
     if (this.context.pointRenderer.handleHover(event)) {
       this.context.cursorManager.setCursor("pointer");
+      this.context.lineRenderer.setHovered(null);
+      this.context.gridRenderer.setHovered(null);
+
       return;
     }
     if (this.context.lineRenderer.handleHover(event)) {
+      this.context.pointRenderer.setHovered(null);
       this.context.cursorManager.setCursor("pointer");
+      this.context.gridRenderer.setHovered(null);
+
       return;
     }
     if (this.context.gridRenderer.handleHover(event)) {
+      this.context.pointRenderer.setHovered(null);
+      this.context.lineRenderer.setHovered(null);
       this.context.cursorManager.setCursor("crosshair");
       return;
     }

@@ -164,20 +164,23 @@ export class PointTool implements Tool {
 
   //Enable Hover for Points, Lines and Grid
   handleHover(event: PointerEvent) {
-    this.context.pointRenderer.setHovered(null);
-    this.context.lineRenderer.setHovered(null);
-    this.context.gridRenderer.setHovered(null);
     this.context.cursorManager.setCursor("default");
 
     if (this.context.pointRenderer.handleHover(event)) {
       this.context.cursorManager.setCursor("pointer");
+      this.context.lineRenderer.setHovered(null);
+      this.context.gridRenderer.setHovered(null);
       return;
     }
     if (this.context.lineRenderer.handleHover(event)) {
+      this.context.pointRenderer.setHovered(null);
       this.context.cursorManager.setCursor("pointer");
+      this.context.gridRenderer.setHovered(null);
       return;
     }
     if (this.context.gridRenderer.handleHover(event)) {
+      this.context.pointRenderer.setHovered(null);
+      this.context.lineRenderer.setHovered(null);
       this.context.cursorManager.setCursor("crosshair");
       return;
     }

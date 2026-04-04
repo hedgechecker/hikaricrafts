@@ -117,16 +117,11 @@ export class GridRenderer extends BaseRenderer<GridRenderData, number> {
   /* ---------------- Grid Utility ---------------- */
 
   getSubdivisionDivisions() {
-
-    let cameraZoom = 10;
-    if(this.sceneManager.camera instanceof THREE.OrthographicCamera){
-      cameraZoom = this.sceneManager.camera.zoom;
-    }
-    if (cameraZoom > 5) return 2000;
-    if (cameraZoom > 1.6) return 400;
-    if (cameraZoom > 0.8) return 200;
-    if (cameraZoom > 0.2) return 80;
-    if (cameraZoom > 0.1) return 40;
+    if (this.zoom > 5) return 2000;
+    if (this.zoom > 1.6) return 400;
+    if (this.zoom > 0.8) return 200;
+    if (this.zoom > 0.2) return 80;
+    if (this.zoom > 0.1) return 40;
 
     return 20;
   }

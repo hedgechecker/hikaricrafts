@@ -112,6 +112,8 @@ export class ImageRenderer extends BaseRenderer<ImageRenderData, ImageData> {
       this.sceneManager.scene.add(data.mesh);
       this.updateImage(image);
     });
+    this.sceneManager.render();
+
   }
 
   updateImage(data: ImageData) {
@@ -133,6 +135,7 @@ export class ImageRenderer extends BaseRenderer<ImageRenderData, ImageData> {
     //Set Height
     img.mesh.rotation.z = data.rotation;
     this.updateScale(this.zoom);
+    this.sceneManager.render();
   }
 
   handleHover(event: MouseEvent): boolean {
@@ -146,8 +149,9 @@ export class ImageRenderer extends BaseRenderer<ImageRenderData, ImageData> {
 
     const intersects = raycaster.intersectObjects(this.getHitboxes(), false);
     const hoveredImageId = this.getFirstHoverableImage(intersects);
+    this.setHovered(hoveredImageId);
+
     if (hoveredImageId) {
-      this.setHovered(hoveredImageId);
       return true;
     }
 

@@ -27,15 +27,42 @@ export class PointRenderer extends BaseRenderer<PointRenderData, PointData> {
     this.setPosition(data.id, new THREE.Vector3(data.x, data.y, data.z));
   }
 
-  updateScale(zoom: number) {
+  updateScale(zoom: number, id?: string) {
     this.zoom = zoom;
     const size = this.baseThickness / zoom;
+
+    if (id) {
+      const object = this.objects.get(id);
+      if (!object) return;
+      const isHovered = object.isHovered;
+      const isSelected = object.isSelected;
+      const isInValid = object.isInValid;
+
+      object.mesh.visible =
+        this.visible || isHovered || isSelected || isInValid;
+
+      object.mesh.children.forEach((child) => {
+        if ((isHovered || isSelected) && child.name != "hitbox") {
+          child.scale.set(
+            size * this.hoverThickness,
+            size * this.hoverThickness,
+            1,
+          );
+          child.visible = true;
+        } else {
+          child.scale.set(size, size, 1);
+        }
+      });
+      return;
+    }
+
     this.objects.forEach((object, id) => {
       const isHovered = object.isHovered;
       const isSelected = object.isSelected;
       const isInValid = object.isInValid;
 
-      object.mesh.visible = this.visible || isHovered || isSelected || isInValid;
+      object.mesh.visible =
+        this.visible || isHovered || isSelected || isInValid;
 
       object.mesh.children.forEach((child) => {
         if ((isHovered || isSelected) && child.name != "hitbox") {
@@ -115,6 +142,7 @@ export class PointRenderer extends BaseRenderer<PointRenderData, PointData> {
       isHovered: false,
       isInValid: false,
     });
+    this.sceneManager.render();
     return group;
   }
 
@@ -122,6 +150,7 @@ export class PointRenderer extends BaseRenderer<PointRenderData, PointData> {
     const p = this.objects.get(id);
     if (!p) return;
     p.mesh.position.copy(pos);
+    this.sceneManager.render();
   }
 
   getWorldPosition(id: string): THREE.Vector3 | null {
@@ -176,19 +205,33 @@ export class PointRenderer extends BaseRenderer<PointRenderData, PointData> {
   }
 
   handleHover(event: MouseEvent): boolean {
-    const rect = this.sceneManager.dom.getBoundingClientRect();
-    let mouse = new THREE.Vector2();
-    let raycaster = new THREE.Raycaster();
-    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-    raycaster.setFromCamera(mouse, this.sceneManager.camera);
-
-    const intersects = raycaster.intersectObjects(this.getHitboxes(), false);
-    const hoveredPointId = this.getFirstHoverablePoint(intersects);
-    if (hoveredPointId) {
-      this.setHovered(hoveredPointId);
-      return true;
+    const worldPos = this.sceneManager.getWorldPosition(event);
+    let hoveredPointId = null;
+    const thres = 0.5 / this.zoom;
+    for (const object of this.objects) {
+      const pos = object[1].mesh.position;
+      if (
+        Math.pow(pos.x - worldPos.x, 2) + Math.pow(pos.y - worldPos.y, 2) <
+        thres
+      ) {
+        hoveredPointId = object[0];
+        this.setHovered(hoveredPointId);
+        return true;
+      }
     }
     return false;
+    // const rect = this.sceneManager.dom.getBoundingClientRect();
+
+    // this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    // this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    // this.raycaster.setFromCamera(this.mouse, this.sceneManager.camera);
+
+    // const intersects = this.raycaster.intersectObjects(this.getHitboxes(), false);
+    // const hoveredPointId = this.getFirstHoverablePoint(intersects);
+    // if (hoveredPointId) {
+    //   this.setHovered(hoveredPointId);
+    //   return true;
+    // }
+    // return false;
   }
 }

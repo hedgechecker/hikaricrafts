@@ -25,7 +25,6 @@ export class ResizeTool implements Tool {
   onClick() {
     this.currentScale = 1;
     this.computeBoundingRect();
-    console.log(this.rect);
     this.context.gizmoRenderer.setVisible(true);
     this.context.gizmoRenderer.addGizmo({
       id: "0",
@@ -33,16 +32,16 @@ export class ResizeTool implements Tool {
       pos: new THREE.Vector3(0, 0, 0),
     });
     this.updateHandlePosition();
-
   }
 
   onPointerDown(event: PointerEvent): void {
+    this.handleHover(event);
     if (!event.isPrimary || event.button !== 0) return;
 
     const hovered = this.context.gizmoRenderer.getHovered();
-    console.log(hovered);
     if (hovered) {
       this.isDragging = true;
+      this.context.sceneManager.setPanEnabled(false);
 
       this.computeBoundingRect();
 
@@ -55,6 +54,7 @@ export class ResizeTool implements Tool {
   onPointerUp(event: PointerEvent): void {
     if (!event.isPrimary || event.button !== 0) return;
     this.isDragging = false;
+    this.context.sceneManager.setPanEnabled(true);
     const points = this.context.model.points;
     const commands = [];
     for (const p of points) {
@@ -92,18 +92,12 @@ export class ResizeTool implements Tool {
     dir.multiplyScalar(this.currentScale);
 
     pos.copy(this.center).add(dir);
-    console.log(pos);
 
     this.context.gizmoRenderer.updateGizmo({
       id: "0",
       type: "resize",
       pos: pos,
     });
-  }
-
-  private handleHover(event: PointerEvent) {
-    this.context.gizmoRenderer.setHovered(null);
-    this.context.gizmoRenderer.handleHover(event);
   }
 
   private computeBoundingRect() {
@@ -130,5 +124,9 @@ export class ResizeTool implements Tool {
   dispose(): void {
     this.context.gizmoRenderer.remove("0");
     this.context.gizmoRenderer.setVisible(false);
+  }
+
+  private handleHover(event: PointerEvent) {
+    this.context.gizmoRenderer.handleHover(event);
   }
 }

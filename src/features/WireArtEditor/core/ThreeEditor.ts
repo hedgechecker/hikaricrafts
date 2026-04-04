@@ -4,7 +4,6 @@ import { ImageRenderer } from "../objects/Renderer/ImageRenderer";
 import { GridRenderer } from "../objects/Renderer/GridRenderer";
 import { GizmoRenderer } from "../objects/Renderer/GizmoRenderer";
 
-
 import { SceneManager } from "../objects/SceneManager";
 import { ToolManager } from "../tools/ToolManager";
 import { CursorManager } from "../objects/CursorManager";
@@ -93,7 +92,9 @@ export class ThreeEditor {
     this.pointRenderer.sync([...this.model.points.values()]);
     this.lineRenderer.sync([...this.model.lines.values()]);
     this.imageRenderer.sync([...this.model.images.values()]);
+    //this.toolManager.setActiveTool(this.store.getState().tool);
     this.saveLocal();
+    this.sceneManager.render();
   }
 
   async loadGlobal(id: number) {
@@ -107,8 +108,8 @@ export class ThreeEditor {
     this.model.images.clear();
     this.hasChanges = false;
 
-    this.toolManager.setActiveTool("line");
-    this.store.setTool("line");
+    this.toolManager.setActiveTool("move");
+    this.store.setTool("move");
 
     if (!data) {
       const project = this.storage.getEmptyProject();
@@ -194,21 +195,19 @@ export class ThreeEditor {
 
   start() {
     let lastZoom = 0;
+    const { camera } = this.sceneManager;
     const animate = () => {
       this.sceneManager.update();
-      const { renderer, scene, camera } = this.sceneManager;
 
-      renderer.render(scene, camera);
-      if (camera instanceof OrthographicCamera) {
-        if (camera.zoom != lastZoom) {
-          this.pointRenderer.updateScale(camera.zoom);
-          this.lineRenderer.updateScale(camera.zoom);
-          this.imageRenderer.updateScale(camera.zoom);
-          this.gridRenderer.updateScale(camera.zoom);
-          this.gizmoRenderer.updateScale(camera.zoom);
-          lastZoom = camera.zoom;
-        }
+      if (camera instanceof OrthographicCamera && camera.zoom != lastZoom) {
+        this.pointRenderer.updateScale(camera.zoom);
+        this.lineRenderer.updateScale(camera.zoom);
+        this.imageRenderer.updateScale(camera.zoom);
+        this.gridRenderer.updateScale(camera.zoom);
+        this.gizmoRenderer.updateScale(camera.zoom);
+        lastZoom = camera.zoom;
       }
+
       this.animationFrameId = requestAnimationFrame(animate);
     };
     animate();

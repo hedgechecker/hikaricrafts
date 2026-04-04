@@ -17,6 +17,7 @@ import {
   insetPolygon,
   insetPolygons,
   isConcave,
+  polygonArea,
   type Vertex,
 } from "../utils/graphs";
 import { generateId } from "../utils/id";
@@ -53,6 +54,10 @@ export class VerifyTool implements Tool {
   }
 
   async onClick() {
+    this.wasGridVisible = this.context.gridRenderer.getVisible();
+    this.wasImageVisible = this.context.imageRenderer.getVisible();
+    this.wasLinesVisible = this.context.lineRenderer.getVisible();
+    this.wasPointsVisible = this.context.pointRenderer.getVisible();
     this.clearPreview();
     const scene = this.context.sceneManager.scene;
     this.points = this.context.model.points;
@@ -120,10 +125,48 @@ export class VerifyTool implements Tool {
       }
     }
 
-    //3 check polygons
+    //3 check polygon Area
     let polygons = findPoygons(this.points, this.lines);
     let invalidPolygons: Vertex[][] = [];
     let invalidVertecies: string[] = [];
+
+    polygons.forEach((polygon) => {
+      if (polygonArea(polygon) < 1) { //1cm²
+        invalidPolygons.push(polygon);
+        polygon.forEach((vertex) => {
+          invalidVertecies.push(vertex.id);
+        });
+      }
+    });
+
+    if (invalidPolygons.length > 0) {
+      const result = await showDialog({
+        type: "confirm",
+        message:
+          "Polygons sollten eine Fläche größer als 1cm² haben, kombiniere kleine Flächen mit anderern, oder skaliere die gesamte Auswahl",
+        cancelText: "Zurück und Polygons markieren",
+        confirmText: "Trotzdem weiter",
+        dontImage: "/dialogs/dontPolygonArea.png",
+        doImage: "/dialogs/doPolygonArea.png",
+      });
+      if (result) {
+        //Do something to the meshes
+      } else {
+        const invalids = this.getPolygonMeshes(invalidPolygons, 0.5, 0xff0000);
+        invalids.forEach((mesh) => {
+          mesh.position.z -= 1.0;
+          scene.add(mesh);
+          this.previewMeshes.push(mesh);
+        });
+        this.context.pointRenderer.setInvalid(invalidVertecies);
+        return;
+      }
+    }
+
+    //3 check polygon Convex
+    invalidPolygons = [];
+    invalidVertecies = [];
+
     polygons.forEach((polygon) => {
       if (isConcave(this.toPositions(polygon))) {
         invalidPolygons.push(insetPolygon(polygon, 0.1));
@@ -182,10 +225,7 @@ export class VerifyTool implements Tool {
       (rect.bottom + rect.top) / 2,
       0,
     );
-    this.wasGridVisible = this.context.gridRenderer.getVisible();
-    this.wasImageVisible = this.context.imageRenderer.getVisible();
-    this.wasLinesVisible = this.context.lineRenderer.getVisible();
-    this.wasPointsVisible = this.context.pointRenderer.getVisible();
+
     this.context.gridRenderer.setVisible(false);
     this.context.imageRenderer.setVisible(false);
     this.context.pointRenderer.setVisible(false);

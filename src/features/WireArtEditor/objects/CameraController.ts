@@ -1,27 +1,42 @@
-import * as THREE from 'three';
+import * as THREE from "three";
+import type { SceneManager } from "./SceneManager";
 
 export class CameraController {
   private camera: THREE.OrthographicCamera;
   private domElement: HTMLElement;
+  private sceneManager: SceneManager;
 
   private isPanning = false;
   private panEnabled = true;
   private lastMouse = new THREE.Vector2();
 
   private lastTouchDistance = 0;
+  private rect: DOMRect;
+  private pendingPan = { x: 0, y: 0 };
+  private isRendering = false;
 
-  constructor(camera: THREE.OrthographicCamera, domElement: HTMLElement) {
+  constructor(
+    camera: THREE.OrthographicCamera,
+    domElement: HTMLElement,
+    sceneManager: SceneManager,
+  ) {
     this.camera = camera;
     this.domElement = domElement;
+    this.sceneManager = sceneManager;
+    this.rect = this.domElement.getBoundingClientRect();
 
-    domElement.addEventListener('wheel', this.onWheel, { passive: false });
-    domElement.addEventListener('mousedown', this.onMouseDown);
-    domElement.addEventListener('mousemove', this.onMouseMove);
-    domElement.addEventListener('mouseup', this.onMouseUp);
+    domElement.addEventListener("wheel", this.onWheel, { passive: false });
+    domElement.addEventListener("mousedown", this.onMouseDown);
+    domElement.addEventListener("mousemove", this.onMouseMove);
+    domElement.addEventListener("mouseup", this.onMouseUp);
 
-    domElement.addEventListener('touchstart', this.onTouchStart, { passive: false });
-    domElement.addEventListener('touchmove', this.onTouchMove, { passive: false });
-    domElement.addEventListener('touchend', this.onTouchEnd);
+    domElement.addEventListener("touchstart", this.onTouchStart, {
+      passive: false,
+    });
+    domElement.addEventListener("touchmove", this.onTouchMove, {
+      passive: false,
+    });
+    domElement.addEventListener("touchend", this.onTouchEnd);
   }
 
   // =======================
@@ -46,6 +61,8 @@ export class CameraController {
   // =======================
 
   private onTouchStart = (event: TouchEvent) => {
+    this.rect = this.domElement.getBoundingClientRect();
+
     if (event.touches.length === 1) {
       const t = event.touches[0];
       this.isPanning = true;
@@ -60,24 +77,27 @@ export class CameraController {
 
   private onTouchMove = (event: TouchEvent) => {
     event.preventDefault();
-
     if (this.panEnabled && event.touches.length === 1 && this.isPanning) {
       const t = event.touches[0];
 
       const dx = t.clientX - this.lastMouse.x;
       const dy = t.clientY - this.lastMouse.y;
 
-      const rect = this.domElement.getBoundingClientRect();
+      const worldWidth =
+        (this.camera.right - this.camera.left) / this.camera.zoom;
+      const worldHeight =
+        (this.camera.top - this.camera.bottom) / this.camera.zoom;
 
-      const worldWidth = (this.camera.right - this.camera.left) / this.camera.zoom;
-      const worldHeight = (this.camera.top - this.camera.bottom) / this.camera.zoom;
-
-      const moveX = (dx / rect.width) * worldWidth;
-      const moveY = (dy / rect.height) * worldHeight;
+      const moveX = (dx / this.rect.width) * worldWidth;
+      const moveY = (dy / this.rect.height) * worldHeight;
 
       this.camera.position.x -= moveX;
       this.camera.position.y += moveY;
       this.lastMouse.set(t.clientX, t.clientY);
+      if (!this.isRendering) {
+        this.isRendering = true;
+        requestAnimationFrame(this.applyPan);
+      }
     }
 
     if (event.touches.length === 2) {
@@ -86,11 +106,9 @@ export class CameraController {
 
       const zoomFactor = newDistance / this.lastTouchDistance;
 
-      const rect = this.domElement.getBoundingClientRect();
-
       const mouse = new THREE.Vector2(
-        ((center.x - rect.left) / rect.width) * 2 - 1,
-        -((center.y - rect.top) / rect.height) * 2 + 1,
+        ((center.x - this.rect.left) / this.rect.width) * 2 - 1,
+        -((center.y - this.rect.top) / this.rect.height) * 2 + 1,
       );
 
       this.zoomToPoint(mouse, zoomFactor);
@@ -118,6 +136,10 @@ export class CameraController {
 
     const offset = beforeZoom.sub(afterZoom);
     this.camera.position.add(offset);
+    if (!this.isRendering) {
+      this.isRendering = true;
+      requestAnimationFrame(this.applyPan);
+    }
   }
 
   private screenToWorld(mouse: THREE.Vector2) {
@@ -133,7 +155,7 @@ export class CameraController {
   private onMouseDown = (event: MouseEvent) => {
     if (event.button === 0) return;
     if (event.button == 1) event.preventDefault();
-
+    this.rect = this.domElement.getBoundingClientRect();
     this.isPanning = true;
     this.lastMouse.set(event.clientX, event.clientY);
   };
@@ -143,20 +165,35 @@ export class CameraController {
     const dx = event.clientX - this.lastMouse.x;
     const dy = event.clientY - this.lastMouse.y;
 
-    const rect = this.domElement.getBoundingClientRect();
+    const worldWidth =
+      (this.camera.right - this.camera.left) / this.camera.zoom;
+    const worldHeight =
+      (this.camera.top - this.camera.bottom) / this.camera.zoom;
 
-    const worldWidth = (this.camera.right - this.camera.left) / this.camera.zoom;
-    const worldHeight = (this.camera.top - this.camera.bottom) / this.camera.zoom;
-
-    const moveX = (dx / rect.width) * worldWidth;
-    const moveY = (dy / rect.height) * worldHeight;
+    const moveX = (dx / this.rect.width) * worldWidth;
+    const moveY = (dy / this.rect.height) * worldHeight;
 
     this.camera.position.x -= moveX;
     this.camera.position.y += moveY;
 
     this.lastMouse.set(event.clientX, event.clientY);
+    if (!this.isRendering) {
+      this.isRendering = true;
+      requestAnimationFrame(this.applyPan);
+    }
   };
 
+  private applyPan = () => {
+    this.camera.position.x -= this.pendingPan.x;
+    this.camera.position.y += this.pendingPan.y;
+
+    this.pendingPan.x = 0;
+    this.pendingPan.y = 0;
+
+    this.sceneManager.render();
+
+    this.isRendering = false;
+  };
   private onMouseUp = () => {
     this.isPanning = false;
   };
@@ -181,14 +218,14 @@ export class CameraController {
   // =======================
 
   dispose() {
-    this.domElement.removeEventListener('wheel', this.onWheel);
-    this.domElement.removeEventListener('mousedown', this.onMouseDown);
-    this.domElement.removeEventListener('mousemove', this.onMouseMove);
-    this.domElement.removeEventListener('mouseup', this.onMouseUp);
+    this.domElement.removeEventListener("wheel", this.onWheel);
+    this.domElement.removeEventListener("mousedown", this.onMouseDown);
+    this.domElement.removeEventListener("mousemove", this.onMouseMove);
+    this.domElement.removeEventListener("mouseup", this.onMouseUp);
 
-    this.domElement.removeEventListener('touchstart', this.onTouchStart);
-    this.domElement.removeEventListener('touchmove', this.onTouchMove);
-    this.domElement.removeEventListener('touchend', this.onTouchEnd);
+    this.domElement.removeEventListener("touchstart", this.onTouchStart);
+    this.domElement.removeEventListener("touchmove", this.onTouchMove);
+    this.domElement.removeEventListener("touchend", this.onTouchEnd);
   }
 
   setPanEnabled(enabled: boolean) {

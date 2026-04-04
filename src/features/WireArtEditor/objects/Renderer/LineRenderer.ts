@@ -168,8 +168,28 @@ export class LineRenderer extends BaseRenderer<LineRenderData, LineData> {
     mesh.scale.set(length, thickness, thickness);
   }
 
-  updateScale(zoom: number) {
+  updateScale(zoom: number, id?:string) {
     this.zoom = zoom;
+    if(id){
+      const line = this.objects.get(id);
+      if(!line)return;
+      const startPos = this.pointManager.getWorldPosition(line.startPointId);
+      const endPos = this.pointManager.getWorldPosition(line.endPointId);
+
+      if (!startPos || !endPos) return;
+
+      const direction = new THREE.Vector3().subVectors(endPos, startPos);
+      const length = direction.length();
+
+      if (length === 0) return;
+
+      const thickness =
+        line.isHovered
+          ? this.hoverThickness / zoom
+          : this.baseThickness / zoom;
+      line.mesh.scale.set(length, thickness, thickness);
+      return;
+    }
     for (const [id, line] of this.objects) {
       const startPos = this.pointManager.getWorldPosition(line.startPointId);
       const endPos = this.pointManager.getWorldPosition(line.endPointId);

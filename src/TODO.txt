@@ -7,10 +7,6 @@ basket site
 
 Import SVG?
 
-Scale Tool
-check minsize
-check minSideHeight
-
 Landing Page
 error handling
 delete images

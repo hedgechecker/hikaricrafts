@@ -39,27 +39,27 @@ export class TransformTool implements Tool {
     this.context.gizmoRenderer.addGizmo({
       id: "1",
       type: "resize",
-      pos: new THREE.Vector3(0, 0, 0),
+      pos: new THREE.Vector3(10000, 0, 0),
     });
     this.context.gizmoRenderer.addGizmo({
       id: "2",
       type: "resize",
-      pos: new THREE.Vector3(0, 0, 0),
+      pos: new THREE.Vector3(10000, 0, 0),
     });
     this.context.gizmoRenderer.addGizmo({
       id: "3",
       type: "resize",
-      pos: new THREE.Vector3(0, 0, 0),
+      pos: new THREE.Vector3(10000, 0, 0),
     });
     this.context.gizmoRenderer.addGizmo({
       id: "4",
       type: "resize",
-      pos: new THREE.Vector3(0, 0, 0),
+      pos: new THREE.Vector3(10000, 0, 0),
     });
     this.context.gizmoRenderer.addGizmo({
       id: "5",
       type: "rotate",
-      pos: new THREE.Vector3(0, 0, 0),
+      pos: new THREE.Vector3(10000, 0, 0),
     });
   }
 
@@ -107,35 +107,7 @@ export class TransformTool implements Tool {
       if (!this.lastImage) return;
       const rect = this.context.imageRenderer.getBoundingRect(this.lastImage);
       if (!rect) return;
-      this.context.gizmoRenderer.updateGizmo({
-        id: "1",
-        type: "resize",
-        pos: new THREE.Vector3(rect.topRight.x, rect.topRight.y, 0),
-      });
-      this.context.gizmoRenderer.updateGizmo({
-        id: "2",
-        type: "resize",
-        pos: new THREE.Vector3(rect.bottomRight.x, rect.bottomRight.y, 0),
-      });
-      this.context.gizmoRenderer.updateGizmo({
-        id: "3",
-        type: "resize",
-        pos: new THREE.Vector3(rect.bottomLeft.x, rect.bottomLeft.y, 0),
-      });
-      this.context.gizmoRenderer.updateGizmo({
-        id: "4",
-        type: "resize",
-        pos: new THREE.Vector3(rect.topLeft.x, rect.topLeft.y, 0),
-      });
-      this.context.gizmoRenderer.updateGizmo({
-        id: "5",
-        type: "rotate",
-        pos: new THREE.Vector3(
-          rect.topLeft.x + (rect.topRight.x - rect.topLeft.x) / 2,
-          rect.topLeft.y + (rect.topRight.y - rect.topLeft.y) / 2,
-          0,
-        ),
-      });
+      this.updateHandles(rect);
     } else {
       this.context.gizmoRenderer.setVisible(handle ? true : false);
     }
@@ -205,21 +177,63 @@ export class TransformTool implements Tool {
     this.handleHover(event);
   };
 
+  updateHandles(rect: {
+    topRight: { x: number; y: number };
+    bottomRight: { x: number; y: number };
+    bottomLeft: { x: number; y: number };
+    topLeft: { x: number; y: number };
+  }) {
+    this.context.gizmoRenderer.updateGizmo({
+      id: "1",
+      type: "resize",
+      pos: new THREE.Vector3(rect.topRight.x, rect.topRight.y, 0),
+    });
+    this.context.gizmoRenderer.updateGizmo({
+      id: "2",
+      type: "resize",
+      pos: new THREE.Vector3(rect.bottomRight.x, rect.bottomRight.y, 0),
+    });
+    this.context.gizmoRenderer.updateGizmo({
+      id: "3",
+      type: "resize",
+      pos: new THREE.Vector3(rect.bottomLeft.x, rect.bottomLeft.y, 0),
+    });
+    this.context.gizmoRenderer.updateGizmo({
+      id: "4",
+      type: "resize",
+      pos: new THREE.Vector3(rect.topLeft.x, rect.topLeft.y, 0),
+    });
+    this.context.gizmoRenderer.updateGizmo({
+      id: "5",
+      type: "rotate",
+      pos: new THREE.Vector3(
+        rect.topLeft.x + (rect.topRight.x - rect.topLeft.x) / 2,
+        rect.topLeft.y + (rect.topRight.y - rect.topLeft.y) / 2,
+        0,
+      ),
+    });
+  }
+
   //Enable Hover only for Images
   handleHover(event: PointerEvent) {
-    this.context.imageRenderer.setHovered(null);
-    this.context.gizmoRenderer.setHovered(null);
-
     this.context.cursorManager.setCursor(
       this.selectedImage ? "grabbing" : "default",
     );
 
     if (this.context.gizmoRenderer.handleHover(event)) {
+      this.context.imageRenderer.setHovered(null);
       this.context.cursorManager.setCursor("pointer");
       return;
     }
     if (this.context.imageRenderer.handleHover(event)) {
       this.context.cursorManager.setCursor("pointer");
+      this.context.gizmoRenderer.setHovered(null);
+      const img = this.context.imageRenderer.getHovered();
+      if (img) {
+        const rect = this.context.imageRenderer.getBoundingRect(img);
+        this.updateHandles(rect!);
+      }
+
       const hovered = this.context.imageRenderer.getHovered();
       this.lastImage = hovered;
       return;

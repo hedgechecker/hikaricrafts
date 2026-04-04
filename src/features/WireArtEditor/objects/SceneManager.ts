@@ -7,7 +7,7 @@ type CameraMode = "2D" | "3D";
 export class SceneManager {
   scene: THREE.Scene;
 
-  camera: THREE.Camera;
+  camera: THREE.OrthographicCamera | THREE.PerspectiveCamera;
   orthoCamera: THREE.OrthographicCamera;
   perspectiveCamera: THREE.PerspectiveCamera;
 
@@ -24,6 +24,8 @@ export class SceneManager {
 
   private raycaster = new THREE.Raycaster();
   private plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+  private mouse = new THREE.Vector2(0, 0);
+  private count = 0;
 
   constructor(container: HTMLDivElement) {
     container.appendChild(this.createOverlay(container));
@@ -34,9 +36,9 @@ export class SceneManager {
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0xfaf7f2);
     this.scene.add(new THREE.AmbientLight(0xffffff, 0.3));
-    const light = new THREE.SpotLight(0xffffff, 150, 100, Math.PI/3,0 ,1);
-    light.position.set(0,0,50);
-    light.lookAt(0,0,0);
+    const light = new THREE.SpotLight(0xffffff, 150, 100, Math.PI / 3, 0, 1);
+    light.position.set(0, 0, 50);
+    light.lookAt(0, 0, 0);
     this.scene.add(light);
     const aspect = width / height;
     const frustumSize = 10;
@@ -58,8 +60,12 @@ export class SceneManager {
     this.perspectiveCamera.position.set(0, 0, 10);
     this.perspectiveCamera.lookAt(0, 0, 0);
 
-    this.renderer = new THREE.WebGLRenderer({ antialias: true });
+    this.renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance",
+    });
     this.renderer.setSize(width, height);
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1));
     this.dom = this.renderer.domElement;
     container.appendChild(this.dom);
 
@@ -71,6 +77,17 @@ export class SceneManager {
     this.renderer.domElement.addEventListener("contextmenu", (e) =>
       e.preventDefault(),
     );
+
+    setInterval(() => {
+      console.log("renders/sec:", this.count);
+      this.count = 0;
+      this.render();
+    }, 1000);
+  }
+
+  render() {
+    this.count++;
+    this.renderer.render(this.scene, this.camera);
   }
 
   createOverlay(container: HTMLDivElement) {
@@ -136,13 +153,9 @@ export class SceneManager {
 
   update() {
     if (this.controller instanceof OrbitControls) {
-      this.controller.update(); // needed for damping
+      this.controller.update();
     }
-    if (this.camera instanceof THREE.OrthographicCamera) {
-      this.camera.updateProjectionMatrix();
-    } else if (this.camera instanceof THREE.PerspectiveCamera) {
-      this.camera.updateProjectionMatrix();
-    }
+    this.camera.updateProjectionMatrix();
   }
 
   updateOverlay(step: number) {
@@ -153,7 +166,7 @@ export class SceneManager {
 
   dispose() {
     if (this.animationId) cancelAnimationFrame(this.animationId);
-
+    this.controller.dispose();
     this.renderer.dispose();
     this.container.removeChild(this.overlay);
 
@@ -167,11 +180,10 @@ export class SceneManager {
 
   getWorldPosition(event: MouseEvent): THREE.Vector3 {
     const rect = this.dom.getBoundingClientRect();
-    let mouse = new THREE.Vector2();
-    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
-    this.raycaster.setFromCamera(mouse, this.camera);
+    this.raycaster.setFromCamera(this.mouse, this.camera);
 
     const intersection = new THREE.Vector3();
     this.raycaster.ray.intersectPlane(this.plane, intersection);
@@ -198,12 +210,12 @@ export class SceneManager {
 
     // Dispose old controller
     if (this.controller) {
-      if ("dispose" in this.controller) this.controller.dispose();
+      this.controller.dispose();
     }
 
     // Create correct controller
     if (mode === "2D") {
-      this.controller = new CameraController(this.orthoCamera, this.dom);
+      this.controller = new CameraController(this.orthoCamera, this.dom, this);
     } else {
       const controls = new OrbitControls(this.perspectiveCamera, this.dom);
       controls.enableDamping = true;

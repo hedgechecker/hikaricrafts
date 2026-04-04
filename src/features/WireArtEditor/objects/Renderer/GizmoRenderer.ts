@@ -66,7 +66,7 @@ export class GizmoRenderer extends BaseRenderer<GizmoRenderData, GizmoData> {
 
     const hitbox = new THREE.Mesh(hitGeometry, hitMaterial);
     hitbox.name = "hitbox";
-    const size = 1.0;
+    const size = 1.0 / this.zoom;
     circle.scale.set(size, size, 1);
     outline.scale.set(size, size, 1);
     hitbox.scale.set(size, size, 1);
@@ -147,8 +147,9 @@ export class GizmoRenderer extends BaseRenderer<GizmoRenderData, GizmoData> {
 
     const intersects = raycaster.intersectObjects(this.getHitboxes(), false);
     const hoveredId = this.getFirstHoverableGizmo(intersects);
+    this.setHovered(hoveredId);
     if (hoveredId) {
-      this.setHovered(hoveredId);
+      
       return true;
     }
     return false;
