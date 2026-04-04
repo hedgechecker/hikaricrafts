@@ -6,6 +6,8 @@ type ShowDialogOptions = {
   defaultValue?: string;
   confirmText?: string;
   cancelText?: string;
+  doImage?: string,
+  dontImage?: string,
 };
 
 type ShowDialogFn = (options: ShowDialogOptions) => Promise<boolean | string>;

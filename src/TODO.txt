@@ -13,5 +13,4 @@ check minSideHeight
 
 Landing Page
 error handling
-error UI
 delete images

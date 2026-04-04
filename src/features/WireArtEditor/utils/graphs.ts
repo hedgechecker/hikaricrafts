@@ -434,6 +434,12 @@ export function isConcave(polygon: Vector2[], epsilon = 1e-4): boolean {
   return false; // convex
 }
 
+const crossProduct = (a: any, b: any, c: any) => {
+  const ab = b.clone().sub(a);
+  const ac = c.clone().sub(a);
+  return ab.x * ac.y - ab.y * ac.x;
+};
+
 export function findConcaveVertices(
   polygon: Vertex[],
   epsilon = 1e-8,
@@ -441,13 +447,7 @@ export function findConcaveVertices(
   const n = polygon.length;
   const concaveIds: string[] = [];
 
-  let referenceSign = 0;
-
-  const crossProduct = (a: any, b: any, c: any) => {
-    const ab = b.clone().sub(a);
-    const bc = c.clone().sub(b);
-    return ab.x * bc.y - ab.y * bc.x;
-  };
+  const winding = getPolygonWinding(polygon);
 
   for (let i = 0; i < n; i++) {
     const a = polygon[i].position;
@@ -456,16 +456,25 @@ export function findConcaveVertices(
 
     const cross = crossProduct(a, b, c);
 
-    if (Math.abs(cross) < epsilon) continue; // skip collinear points
+    if (Math.abs(cross) < epsilon) continue;
 
-    const currentSign = Math.sign(cross);
+    const turn = Math.sign(cross);
 
-    if (referenceSign === 0) {
-      referenceSign = currentSign; // establish winding direction
-    } else if (currentSign !== referenceSign) {
+    // concave if turn is opposite to polygon winding
+    if (turn !== winding) {
       concaveIds.push(polygon[(i + 1) % n].id);
     }
   }
 
   return concaveIds;
+}
+
+function getPolygonWinding(polygon: Vertex[]): number {
+  let area = 0;
+  for (let i = 0; i < polygon.length; i++) {
+    const p1 = polygon[i].position;
+    const p2 = polygon[(i + 1) % polygon.length].position;
+    area += p1.x * p2.y - p2.x * p1.y;
+  }
+  return Math.sign(area); // +1 CCW, -1 CW
 }

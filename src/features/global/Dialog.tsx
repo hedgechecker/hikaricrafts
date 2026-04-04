@@ -12,6 +12,8 @@ interface DialogProps {
 
   confirmText?: string;
   cancelText?: string;
+  doImage?: string;
+  dontImage?: string;
 }
 
 export const Dialog: React.FC<DialogProps> = ({
@@ -21,9 +23,11 @@ export const Dialog: React.FC<DialogProps> = ({
   onClose,
   confirmText,
   cancelText,
+  doImage,
+  dontImage,
 }) => {
   const [inputValue, setInputValue] = useState(defaultValue);
-
+  console.log(doImage)
   const confirmLabel = confirmText ?? "OK";
   const cancelLabel = cancelText ?? "Abbrechen";
 
@@ -42,6 +46,10 @@ export const Dialog: React.FC<DialogProps> = ({
   return ReactDOM.createPortal(
     <div className={styles.overlay}>
       <div className={styles.wrapper}>
+          {dontImage && (
+            <img src={dontImage} className={styles.dontImage}></img>
+          )}
+          {doImage && <img src={doImage} className={styles.doImage}></img>}
         <p>{message}</p>
 
         {type === "prompt" && (

@@ -9,6 +9,8 @@ export function useDialog() {
 
     confirmText?: string;
     cancelText?: string;
+    doImage?: string;
+    dontImage?: string;
 
     resolve: (value: boolean | string) => void;
   } | null>(null);
@@ -19,6 +21,8 @@ export function useDialog() {
     defaultValue?: string;
     confirmText?: string;
     cancelText?: string;
+    doImage?:string;
+    dontImage?:string;
   }): Promise<boolean | string> => {
     return new Promise((resolve) => {
       setState({ ...options, resolve });
@@ -40,6 +44,8 @@ export function useDialog() {
       confirmText={state.confirmText}
       cancelText={state.cancelText}
       onClose={handleClose}
+      doImage={state.doImage}
+      dontImage={state.dontImage}
     />
   ) : null;
 

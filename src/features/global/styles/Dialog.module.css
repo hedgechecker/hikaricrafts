@@ -19,6 +19,7 @@
   text-align: center;
   box-shadow: 0 4px 20px rgba(0,0,0,0.3);
   font-size: var(--font-size-lg);
+  width: max-content;
 }
 
 .buttonContainer{
@@ -54,4 +55,13 @@
   padding: var(--space-sm);
   font-size: 14px;
   margin-top: var(--space-sm);
+}
+
+.dontImage{
+  border: var(--space-xs) solid var(--color-warning);
+  width: 300px
+}
+.doImage{
+  border: var(--space-xs) solid var(--color-success);
+  width: 300px
 }

@@ -121,8 +121,6 @@ export class GridRenderer extends BaseRenderer<GridRenderData, number> {
     let cameraZoom = 10;
     if(this.sceneManager.camera instanceof THREE.OrthographicCamera){
       cameraZoom = this.sceneManager.camera.zoom;
-    }else{
-      this.setVisible(false);
     }
     if (cameraZoom > 5) return 2000;
     if (cameraZoom > 1.6) return 400;

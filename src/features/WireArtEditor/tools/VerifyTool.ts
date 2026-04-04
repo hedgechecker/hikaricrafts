@@ -67,8 +67,10 @@ export class VerifyTool implements Tool {
       const result = await showDialog({
         type: "confirm",
         message: "Punkte sollten zwei oder mehr Linien verbinden",
-        cancelText: "Abbrechen",
+        cancelText: "Zurück und Punkte markieren",
         confirmText: "Punkte automatisch entfernen und verbinden",
+        dontImage: "/dialogs/dontPoints.png",
+        doImage: "/dialogs/doPoints.png",
       });
       if (result) {
         let commands: Command[] = [];
@@ -105,8 +107,10 @@ export class VerifyTool implements Tool {
       const result = await showDialog({
         type: "confirm",
         message: "Linien dürfen sich nicht schneiden.",
-        cancelText: "Abbrechen",
+        cancelText: "Zurück und Linien markieren",
         confirmText: "Linien automatisch aufteilen",
+        dontImage: "/dialogs/dontLines.png",
+        doImage: "/dialogs/doLines.png",
       });
       if (result) {
         this.splitLines();
@@ -130,9 +134,11 @@ export class VerifyTool implements Tool {
     if (invalidPolygons.length > 0) {
       const result = await showDialog({
         type: "confirm",
-        message: "Polygons sollten Konvex sein",
-        cancelText: "Abbrechen",
+        message: "Polygons sollten Konvex (nicht nach innen gekrümmt) sein",
+        cancelText: "Zurück und Polygons markieren",
         confirmText: "Trotzdem Vorschau generieren",
+        dontImage: "/dialogs/dontPolygon.png",
+        doImage: "/dialogs/doPolygon.png",
       });
       if (result) {
         //Do something to the meshes
