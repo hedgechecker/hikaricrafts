@@ -26,6 +26,7 @@ import type { Command } from "../commands/Command";
 import { EditorStore } from "./EditorStore";
 import type { ToolType } from "../tools/Tool";
 import { OrthographicCamera } from "three";
+import { logInfo } from "../../../utils/error/errorHandler";
 
 export class ThreeEditor {
   private pointRenderer: PointRenderer;
@@ -174,7 +175,7 @@ export class ThreeEditor {
 
   public executeCommand(command: Command) {
     this.hasChanges = true;
-    console.log(command);
+    logInfo("Executed Command", { command: command });
     this.history.execute(command, this.model);
     this.syncSceneFromModel();
   }
@@ -280,7 +281,9 @@ export class ThreeEditor {
     SVGExporter.simpleExport(this.model, this.project);
   }
   exportProject() {
-    console.log(this.project);
+    logInfo("Exported Project", {
+      project: this.project,
+    });
     this.storage.userExport(this.project);
   }
   async renameProject(id: number, name: string) {
@@ -292,7 +295,9 @@ export class ThreeEditor {
     this.load(project);
     this.store.setProject(project);
     this.hasChanges = true;
-    console.log(project);
+    logInfo("Loaded Project", {
+      project: project,
+    });
   }
 
   private onKeyDown = async (e: KeyboardEvent) => {

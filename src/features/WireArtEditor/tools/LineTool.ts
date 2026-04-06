@@ -155,7 +155,6 @@ export class LineTool implements Tool {
     }
 
     //Line between lastPoint and current Point
-    console.log(selectedPointId);
     if (
       this.lastPointId &&
       selectedPointId &&
@@ -468,7 +467,6 @@ export class LineTool implements Tool {
   //Enable Hover for Points, Lines and Grid
   handleHover(event: PointerEvent) {
     this.context.cursorManager.setCursor("default");
-    console.log(this.context.lineRenderer.getHovered());
 
     if (this.context.pointRenderer.handleHover(event)) {
       this.context.cursorManager.setCursor("pointer");

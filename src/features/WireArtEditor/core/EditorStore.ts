@@ -1,5 +1,7 @@
-import type { Settings } from '../models/Settings';
-import type { Project } from '../models/Project';
+import type { Settings } from "../models/Settings";
+import type { Project } from "../models/Project";
+import { useEffect, useState } from "react";
+import type { ToolType } from "../tools/Tool";
 
 type Listener = () => void;
 
@@ -49,9 +51,6 @@ export class EditorStore {
     this.emit();
   }
 }
-
-import { useEffect, useState } from 'react';
-import type { ToolType } from '../tools/Tool';
 
 export function useEditorStore(store: EditorStore) {
   const [state, setState] = useState(store.getState());

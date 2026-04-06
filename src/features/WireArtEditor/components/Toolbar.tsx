@@ -84,6 +84,16 @@ export default function Toolbar({ engine }: Props) {
         return;
       }
 
+      const target = e.target as HTMLElement | null;
+
+      // Check if the user is typing in an input, textarea, or contenteditable
+      const isTyping = target &&(
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable);
+
+      if (isTyping) return;
+
       const toolMap: Record<string, ToolType> = {
         "1": "move",
         "2": "point",

@@ -1,3 +1,4 @@
+import { logError, logInfo, logWarn } from "../../../utils/error/errorHandler";
 import type { Project } from "../models/Project";
 import CryptoJS from "crypto-js";
 
@@ -56,7 +57,9 @@ export class DataStorage {
     const token = localStorage.getItem("token");
 
     if (!token) {
-      console.log("User not Logged In: No Global Storage");
+      logWarn("Global Saving aborted, User is not logged In", {
+        function: "DataStorage/saveGlobal",
+      });
       return null;
     }
 
@@ -66,7 +69,7 @@ export class DataStorage {
       return success ? project : null;
     }
 
-    console.log("Creating new project");
+    logInfo("Creating new project");
 
     const data = {
       points: project.points,
@@ -89,7 +92,10 @@ export class DataStorage {
     });
 
     if (!res.ok) {
-      console.error("Failed to create project");
+      logError("Failed to create Project", {
+        function: "DataStorage/saveGlobal",
+        res: res,
+      });
       return null;
     }
 
@@ -101,7 +107,6 @@ export class DataStorage {
     };
   }
   /**
-   *
    * @param project the Project to be Updated
    * @returns if Updating was successfull
    */
@@ -109,7 +114,10 @@ export class DataStorage {
     const token = localStorage.getItem("token");
 
     if (!project.id) {
-      console.error("Cannot update project without id");
+      logError("Cannot update Project without ID", {
+        function: "DataStorage/updateGlobal",
+        project: project,
+      });
       return false;
     }
 
@@ -120,7 +128,7 @@ export class DataStorage {
       settings: project.settings,
     };
 
-    const response = await fetch(`${BASE_URL}/wireArtProjects/${project.id}`, {
+    const res = await fetch(`${BASE_URL}/wireArtProjects/${project.id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -134,13 +142,17 @@ export class DataStorage {
       }),
     });
 
-    if (!response.ok) {
-      console.error("Failed to update project");
+    if (!res.ok) {
+      logWarn("Failed to update Project", {
+        function: "DataStorage/updateGlobal",
+        res: res,
+        project: project,
+      });
       return false;
     }
 
-    const updatedProject = await response.json();
-    console.log("Project updated:", updatedProject);
+    const updatedProject = await res.json();
+    logInfo("Project updated", {project:updatedProject});
     return true;
   }
 
@@ -155,28 +167,36 @@ export class DataStorage {
       },
       body: JSON.stringify({ name: name }),
     });
-    if(!res.ok){
-      console.log("Couldn't rename Project "+ id+ " to "+ name);
+    if (!res.ok) {
+      logWarn("Failed to update Project", {
+        function: "DataStorage/renameProject",
+        res: res,
+        id: id,
+        name: name
+      });
     }
-
   }
 
   async loadGlobal(id: number): Promise<Project | null> {
     const token = localStorage.getItem("token");
 
-    const response = await fetch(`${BASE_URL}/wireArtProjects/${id}`, {
+    const res = await fetch(`${BASE_URL}/wireArtProjects/${id}`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
 
-    if (!response.ok) {
-      console.error("Failed to load project");
+    if (!res.ok) {
+      logWarn("Failed to load Project", {
+        function: "DataStorage/renameProject",
+        res: res,
+        id: id,
+      });
       return null;
     }
 
-    const project = await response.json();
+    const project = await res.json();
     const data = project.data;
 
     return {
@@ -192,7 +212,6 @@ export class DataStorage {
   }
 
   userExport(project: Project) {
-    console.log(project);
     const copy = project;
     copy.id = null;
     const json = JSON.stringify(copy);
