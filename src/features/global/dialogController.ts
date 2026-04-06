@@ -1,3 +1,4 @@
+import { logError } from "../../utils/error/errorHandler";
 import type { DialogType } from "./Dialog";
 
 type ShowDialogOptions = {
@@ -6,8 +7,8 @@ type ShowDialogOptions = {
   defaultValue?: string;
   confirmText?: string;
   cancelText?: string;
-  doImage?: string,
-  dontImage?: string,
+  doImage?: string;
+  dontImage?: string;
 };
 
 type ShowDialogFn = (options: ShowDialogOptions) => Promise<boolean | string>;
@@ -20,7 +21,10 @@ export function registerDialog(fn: ShowDialogFn) {
 
 export function showDialog(options: ShowDialogOptions) {
   if (!showDialogRef) {
-    throw new Error("Dialog system not initialized");
+    logError("uninitialzed", {
+      function: "showDialog",
+    });
+    return;
   }
   return showDialogRef(options);
 }

@@ -27,7 +27,6 @@ export const Dialog: React.FC<DialogProps> = ({
   dontImage,
 }) => {
   const [inputValue, setInputValue] = useState(defaultValue);
-  console.log(doImage)
   const confirmLabel = confirmText ?? "OK";
   const cancelLabel = cancelText ?? "Abbrechen";
 

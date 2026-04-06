@@ -1,7 +1,8 @@
-import type { Command } from './Command';
-import type { LineData } from '../models/Line';
-import type { PointData } from '../models/Point';
-import type { SceneModel } from '../models/SceneModel';
+import type { Command } from "./Command";
+import type { LineData } from "../models/Line";
+import type { PointData } from "../models/Point";
+import type { SceneModel } from "../models/SceneModel";
+import { logWarn } from "../../../utils/error/errorHandler";
 /**
  * Command that merges a given Point to another Point, duplicate Lines get Removed
  *
@@ -20,21 +21,42 @@ export class MergePointsCommand implements Command {
   }
 
   execute(model: SceneModel) {
-    if (this.sourceId === this.targetId) return;
+    if (this.sourceId === this.targetId) {
+      logWarn("A point cant be merged to itself", {
+        function: "MergePointsCommand/execute",
+        sourceId: this.sourceId,
+        targetId: this.targetId,
+      });
+      return false;
+    }
 
     const source = model.points.get(this.sourceId);
     const target = model.points.get(this.targetId);
-    if (!source || !target) return;
+    if (!source || !target) {
+      logWarn("One or more given Ids dont exist", {
+        function: "MergePointsCommand/execute",
+        source: source,
+        target: target,
+      });
+      return false;
+    }
 
     this.deletedPoint = { ...source };
 
     // Process all lines
     for (const line of model.lines.values()) {
-      if (line.startPointId === this.sourceId || line.endPointId === this.sourceId) {
+      if (
+        line.startPointId === this.sourceId ||
+        line.endPointId === this.sourceId
+      ) {
         this.originalLines.push({ ...line });
 
-        const newStart = line.startPointId === this.sourceId ? this.targetId : line.startPointId;
-        const newEnd = line.endPointId === this.sourceId ? this.targetId : line.endPointId;
+        const newStart =
+          line.startPointId === this.sourceId
+            ? this.targetId
+            : line.startPointId;
+        const newEnd =
+          line.endPointId === this.sourceId ? this.targetId : line.endPointId;
 
         // Prevent self-loop
         if (newStart === newEnd) {
@@ -61,14 +83,24 @@ export class MergePointsCommand implements Command {
 
     // Remove source point
     model.points.delete(this.sourceId);
+    return true;
   }
 
   undo(model: SceneModel) {
-    if (!this.deletedPoint) return;
+    if (!this.deletedPoint) {
+      logWarn("The Points cant be restored, because they havent been merged", {
+        function: "MergePointsCommand/undo",
+        deletedPoint: this.deletedPoint,
+        sourceId: this.sourceId,
+        targetId: this.targetId,
+      });
+      return false;
+    }
     model.points.set(this.deletedPoint.id, { ...this.deletedPoint });
 
     for (const line of this.originalLines) {
       model.lines.set(line.id, { ...line });
     }
+    return true;
   }
 }

@@ -1,6 +1,7 @@
-import type { Command } from './Command';
-import type { LineData } from '../models/Line';
-import type { SceneModel } from '../models/SceneModel';
+import type { Command } from "./Command";
+import type { LineData } from "../models/Line";
+import type { SceneModel } from "../models/SceneModel";
+import { logWarn } from "../../../utils/error/errorHandler";
 
 /**
  * Command that removes a Line from the SceneModel.
@@ -17,15 +18,29 @@ export class DeleteLineCommand implements Command {
 
   execute(model: SceneModel) {
     const line = model.lines.get(this.lineId);
-    if (!line) return;
+    if (!line) {
+      logWarn("The given line doesnt exist therefore cant be deleted", {
+        function: "DeleteLineCommand/execute",
+        lineId: this.lineId,
+      });
+      return false;
+    }
 
     this.deletedLine = { ...line };
     model.lines.delete(this.lineId);
+    return true;
   }
 
   undo(model: SceneModel) {
-    if (!this.deletedLine) return;
+    if (!this.deletedLine) {
+      logWarn("The Line cant be restored, because it hasnt been deleted", {
+        function: "DeleteLineCommand/undo",
+        lineId: this.lineId,
+      });
+      return false;
+    }
 
-    model.lines.set(this.deletedLine.id, this.deletedLine);
+    model.lines.set(this.deletedLine.id, { ...this.deletedLine });
+    return true;
   }
 }

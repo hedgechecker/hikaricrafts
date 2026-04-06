@@ -10,8 +10,10 @@ import SingleProduct from './Product/SingleProduct.tsx';
 import Contact from './Contact/Contact.tsx';
 import WireArtEditor from './WireArtEditor/WireArtEditor.tsx';
 import Overview from '../features/WireArtEditor/components/Overview.tsx';
+import { setupGlobalErrorHandling } from '../utils/error/errorHandler.ts';
 
 export default function Routing() {
+  setupGlobalErrorHandling();
   return (
     <Routes>
       <Route path="/" element={<Feedback />} />

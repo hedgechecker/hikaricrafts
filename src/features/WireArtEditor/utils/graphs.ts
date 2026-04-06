@@ -86,7 +86,7 @@ export function findLineIntersections(
       const p3 = points.get(l2.startPointId)!;
       const p4 = points.get(l2.endPointId)!;
       if (!p1 || !p2 || !p3 || !p4) {
-        console.log(p1, p2, p3, p4);
+        //console.log(p1, p2, p3, p4);
         continue;
       }
 
