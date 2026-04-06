@@ -40,10 +40,12 @@ export class DeleteTool implements Tool {
 
     if (hoveredPoint) {
       this.context.executeCommand(new DeletePointCommand(hoveredPoint));
+      this.context.pointRenderer.remove(hoveredPoint);
     }
 
     if (hoveredLine) {
       this.context.executeCommand(new DeleteLineCommand(hoveredLine));
+      this.context.lineRenderer.remove(hoveredLine);
     }
   }
 
@@ -53,13 +55,15 @@ export class DeleteTool implements Tool {
     if (!this.dragging) return;
     const hoveredPoint = this.context.pointRenderer.getHovered();
     const hoveredLine = this.context.lineRenderer.getHovered();
-
+    
     if (hoveredPoint) {
       this.context.executeCommand(new DeletePointCommand(hoveredPoint));
+      this.context.pointRenderer.remove(hoveredPoint);
     }
 
     if (hoveredLine) {
       this.context.executeCommand(new DeleteLineCommand(hoveredLine));
+      this.context.lineRenderer.remove(hoveredLine);
     }
   }
 

@@ -51,17 +51,17 @@ export const tutorialSteps: TutorialStep[] = [
   {
     id: "canvas",
     target: "#canvas",
-    content: "Das ist die Zeichenfläche",
+    content: "Das ist die Zeichenfläche, hier ist ein kleiner Bär zur Vorschau",
   },
   {
     id: "verifytool",
     target: "#verifytool",
     content:
-      "Wenn Sie fertig sind mit der Zeichnung können Sie hier ihr Projekt verifizieren und eine Vorschau generieren lassen",
+      "Wenn Sie mit der Zeichnung fertig sind können Sie hier ihr Projekt überprüfen und eine Vorschau generieren lassen",
   },
   {
     id: "finish",
-    target: "#editor",
-    content: "Das war das Tutorial, viel Spaß beim designen",
+    target: "#canvas",
+    content: "Versuchen Sie gleich diesen Bär zu vervollständigen und eine Vorschau generieren zu lassen",
   },
 ];

@@ -1,6 +1,7 @@
-import { useRef } from 'react';
-import ToolButton from '../../global/ToolButton';
+import { useRef } from "react";
+import ToolButton from "../../global/ToolButton";
 import imageCompression from "browser-image-compression";
+import { logError, logWarn } from "../../../utils/error/errorHandler";
 
 interface Props {
   onImageSelected: (image: string) => void;
@@ -9,7 +10,6 @@ interface Props {
 /**
  * Handles the hidden Upload of an User-Image
  * @param onImageSelected reaction to Image-Upload
- * @returns
  */
 export default function ImageUploader({ onImageSelected }: Props) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -20,7 +20,13 @@ export default function ImageUploader({ onImageSelected }: Props) {
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      logWarn("Couldnt Find the User-Selected Image", {
+        function: "ImageUploader/handleFileChange",
+        file: e.target.files,
+      });
+      return;
+    }
 
     try {
       const options = {
@@ -36,9 +42,12 @@ export default function ImageUploader({ onImageSelected }: Props) {
       reader.onloadend = () => {
         onImageSelected(reader.result as string);
       };
-      reader.readAsDataURL(compressedFile); 
+      reader.readAsDataURL(compressedFile);
     } catch (error) {
-      console.error("Compression failed:", error);
+      logError("Compression failed", {
+        function: "ImageUploader/handleFileChange",
+        error: error,
+      });
     }
   };
 
@@ -49,17 +58,17 @@ export default function ImageUploader({ onImageSelected }: Props) {
         ref={fileInputRef}
         type="file"
         accept="image/*"
-        style={{ display: 'none' }}
+        style={{ display: "none" }}
         onChange={handleFileChange}
       />
 
       {/* Visible ToolButton */}
       <ToolButton
-        label="Bild laden"
+        label=""
         onClick={handleButtonClick}
         image="/icons/image.svg"
         toolTip="Ein neues Hintergrundbild öffnen"
-        id='addImageButton'
+        id="addImageButton"
       />
     </>
   );

@@ -77,24 +77,25 @@ export default function Toolbar({ engine }: Props) {
    */
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+      const key = e.key.toLowerCase();
+      if ((e.ctrlKey || e.metaKey) && key === "s") {
         e.preventDefault();
         handleSave();
-      } else if (e.key === "1") {
+        return;
+      }
+
+      const toolMap: Record<string, ToolType> = {
+        "1": "move",
+        "2": "point",
+        "3": "line",
+        "4": "delete",
+        "5": "resize",
+      };
+
+      const tool = toolMap[key];
+      if (tool) {
         e.preventDefault();
-        engine.setActiveTool("move");
-      } else if (e.key === "2") {
-        e.preventDefault();
-        engine.setActiveTool("point");
-      } else if (e.key === "3") {
-        e.preventDefault();
-        engine.setActiveTool("line");
-      } else if (e.key === "4") {
-        e.preventDefault();
-        engine.setActiveTool("delete");
-      } else if(e.key == "5"){
-        e.preventDefault();
-        engine.setActiveTool("resize")
+        engine.setActiveTool(tool);
       }
     }
 
@@ -247,6 +248,7 @@ export default function Toolbar({ engine }: Props) {
                 type="checkbox"
                 checked={settings?.showPoints}
                 onChange={(e) => updateSetting("showPoints", e.target.checked)}
+                className={styles.checkbox}
               />
               Punkte anzeigen
             </label>
@@ -256,6 +258,7 @@ export default function Toolbar({ engine }: Props) {
                 type="checkbox"
                 checked={settings?.showImage}
                 onChange={(e) => updateSetting("showImage", e.target.checked)}
+                className={styles.checkbox}
               />
               Bilder anzeigen
             </label>
@@ -265,6 +268,7 @@ export default function Toolbar({ engine }: Props) {
                 type="checkbox"
                 checked={settings?.showGrid}
                 onChange={(e) => updateSetting("showGrid", e.target.checked)}
+                className={styles.checkbox}
               />
               Gitter anzeigen
             </label>
@@ -275,6 +279,7 @@ export default function Toolbar({ engine }: Props) {
                 type="color"
                 value={settings?.lineColor}
                 onChange={(e) => updateSetting("lineColor", e.target.value)}
+                className={styles.colorInput}
               />
             </label>
 
@@ -284,6 +289,7 @@ export default function Toolbar({ engine }: Props) {
                 type="color"
                 value={settings?.pointColor}
                 onChange={(e) => updateSetting("pointColor", e.target.value)}
+                className={styles.colorInput}
               />
             </label>
           </div>

@@ -120,7 +120,7 @@ export class MoveTool implements Tool {
       // }
     }
 
-    if (rawPosition.distanceTo(snappedPosition) < 0.2) {
+    if (rawPosition.distanceTo(snappedPosition) < 0.3 / this.context.sceneManager.camera.zoom) {
       this.currentPosition = snappedPosition;
     } else {
       this.currentPosition = rawPosition;

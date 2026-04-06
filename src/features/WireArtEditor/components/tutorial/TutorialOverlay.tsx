@@ -26,7 +26,13 @@ export function TutorialOverlay() {
 
     const element = document.querySelector(step.target);
     if (!element) {
-      console.log("The Element "+step.target+" specified by the TutorialStep "+step.id+" couldnt be found")
+      console.log(
+        "The Element " +
+          step.target +
+          " specified by the TutorialStep " +
+          step.id +
+          " couldnt be found",
+      );
       setRect(null);
       return;
     }
@@ -94,7 +100,6 @@ export function TutorialOverlay() {
     });
   }, [rect]);
 
-
   if (!context || !context.active || !step || !rect) return null;
 
   const { next, prev } = context;
@@ -121,9 +126,15 @@ export function TutorialOverlay() {
           left: tooltipPos.left,
         }}
       >
-        <p>{step.content}</p>
-        {(step.id != "start" )&& <button onClick={prev}>Zurück</button>}
-        <button onClick={next}>Weiter</button>
+        <p className={styles.text}>{step.content}</p>
+        {step.id != "start" && (
+          <button onClick={prev} className={styles.button}>
+            Zurück
+          </button>
+        )}
+        <button onClick={next} className={styles.button}>
+          Weiter
+        </button>
       </div>
     </>
   );

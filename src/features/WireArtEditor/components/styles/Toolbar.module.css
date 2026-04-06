@@ -54,3 +54,15 @@
 .settingsMenu h4 {
   margin: 0 0 8px 0;
 }
+
+.checkbox{
+  accent-color: var(--color-accent);
+}
+
+.colorInput{
+  
+  padding: 5px;
+  cursor: pointer;
+  background: none;
+  border: none;
+}

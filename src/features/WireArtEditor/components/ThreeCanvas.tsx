@@ -1,7 +1,14 @@
-import { useContext, useEffect, useRef, type Dispatch, type SetStateAction } from "react";
+import {
+  useContext,
+  useEffect,
+  useRef,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import styles from "./styles/ThreeCanvas.module.css";
 import { ThreeEditor } from "../core/ThreeEditor";
 import { TutorialContext } from "./tutorial/TutorialProvider";
+import { logInfo, logWarn } from "../../../utils/error/errorHandler";
 
 interface Props {
   setEngine: Dispatch<SetStateAction<ThreeEditor | null>>;
@@ -18,7 +25,13 @@ export default function ThreeCanvas({ setEngine }: Props) {
 
   useEffect(() => {
     const mount = mountRef.current;
-    if (!mount) return;
+    if (!mount) {
+      logWarn("The Ref for the canvas isnt mounted", {
+        function: "Canvas/useEffect([])",
+        mount: mountRef.current,
+      });
+      return;
+    }
 
     const engine = new ThreeEditor(mount);
     setEngine(engine);
@@ -48,10 +61,12 @@ export default function ThreeCanvas({ setEngine }: Props) {
 
     const params = new URLSearchParams(window.location.search);
     if (params.has("tutorial") && !tutorial.active) {
+      logInfo("The tutorial has been started");
+      
       localengine.loadGlobal(0);
       tutorial.start();
     }
   }, [tutorial]);
 
-  return <div ref={mountRef} className={styles.container} id="canvas"/>;
+  return <div ref={mountRef} className={styles.container} id="canvas" />;
 }

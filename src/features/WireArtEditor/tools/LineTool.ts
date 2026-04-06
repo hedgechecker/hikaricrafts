@@ -64,6 +64,7 @@ export class LineTool implements Tool {
 
     this.worldPos.copy(this.context.sceneManager.getWorldPosition(event));
     let snapCandidate = this.getBestSnappingCandidate(this.worldPos);
+    console.log(snapCandidate);
 
     if (event.pointerType != "touch") {
       this.inputOverlay.reset();
@@ -154,6 +155,7 @@ export class LineTool implements Tool {
     }
 
     //Line between lastPoint and current Point
+    console.log(selectedPointId);
     if (
       this.lastPointId &&
       selectedPointId &&
@@ -170,16 +172,19 @@ export class LineTool implements Tool {
           endPointId: selectedPointId,
         }),
       );
+      this.lastPointId = selectedPointId;
     }
 
     //add Point and Line Together
     if (commands.length > 0)
       this.context.executeCommand(new CompositeCommand(commands));
 
+    this.context.pointRenderer.setHovered(this.lastPointId);
     this.lastPointId = selectedPointId;
     if (!this.previewLine && event.pointerType != "touch") {
       this.createPreviewLine();
     }
+    console.log(this.lastPointId);
   }
 
   onPointerMove(event: PointerEvent) {
@@ -235,6 +240,7 @@ export class LineTool implements Tool {
       start.clone(),
       endPosition.clone(),
     ]);
+    this.context.sceneManager.render();
   }
 
   private createPreviewLine() {
@@ -322,7 +328,7 @@ export class LineTool implements Tool {
     }
     //2 Snap to existing Points
     const hoveredPoint = this.context.pointRenderer.getHovered();
-    if (hoveredPoint)
+    if (hoveredPoint && hoveredPoint != this.lastPointId)
       return {
         pointId: hoveredPoint,
         line: null,
@@ -462,6 +468,7 @@ export class LineTool implements Tool {
   //Enable Hover for Points, Lines and Grid
   handleHover(event: PointerEvent) {
     this.context.cursorManager.setCursor("default");
+    console.log(this.context.lineRenderer.getHovered());
 
     if (this.context.pointRenderer.handleHover(event)) {
       this.context.cursorManager.setCursor("pointer");
@@ -483,5 +490,9 @@ export class LineTool implements Tool {
       this.context.cursorManager.setCursor("crosshair");
       return;
     }
+
+    this.context.pointRenderer.setHovered(null);
+    this.context.lineRenderer.setHovered(null);
+    this.context.gridRenderer.setHovered(null);
   }
 }

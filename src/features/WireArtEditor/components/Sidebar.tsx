@@ -5,6 +5,7 @@ import ToolButton from "../../global/ToolButton";
 import { useNavigate } from "react-router-dom";
 import { useEditorStore } from "../core/EditorStore";
 import { showDialog } from "../../global/dialogController";
+import { logWarn } from "../../../utils/error/errorHandler";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -63,7 +64,7 @@ export default function SideBar({ engine }: Props) {
     };
   }, []);
 
-  // Fetch all projects available to the current user (private + public)
+  // Fetch all projects available to the current user (private)
   async function loadProjects() {
     const token = localStorage.getItem("token");
 
@@ -71,7 +72,14 @@ export default function SideBar({ engine }: Props) {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
 
-    if (!res.ok) return;
+    if (!res.ok) {
+      logWarn("Something went wrong, when trying to load the user Projects", {
+        function: "Sidebar/loadProjects",
+        res: res,
+        token: token,
+      });
+      return;
+    }
 
     const data = await res.json();
     setProjects(data);
@@ -119,7 +127,14 @@ export default function SideBar({ engine }: Props) {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
 
-    if (res.ok) {
+    if (!res.ok) {
+      logWarn("Something went wrong, when trying to delete a Project", {
+        function: "Sidebar/loadProjects",
+        res: res,
+        token: token,
+        projectId: id,
+      });
+    } else {
       loadProjects();
     }
 

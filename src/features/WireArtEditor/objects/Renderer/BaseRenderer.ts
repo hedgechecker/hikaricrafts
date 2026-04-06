@@ -107,6 +107,7 @@ export abstract class BaseRenderer<T extends RenderData, TInput> {
   }
 
   remove(id: string) {
+    if(id==this.hovered) this.hovered = null;
     const obj = this.objects.get(id);
     if (!obj) return;
 
