@@ -18,7 +18,8 @@ export default function Routing() {
   setupGlobalErrorHandling();
   return (
     <>
-    {dialogComponent}
+      <div id="tooltip-root"></div>
+      {dialogComponent}
       <Routes>
         <Route path="/" element={<Feedback />} />
         <Route path="/all" element={<AllProductsPage />} />

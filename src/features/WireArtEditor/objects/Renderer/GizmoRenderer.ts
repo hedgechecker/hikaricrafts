@@ -130,7 +130,7 @@ export class GizmoRenderer extends BaseRenderer<GizmoRenderData, GizmoData> {
   }
 
   handleHover(event: MouseEvent): boolean {
-    const rect = this.sceneManager.rect;
+    const rect = this.sceneManager.dom.getBoundingClientRect();
     this.mouse = new THREE.Vector2();
     this.raycaster = new THREE.Raycaster();
     this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;

@@ -1,4 +1,5 @@
 import styles from './styles/ToolButton.module.css';
+import Tooltip from './ToolTip';
 interface Props {
   label: string;
   id?: string;
@@ -26,14 +27,17 @@ export default function ToolButton({ id, label, active, image, toolTip, onClick 
   };
 
   return (
-    <button
-      id={id}
-      onClick={handleClick}
-      className={`${styles.button} ${toolTip && styles.tooltip} ${active && styles.selected}`}
-      data-tooltip={toolTip}
-    >
-      {image && <img src={image} className={styles.image} />}
-      {label}
-    </button>
+    <Tooltip text={toolTip}>
+      <button
+        id={id}
+        onClick={handleClick}
+        className={`${styles.button}`}
+        data-tooltip={toolTip}
+        style={active ? { filter: "invert(1)" } : {}}
+      >
+        {image && <img src={image} className={styles.image} />}
+        {label}
+      </button>
+    </Tooltip>
   );
 }

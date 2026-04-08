@@ -206,6 +206,7 @@ export default function Toolbar({ engine }: Props) {
           label={saved ? "" : ""}
           image={saved ? "/icons/check.svg" : "/icons/save.svg"}
           toolTip="Projekt speichern"
+          active={saved}
           onClick={handleSave}
           id="saveButton"
         />
@@ -243,7 +244,8 @@ export default function Toolbar({ engine }: Props) {
           label="Überprüfen"
           image="/icons/preview.svg"
           toolTip="Vorschau erstellen"
-          active={tool === "verify"}
+          // active={tool === "verify"}
+          active={true}
           onClick={() => changeTool("verify")}
           id="verifytool"
         />

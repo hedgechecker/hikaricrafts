@@ -36,6 +36,7 @@ export default function OptionSquares({
                 opacity: isDisabled ? 0.4 : 1,
                 border: isSelected ? "2px solid black" : "1px solid #ccc",
                 background: isSelected ? "#f0f0f0" : "white",
+                color: "var(--color-primary)"
               }}
             >
               {v.value}
