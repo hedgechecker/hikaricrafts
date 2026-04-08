@@ -10,14 +10,11 @@ export class SceneManager {
   renderer: THREE.WebGLRenderer;
   dom: HTMLCanvasElement;
   container: HTMLDivElement;
-  rect: DOMRect;
 
   camera: THREE.OrthographicCamera | THREE.PerspectiveCamera;
   private orthoCamera: THREE.OrthographicCamera;
   private perspectiveCamera: THREE.PerspectiveCamera;
 
-  private overlay!: HTMLDivElement;
-  private gridLabel!: HTMLDivElement;
   private animationId?: number;
 
   private raycaster = new THREE.Raycaster();
@@ -27,7 +24,6 @@ export class SceneManager {
   private count = 0;
 
   constructor(container: HTMLDivElement) {
-    container.appendChild(this.createOverlay(container));
     this.container = container;
     const width = container.clientWidth;
     const height = container.clientHeight;
@@ -60,7 +56,6 @@ export class SceneManager {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1));
 
     this.dom = this.renderer.domElement;
-    this.rect = this.dom.getBoundingClientRect();
     container.appendChild(this.dom);
     this.camera = this.orthoCamera;
     this.setCameraMode("2D");
@@ -91,42 +86,12 @@ export class SceneManager {
     this.renderer.render(this.scene, this.camera);
   }
 
-  createOverlay(container: HTMLDivElement) {
-    const overlay = document.createElement("div");
-
-    overlay.style.position = "absolute";
-    overlay.style.top = container.offsetTop + container.clientTop + "px";
-    overlay.style.left = container.offsetLeft + container.clientLeft + "px";
-    overlay.style.width = container.clientWidth + "px";
-    overlay.style.height = container.clientHeight + "px";
-
-    overlay.style.pointerEvents = "none";
-    overlay.style.zIndex = "10";
-
-    // ---- GRID SIZE LABEL ----
-    const gridLabel = document.createElement("div");
-    gridLabel.style.position = "absolute";
-    gridLabel.style.padding = "4px 8px";
-    gridLabel.style.background = "rgba(0,0,0,0.6)";
-    gridLabel.style.color = "#fff";
-    gridLabel.style.fontFamily = "monospace";
-    gridLabel.style.fontSize = "var(--font-size-lg)";
-    gridLabel.style.borderRadius = "4px";
-    gridLabel.style.width = "max-content";
-
-    overlay.appendChild(gridLabel);
-
-    this.gridLabel = gridLabel;
-    this.overlay = overlay;
-
-    return overlay;
-  }
+  
 
   onResize = () => {
     const width = this.container.clientWidth;
     const height = this.container.clientHeight;
     const aspect = width / height;
-
     // const referenceWidth = 300; // "desktop baseline"
     // const scale = width / referenceWidth;
     //const frustumSize = scale * width;
@@ -145,11 +110,6 @@ export class SceneManager {
     }
 
     this.renderer.setSize(width, height);
-
-    this.rect = this.dom.getBoundingClientRect();
-    this.overlay.style.position = "absolute";
-    this.overlay.style.top = this.rect.top + "px";
-    this.overlay.style.left = this.rect.left + "px";
   };
 
   update() {
@@ -160,17 +120,10 @@ export class SceneManager {
     this.camera.updateProjectionMatrix();
   }
 
-  updateOverlay(step: number) {
-    this.gridLabel.innerText = `Gittergröße: ${step.toFixed(0)} mm\n`;
-    // `Zoom: ${this.camera.zoom.toFixed(2)}\n` +
-    // `Center: (${cameraPos.x.toFixed(2)}, ${cameraPos.y.toFixed(2)})`;
-  }
-
   dispose() {
     if (this.animationId) cancelAnimationFrame(this.animationId);
     this.controller.dispose();
     this.renderer.dispose();
-    this.container.removeChild(this.overlay);
 
     if (this.renderer.domElement.parentNode) {
       this.renderer.domElement.parentNode.removeChild(this.renderer.domElement);

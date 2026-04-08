@@ -4,7 +4,6 @@ import Login from "./Authentication/Login.tsx";
 import "../styles/theme.css";
 import { Register } from "./Authentication/Register.tsx";
 import Feedback from "./Contact/Feedback.tsx";
-
 import AllProductsPage from "../features/products/AllProducts.tsx";
 import SingleProduct from "./Product/SingleProduct.tsx";
 import Contact from "./Contact/Contact.tsx";
@@ -12,15 +11,9 @@ import WireArtEditor from "./WireArtEditor/WireArtEditor.tsx";
 import Overview from "../features/WireArtEditor/components/Overview.tsx";
 import { setupGlobalErrorHandling } from "../utils/error/errorHandler.ts";
 import { useDialog } from "../features/global/useDialog.tsx";
-import { useEffect } from "react";
-import { registerDialog } from "../features/global/dialogController.ts";
 
 export default function Routing() {
-  const { showDialog, dialogComponent } = useDialog();
-
-  useEffect(() => {
-    registerDialog(showDialog);
-  }, [showDialog]);
+  const { dialogComponent } = useDialog();
 
   setupGlobalErrorHandling();
   return (

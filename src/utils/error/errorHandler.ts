@@ -1,4 +1,4 @@
-import { showDialog } from "../../features/global/dialogController";
+import { showDialog } from "../../features/global/useDialog";
 import type { AppLogContext, LogLevel } from "./types";
 
 function logToService(

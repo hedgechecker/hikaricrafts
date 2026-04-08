@@ -1,6 +1,6 @@
-import * as THREE from 'three';
-import { BaseRenderer, type RenderData } from './BaseRenderer';
-import type { SceneManager } from '../SceneManager';
+import * as THREE from "three";
+import { BaseRenderer, type RenderData } from "./BaseRenderer";
+import type { SceneManager } from "../SceneManager";
 
 interface GridRenderData extends RenderData {
   mesh: THREE.LineSegments;
@@ -10,14 +10,17 @@ interface GridRenderData extends RenderData {
 export class GridRenderer extends BaseRenderer<GridRenderData, number> {
   private size = 200;
   private hoveredGrid: THREE.Vector3 | null = null;
+  private gridLabel!: HTMLDivElement;
+  private overlay!: HTMLDivElement;
 
   constructor(sceneManager: SceneManager) {
     super(sceneManager);
 
     const divisions = this.getSubdivisionDivisions();
     this.createGrid(divisions);
+    sceneManager.container.appendChild(this.createOverlay(sceneManager.container));
+    this.update(this.zoom);
   }
-
 
   protected getId() {
     return "grid";
@@ -37,11 +40,15 @@ export class GridRenderer extends BaseRenderer<GridRenderData, number> {
     this.createGrid(divisions);
   }
 
-
   update(zoom: number) {
     this.zoom = zoom;
     const divisions = this.getSubdivisionDivisions();
-    this.sceneManager.updateOverlay(this.getGridStep() * 10);
+
+    this.gridLabel.innerText = `Gittergröße: ${(this.getGridStep() * 10).toFixed(0)} mm\n`;
+    this.overlay.style.position = "absolute";
+    const rect = this.sceneManager.dom.getBoundingClientRect(); 
+    this.overlay.style.top = rect.top + "px";
+    this.overlay.style.left = rect.left + "px";
     this.sync([divisions]);
   }
 
@@ -110,6 +117,43 @@ export class GridRenderer extends BaseRenderer<GridRenderData, number> {
     return new THREE.LineSegments(geometry, material);
   }
 
+  createOverlay(container: HTMLDivElement) {
+    const overlay = document.createElement("div");
+
+    overlay.style.position = "absolute";
+    overlay.style.top = container.offsetTop + container.clientTop + "px";
+    overlay.style.left = container.offsetLeft + container.clientLeft + "px";
+    overlay.style.width = container.clientWidth + "px";
+    overlay.style.height = container.clientHeight + "px";
+
+    overlay.style.pointerEvents = "none";
+    overlay.style.zIndex = "10";
+
+    // ---- GRID SIZE LABEL ----
+    const gridLabel = document.createElement("div");
+    gridLabel.style.position = "absolute";
+    gridLabel.style.padding = "4px 8px";
+    gridLabel.style.background = "rgba(0,0,0,0.6)";
+    gridLabel.style.color = "#fff";
+    gridLabel.style.fontFamily = "monospace";
+    gridLabel.style.fontSize = "var(--font-size-lg)";
+    gridLabel.style.borderRadius = "4px";
+    gridLabel.style.width = "max-content";
+
+    overlay.appendChild(gridLabel);
+
+    this.gridLabel = gridLabel;
+    this.overlay = overlay;
+
+    return overlay;
+  }
+
+  setVisible(visible: boolean): void {
+    super.setVisible(visible);
+    this.gridLabel.style.display = visible? "block" : "none";
+    this.update(this.zoom);
+  }
+
   getSubdivisionDivisions() {
     if (this.zoom > 5) return 2000;
     if (this.zoom > 1.6) return 400;
@@ -153,5 +197,9 @@ export class GridRenderer extends BaseRenderer<GridRenderData, number> {
 
   getHoveredGrid() {
     return this.hoveredGrid;
+  }
+
+  dispose(){
+    this.sceneManager.container.removeChild(this.overlay);
   }
 }

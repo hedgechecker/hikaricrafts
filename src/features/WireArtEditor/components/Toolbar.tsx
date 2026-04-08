@@ -7,7 +7,7 @@ import type { Settings } from "../models/Settings";
 import type { ThreeEditor } from "../core/ThreeEditor";
 import { useEditorStore } from "../core/EditorStore";
 import type { ToolType } from "../tools/Tool";
-import { showDialog } from "../../global/dialogController";
+import { showDialog } from "../../global/useDialog";
 
 interface Props {
   engine: ThreeEditor;

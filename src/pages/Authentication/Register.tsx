@@ -2,7 +2,7 @@ import { useState } from "react";
 import style from "./Login.module.css";
 import { useNavigate } from "react-router-dom";
 import { logError, logInfo } from "../../utils/error/errorHandler";
-import { showDialog } from "../../features/global/dialogController";
+import { showDialog } from "../../features/global/useDialog";
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 export function Register() {

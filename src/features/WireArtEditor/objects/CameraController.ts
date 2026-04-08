@@ -53,6 +53,10 @@ export class CameraController {
     );
 
     this.zoomToPoint(mouse, event.deltaY > 0 ? 0.9 : 1.1);
+    if (!this.isRendering) {
+      this.isRendering = true;
+      requestAnimationFrame(this.applyPan);
+    }
   };
 
   private onTouchStart = (event: TouchEvent) => {
@@ -198,7 +202,6 @@ export class CameraController {
       (event.touches[0].clientY + event.touches[1].clientY) / 2,
     );
   }
-
 
   dispose() {
     this.domElement.removeEventListener("wheel", this.onWheel);

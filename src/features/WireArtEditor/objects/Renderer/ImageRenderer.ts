@@ -134,7 +134,7 @@ export class ImageRenderer extends BaseRenderer<ImageRenderData, ImageData> {
 
   handleHover(event: MouseEvent): boolean {
     if (!this.visible || this.objects.size < 1) return false;
-    const rect = this.sceneManager.rect;
+    const rect = this.sceneManager.dom.getBoundingClientRect();
     this.mouse = new THREE.Vector2();
     this.raycaster = new THREE.Raycaster();
     this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;

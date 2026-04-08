@@ -1,4 +1,4 @@
-import { showDialog } from "../../global/dialogController";
+import { showDialog } from "../../global/useDialog";
 import { AddLineCommand } from "../commands/AddLineCommand";
 import { AddPointCommand } from "../commands/AddPointCommand";
 import type { Command } from "../commands/Command";
@@ -131,7 +131,8 @@ export class VerifyTool implements Tool {
     let invalidVertecies: string[] = [];
 
     polygons.forEach((polygon) => {
-      if (polygonArea(polygon) < 1) { //1cm²
+      if (polygonArea(polygon) < 1) {
+        //1cm²
         invalidPolygons.push(polygon);
         polygon.forEach((vertex) => {
           invalidVertecies.push(vertex.id);

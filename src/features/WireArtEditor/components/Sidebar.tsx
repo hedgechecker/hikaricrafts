@@ -4,8 +4,8 @@ import type { ThreeEditor } from "../core/ThreeEditor";
 import ToolButton from "../../global/ToolButton";
 import { useNavigate } from "react-router-dom";
 import { useEditorStore } from "../core/EditorStore";
-import { showDialog } from "../../global/dialogController";
 import { logWarn } from "../../../utils/error/errorHandler";
+import { showDialog } from "../../global/useDialog";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 

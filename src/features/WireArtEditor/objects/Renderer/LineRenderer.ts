@@ -245,9 +245,7 @@ export class LineRenderer extends BaseRenderer<LineRenderData, LineData> {
   }
 
   handleHover(event: MouseEvent): boolean {
-    const rect = this.sceneManager.rect;
-    this.mouse = new THREE.Vector2();
-    this.raycaster = new THREE.Raycaster();
+    const rect = this.sceneManager.dom.getBoundingClientRect();
     this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
     this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     this.raycaster.setFromCamera(this.mouse, this.sceneManager.camera);
