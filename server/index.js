@@ -24,14 +24,16 @@ const feedBackLimiter = rateLimit({
 app.use(
   cors({
     origin: [
-      'https://nowakl.org',
-      'https://api.nowakl.org',
-      'http://localhost:5173',
-      'http://192.168.178.42:5173',
-      'http://192.168.178.22:5173',
-      '*', // for local dev
+      "https://hikaricrafts.xyz",
+      "https://api.hikaricrafts.xyz",
+      "https://nowakl.org",
+      "https://api.nowakl.org",
+      "http://localhost:5173",
+      "http://192.168.178.42:5173",
+      "http://192.168.178.22:5173",
+      "*", // for local dev
     ],
-    methods: 'GET,POST,PUT,DELETE',
+    methods: "GET,POST,PUT,DELETE",
     credentials: true,
   }),
 );
