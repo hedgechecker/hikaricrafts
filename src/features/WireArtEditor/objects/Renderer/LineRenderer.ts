@@ -1,8 +1,8 @@
-import * as THREE from 'three';
-import { PointRenderer } from './PointRenderer';
-import type { SceneManager } from '../SceneManager';
-import { BaseRenderer, type RenderData } from './BaseRenderer';
-import type { LineData } from '../../models/Line';
+import * as THREE from "three";
+import { PointRenderer } from "./PointRenderer";
+import type { SceneManager } from "../SceneManager";
+import { BaseRenderer, type RenderData } from "./BaseRenderer";
+import type { LineData } from "../../models/Line";
 
 interface LineRenderData extends RenderData {
   startPointId: string;
@@ -15,7 +15,7 @@ export class LineRenderer extends BaseRenderer<LineRenderData, LineData> {
 
   private readonly baseThickness = 0.035;
   private readonly hoverThickness = 0.06;
-  private color = '#000000';
+  private color = "#000000";
 
   constructor(sceneManager: SceneManager, pointManager: PointRenderer) {
     super(sceneManager);
@@ -25,16 +25,9 @@ export class LineRenderer extends BaseRenderer<LineRenderData, LineData> {
   protected getId(data: LineData) {
     return data.id;
   }
-  protected addFromData(data: LineData) {
-    this.addLine(data.startPointId, data.endPointId, data.id);
-  }
-  protected updateFromData(data: LineData) {
-    this.updateConnection(data.id, data.startPointId, data.endPointId);
-  }
-
-  addLine(startPointId: string, endPointId: string, id: string) {
+  public addFromData(data: LineData) {
     const group = new THREE.Group();
-    group.userData.id = id;
+    group.userData.id = data.id;
     const geometry = new THREE.BoxGeometry(1, 1, 1);
     const material = new THREE.MeshBasicMaterial({
       color: this.color,
@@ -42,7 +35,7 @@ export class LineRenderer extends BaseRenderer<LineRenderData, LineData> {
       opacity: 0.8,
     });
     const lineMesh = new THREE.Mesh(geometry, material);
-    lineMesh.name = 'visual';
+    lineMesh.name = "visual";
 
     const hitGeometry = new THREE.BoxGeometry(1, 10, 1);
     const hitMaterial = new THREE.MeshBasicMaterial({
@@ -51,23 +44,26 @@ export class LineRenderer extends BaseRenderer<LineRenderData, LineData> {
       depthWrite: false,
     });
     const hitboxMesh = new THREE.Mesh(hitGeometry, hitMaterial);
-    hitboxMesh.name = 'hitbox';
+    hitboxMesh.name = "hitbox";
 
     group.add(lineMesh);
     group.add(hitboxMesh);
     group.visible = this.visible;
     this.sceneManager.scene.add(group);
 
-    this.objects.set(id, {
-      startPointId: startPointId,
-      endPointId: endPointId,
+    this.objects.set(data.id, {
+      startPointId: data.startPointId,
+      endPointId: data.endPointId,
       mesh: group,
       isHovered: false,
       isSelected: false,
       isInValid: false,
     });
 
-    this.updateLineGeometry(id);
+    this.updateLineGeometry(data.id);
+  }
+  protected updateFromData(data: LineData) {
+    this.updateConnection(data.id, data.startPointId, data.endPointId);
   }
 
   //NEEEE
@@ -83,7 +79,9 @@ export class LineRenderer extends BaseRenderer<LineRenderData, LineData> {
     return connected;
   }
 
-  public getFirstHoverableLine(intersects: THREE.Intersection[]): string | null {
+  public getFirstHoverableLine(
+    intersects: THREE.Intersection[],
+  ): string | null {
     const selectedPoints = this.pointManager.getSelected();
     for (const hit of intersects) {
       const id = hit.object.parent?.userData.id;
@@ -117,7 +115,7 @@ export class LineRenderer extends BaseRenderer<LineRenderData, LineData> {
     return false;
   }
 
-  update() {
+  updateGeometry() {
     for (const [id] of this.objects) {
       this.updateLineGeometry(id);
     }
@@ -150,12 +148,17 @@ export class LineRenderer extends BaseRenderer<LineRenderData, LineData> {
     if (length === 0) return;
 
     // Position: midpoint
-    const midpoint = new THREE.Vector3().addVectors(startPos, endPos).multiplyScalar(0.5);
+    const midpoint = new THREE.Vector3()
+      .addVectors(startPos, endPos)
+      .multiplyScalar(0.5);
     mesh.position.copy(midpoint);
 
     // Orientation: align X axis to direction
     const quaternion = new THREE.Quaternion();
-    quaternion.setFromUnitVectors(new THREE.Vector3(1, 0, 0), direction.clone().normalize());
+    quaternion.setFromUnitVectors(
+      new THREE.Vector3(1, 0, 0),
+      direction.clone().normalize(),
+    );
     mesh.setRotationFromQuaternion(quaternion);
 
     // Scale:
@@ -163,16 +166,18 @@ export class LineRenderer extends BaseRenderer<LineRenderData, LineData> {
     // Y = thickness
     // Z = thickness (gives slight depth)
     const thickness =
-      this.hovered === id ? this.hoverThickness / this.zoom : this.baseThickness / this.zoom;
+      this.hovered === id
+        ? this.hoverThickness / this.zoom
+        : this.baseThickness / this.zoom;
 
     mesh.scale.set(length, thickness, thickness);
   }
 
-  updateScale(zoom: number, id?:string) {
+  update(zoom: number, id?: string) {
     this.zoom = zoom;
-    if(id){
+    if (id) {
       const line = this.objects.get(id);
-      if(!line)return;
+      if (!line) return;
       const startPos = this.pointManager.getWorldPosition(line.startPointId);
       const endPos = this.pointManager.getWorldPosition(line.endPointId);
 
@@ -183,10 +188,9 @@ export class LineRenderer extends BaseRenderer<LineRenderData, LineData> {
 
       if (length === 0) return;
 
-      const thickness =
-        line.isHovered
-          ? this.hoverThickness / zoom
-          : this.baseThickness / zoom;
+      const thickness = line.isHovered
+        ? this.hoverThickness / zoom
+        : this.baseThickness / zoom;
       line.mesh.scale.set(length, thickness, thickness);
       return;
     }
@@ -202,7 +206,9 @@ export class LineRenderer extends BaseRenderer<LineRenderData, LineData> {
       if (length === 0) continue;
 
       const thickness =
-        this.hovered === id ? this.hoverThickness / zoom : this.baseThickness / zoom;
+        this.hovered === id
+          ? this.hoverThickness / zoom
+          : this.baseThickness / zoom;
       line.mesh.scale.set(length, thickness, thickness);
 
       if (line.isInValid) {
@@ -227,24 +233,26 @@ export class LineRenderer extends BaseRenderer<LineRenderData, LineData> {
 
     const line = this.objects.get(id);
     if (!line) return;
-    const visual = line.mesh.getObjectByName('visual');
+    const visual = line.mesh.getObjectByName("visual");
 
     if (visual && (visual as THREE.Mesh).material) {
-      ((visual as THREE.Mesh).material as THREE.Material & { color: THREE.Color }).color.copy(
-        newColor,
-      );
+      (
+        (visual as THREE.Mesh).material as THREE.Material & {
+          color: THREE.Color;
+        }
+      ).color.copy(newColor);
     }
   }
 
   handleHover(event: MouseEvent): boolean {
-    const rect = this.sceneManager.dom.getBoundingClientRect();
-    let mouse = new THREE.Vector2();
-    let raycaster = new THREE.Raycaster();
-    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-    raycaster.setFromCamera(mouse, this.sceneManager.camera);
+    const rect = this.sceneManager.rect;
+    this.mouse = new THREE.Vector2();
+    this.raycaster = new THREE.Raycaster();
+    this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    this.raycaster.setFromCamera(this.mouse, this.sceneManager.camera);
 
-    const intersects = raycaster.intersectObjects(this.getHitboxes(), false);
+    const intersects = this.raycaster.intersectObjects(this.getHitboxes(), false);
     const hoveredLine = this.getFirstHoverableLine(intersects);
     if (hoveredLine) {
       this.setHovered(hoveredLine);

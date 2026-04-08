@@ -26,7 +26,7 @@ export class ResizeTool implements Tool {
     this.currentScale = 1;
     this.computeBoundingRect();
     this.context.gizmoRenderer.setVisible(true);
-    this.context.gizmoRenderer.addGizmo({
+    this.context.gizmoRenderer.addFromData({
       id: "0",
       type: "resize",
       pos: new THREE.Vector3(0, 0, 0),
@@ -118,7 +118,7 @@ export class ResizeTool implements Tool {
       pos.copy(this.center).add(dir);
       this.context.pointRenderer.setPosition(p[0], pos);
     }
-    this.context.lineRenderer.update();
+    this.context.lineRenderer.updateGeometry();
   }
 
   dispose(): void {

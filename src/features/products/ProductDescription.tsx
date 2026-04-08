@@ -1,6 +1,5 @@
 import { type ReactNode } from "react";
 import styles from "./styles/ProductDescription.module.css";
-import { BuyInformation } from "./BuyInformation";
 
 
 interface ProductDescriptionProps {
@@ -11,15 +10,13 @@ interface ProductDescriptionProps {
   children?: ReactNode;
 }
 
-export function ProductDescription({ title, price, available, description, children }: ProductDescriptionProps) {
+export function ProductDescription({ title, description, children }: ProductDescriptionProps) {
   return (
     <div className={styles.layout}>
-      <div className={styles.title}>  
-        {title}
-      </div>
+      <div className={styles.title}>{title}</div>
       {children}
 
-      <div>
+      {/* <div>
       <div className={styles.cost}>
         Vorläufiger Preis: €{price.toFixed(2)}/Stk.
       </div>
@@ -35,17 +32,35 @@ export function ProductDescription({ title, price, available, description, child
           ⨯ Dieser Artikel ist zur Zeit leider nicht verfügbar, könnte aber womöglich auf Anfrage wieder erstellt werden
         </div>
       )}
-      </div>
+      </div>*/}
 
-      {description && (
-        <div className={styles.description}>
-          {description}
-        </div>
-      )}
+      {description && <div className={styles.description}>{description}</div>}
 
-
-      <BuyInformation available={available > 0} />
-
+      {/* <div className={styles.layout}>
+        <table className={styles.table}>
+          <tbody>
+            <tr className={styles.row}>
+              <th className={styles.cell}>Versand:</th>
+              <td className={styles.cell}>
+                <strong>kostenfrei</strong> mit DHL
+              </td>
+            </tr>
+            {available && (
+              <tr className={styles.row}>
+                <th className={styles.cell}>Lieferung:</th>
+                <td className={styles.cell}>
+                  innerhalb von <strong>7-9</strong> Werktagen
+                </td>
+              </tr>
+            )}
+            <tr className={styles.row}>
+              <th className={styles.cell}>Zahlungen:</th>
+              <td className={styles.cell}>PayPal</td>
+            </tr>
+          </tbody>
+        </table>
+        <button className={styles.cart}>In den Warenkorb</button>
+      </div> */}
     </div>
   );
 }

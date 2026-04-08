@@ -43,10 +43,10 @@ export default function Contact() {
             <label className={styles.label}>Email</label>
             <label className={styles.label}>lukas_n3@gmx.de</label>
           </div>
-          <div className={styles.inputField}>
+          {/* <div className={styles.inputField}>
             <label className={styles.label}>Telefon</label>
             <label className={styles.label}>0 159 12341234</label>
-          </div>
+          </div> */}
         </div>
         <p>
           {' '}

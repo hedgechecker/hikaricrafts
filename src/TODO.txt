@@ -1,6 +1,4 @@
-Make slider full black : SizePanel
 linewidth celsize dynamicly input field
-Keyboard anleitung
 Select a range of patterns to move them
 basket info
 basket site
@@ -9,5 +7,4 @@ Import SVG?
 
 Scale Tool
 Landing Page
-error handling
 delete images

@@ -36,27 +36,27 @@ export class TransformTool implements Tool {
 
   onClick(): void {
     this.context.gizmoRenderer.setVisible(true);
-    this.context.gizmoRenderer.addGizmo({
+    this.context.gizmoRenderer.addFromData({
       id: "1",
       type: "resize",
       pos: new THREE.Vector3(10000, 0, 0),
     });
-    this.context.gizmoRenderer.addGizmo({
+    this.context.gizmoRenderer.addFromData({
       id: "2",
       type: "resize",
       pos: new THREE.Vector3(10000, 0, 0),
     });
-    this.context.gizmoRenderer.addGizmo({
+    this.context.gizmoRenderer.addFromData({
       id: "3",
       type: "resize",
       pos: new THREE.Vector3(10000, 0, 0),
     });
-    this.context.gizmoRenderer.addGizmo({
+    this.context.gizmoRenderer.addFromData({
       id: "4",
       type: "resize",
       pos: new THREE.Vector3(10000, 0, 0),
     });
-    this.context.gizmoRenderer.addGizmo({
+    this.context.gizmoRenderer.addFromData({
       id: "5",
       type: "rotate",
       pos: new THREE.Vector3(10000, 0, 0),

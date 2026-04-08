@@ -12,61 +12,7 @@ export class ImageRenderer extends BaseRenderer<ImageRenderData, ImageData> {
   protected getId(data: ImageData) {
     return data.id;
   }
-  protected addFromData(data: ImageData) {
-    this.addImage(data);
-  }
-  protected updateFromData(data: ImageData) {
-    this.updateImage(data);
-  }
-
-  updateScale(zoom: number) {
-    this.zoom = zoom;
-  }
-
-  getFirstHoverableImage(intersects: THREE.Intersection[]): string | null {
-    for (const hit of intersects) {
-      const id = hit.object.parent?.userData.id;
-      if (!id) continue;
-      const selected = this.selected.some((image) => image == id);
-      if (selected) continue;
-
-      return id;
-    }
-    return null;
-  }
-
-  getBoundingRect(id: string) {
-    const img = this.objects.get(id);
-    if (!img) return;
-
-    const pos = img.mesh.position;
-    const width = img.height * img.aspect;
-    const height = img.height;
-    const rot = img.mesh.rotation.z;
-
-    const hw = width / 2;
-    const hh = height / 2;
-
-    const cos = Math.cos(rot);
-    const sin = Math.sin(rot);
-
-    const rotate = (x: number, y: number) => {
-      return {
-        x: pos.x + x * cos - y * sin,
-        y: pos.y + x * sin + y * cos,
-      };
-    };
-
-    return {
-      topRight: rotate(hw, hh),
-      bottomRight: rotate(hw, -hh),
-      topLeft: rotate(-hw, hh),
-      bottomLeft: rotate(-hw, -hh),
-      center: { x: pos.x, y: pos.y },
-    };
-  }
-
-  addImage(image: ImageData) {
+  public addFromData(image: ImageData) {
     const loader = new THREE.TextureLoader();
 
     loader.load(image.url, (texture) => {
@@ -113,7 +59,56 @@ export class ImageRenderer extends BaseRenderer<ImageRenderData, ImageData> {
       this.updateImage(image);
     });
     this.sceneManager.render();
+  }
+  protected updateFromData(data: ImageData) {
+    this.updateImage(data);
+  }
 
+  update(zoom: number) {
+    this.zoom = zoom;
+  }
+
+  getFirstHoverableImage(intersects: THREE.Intersection[]): string | null {
+    for (const hit of intersects) {
+      const id = hit.object.parent?.userData.id;
+      if (!id) continue;
+      const selected = this.selected.some((image) => image == id);
+      if (selected) continue;
+
+      return id;
+    }
+    return null;
+  }
+
+  getBoundingRect(id: string) {
+    const img = this.objects.get(id);
+    if (!img) return;
+
+    const pos = img.mesh.position;
+    const width = img.height * img.aspect;
+    const height = img.height;
+    const rot = img.mesh.rotation.z;
+
+    const hw = width / 2;
+    const hh = height / 2;
+
+    const cos = Math.cos(rot);
+    const sin = Math.sin(rot);
+
+    const rotate = (x: number, y: number) => {
+      return {
+        x: pos.x + x * cos - y * sin,
+        y: pos.y + x * sin + y * cos,
+      };
+    };
+
+    return {
+      topRight: rotate(hw, hh),
+      bottomRight: rotate(hw, -hh),
+      topLeft: rotate(-hw, hh),
+      bottomLeft: rotate(-hw, -hh),
+      center: { x: pos.x, y: pos.y },
+    };
   }
 
   updateImage(data: ImageData) {
@@ -132,22 +127,21 @@ export class ImageRenderer extends BaseRenderer<ImageRenderData, ImageData> {
         );
       }
     });
-    //Set Height
     img.mesh.rotation.z = data.rotation;
-    this.updateScale(this.zoom);
+    this.update(this.zoom);
     this.sceneManager.render();
   }
 
   handleHover(event: MouseEvent): boolean {
     if (!this.visible || this.objects.size < 1) return false;
-    const rect = this.sceneManager.dom.getBoundingClientRect();
-    let mouse = new THREE.Vector2();
-    let raycaster = new THREE.Raycaster();
-    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-    raycaster.setFromCamera(mouse, this.sceneManager.camera);
+    const rect = this.sceneManager.rect;
+    this.mouse = new THREE.Vector2();
+    this.raycaster = new THREE.Raycaster();
+    this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    this.raycaster.setFromCamera(this.mouse, this.sceneManager.camera);
 
-    const intersects = raycaster.intersectObjects(this.getHitboxes(), false);
+    const intersects = this.raycaster.intersectObjects(this.getHitboxes(), false);
     const hoveredImageId = this.getFirstHoverableImage(intersects);
     this.setHovered(hoveredImageId);
 

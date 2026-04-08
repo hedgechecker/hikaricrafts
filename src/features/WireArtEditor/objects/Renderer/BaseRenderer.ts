@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import type { SceneManager } from "../SceneManager";
+import { logWarn } from "../../../../utils/error/errorHandler";
 
 export interface RenderData {
   mesh: THREE.Object3D;
@@ -8,6 +9,9 @@ export interface RenderData {
   isInValid: boolean;
 }
 
+/**
+ * Base Class for managing different types of renderers
+ */
 export abstract class BaseRenderer<T extends RenderData, TInput> {
   protected sceneManager: SceneManager;
   protected objects = new Map<string, T>();
@@ -20,7 +24,6 @@ export abstract class BaseRenderer<T extends RenderData, TInput> {
   protected visible = true;
 
   protected colorInValid = "#ff0000";
-
   protected mouse = new THREE.Vector2();
   protected raycaster = new THREE.Raycaster();
 
@@ -28,18 +31,13 @@ export abstract class BaseRenderer<T extends RenderData, TInput> {
     this.sceneManager = sceneManager;
   }
 
-  abstract updateScale(zoom: number, id?:string): void;
+  abstract update(zoom: number, id?: string): void;
   protected abstract getId(data: TInput): string;
-  protected abstract addFromData(data: TInput): void;
+  public abstract addFromData(data: TInput): void;
   protected abstract updateFromData(data: TInput): void;
 
-  
   has(id: string) {
     return this.objects.has(id);
-  }
-
-  getAllIds(): string[] {
-    return [...this.objects.keys()];
   }
 
   getHitboxes(): THREE.Object3D[] {
@@ -57,11 +55,11 @@ export abstract class BaseRenderer<T extends RenderData, TInput> {
   }
 
   setHovered(id: string | null) {
-    if(id == this.hovered)return;
+    if (id == this.hovered) return;
     if (this.hovered) {
       const obj = this.objects.get(this.hovered);
       if (obj) obj.isHovered = false;
-      this.updateScale(this.zoom, this.hovered);
+      this.update(this.zoom, this.hovered);
     }
 
     this.hovered = id;
@@ -69,16 +67,16 @@ export abstract class BaseRenderer<T extends RenderData, TInput> {
     if (this.hovered) {
       const obj = this.objects.get(this.hovered);
       if (obj) obj.isHovered = true;
-      this.updateScale(this.zoom, this.hovered);
+      this.update(this.zoom, this.hovered);
     }
     this.sceneManager.render();
-    //this.updateScale(this.zoom);
   }
 
   setSelected(ids: string[]) {
     this.selected.forEach((id) => {
       const obj = this.objects.get(id);
       if (obj) obj.isSelected = false;
+      this.update(this.zoom, id);
     });
 
     this.selected = ids;
@@ -86,6 +84,7 @@ export abstract class BaseRenderer<T extends RenderData, TInput> {
     this.selected.forEach((id) => {
       const obj = this.objects.get(id);
       if (obj) obj.isSelected = true;
+      this.update(this.zoom, id);
     });
     this.sceneManager.render();
   }
@@ -94,6 +93,7 @@ export abstract class BaseRenderer<T extends RenderData, TInput> {
     this.invalid.forEach((id) => {
       const obj = this.objects.get(id);
       if (obj) obj.isInValid = false;
+      this.update(this.zoom, id);
     });
 
     this.invalid = ids;
@@ -101,15 +101,22 @@ export abstract class BaseRenderer<T extends RenderData, TInput> {
     this.invalid.forEach((id) => {
       const obj = this.objects.get(id);
       if (obj) obj.isInValid = true;
+      this.update(this.zoom, id);
     });
-    this.updateScale(this.zoom);
     this.sceneManager.render();
   }
 
   remove(id: string) {
-    if(id==this.hovered) this.hovered = null;
+    if (id == this.hovered) this.hovered = null;
     const obj = this.objects.get(id);
-    if (!obj) return;
+    if (!obj) {
+      logWarn("Trying to remove a Object, that doesnt exist", {
+        function: "BaseRenderer/remove",
+        objectId: id,
+        objects: this.objects,
+      });
+      return;
+    }
 
     this.sceneManager.scene.remove(obj.mesh);
 
@@ -133,7 +140,7 @@ export abstract class BaseRenderer<T extends RenderData, TInput> {
   }
 
   setVisible(visible: boolean) {
-    if(visible == this.visible)return;
+    if (visible == this.visible) return;
     this.objects.forEach((obj) => {
       obj.mesh.visible = visible;
     });
@@ -142,6 +149,10 @@ export abstract class BaseRenderer<T extends RenderData, TInput> {
     this.sceneManager.render();
   }
 
+  /**
+   * Syncs the internal Render Data to the source data
+   * @param data Array of source truth data
+   */
   sync(data: TInput[]) {
     const existing = new Set(this.objects.keys());
 
@@ -158,13 +169,5 @@ export abstract class BaseRenderer<T extends RenderData, TInput> {
     for (const id of existing) {
       this.remove(id);
     }
-  }
-
-  clear() {
-    this.objects.forEach((obj) => {
-      this.sceneManager.scene.remove(obj.mesh);
-    });
-
-    this.objects.clear();
   }
 }

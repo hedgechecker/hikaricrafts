@@ -1,33 +1,81 @@
 import * as THREE from "three";
 import type { PointData } from "../../models/Point";
-import { BaseRenderer } from "./BaseRenderer";
+import { BaseRenderer, type RenderData } from "./BaseRenderer";
 
-interface PointRenderData {
-  mesh: THREE.Group;
-  isHovered: boolean;
-  isSelected: boolean;
-  isInValid: boolean;
-}
-
-export class PointRenderer extends BaseRenderer<PointRenderData, PointData> {
+export class PointRenderer extends BaseRenderer<RenderData, PointData> {
   private readonly baseThickness = 1.0;
   private readonly hoverThickness = 2.0;
   private readonly baseRadius = 0.09;
-  private readonly hitRadius = 0.2; // bigger for easier hover
+  private readonly hitRadius = 0.2;
 
   private color = "#999999";
 
   protected getId(data: PointData) {
     return data.id;
   }
-  protected addFromData(data: PointData) {
-    this.addPoint(new THREE.Vector3(data.x, data.y, data.z), data.id);
+  public addFromData(data: PointData) {
+    const group = new THREE.Group();
+    group.position.copy(new THREE.Vector3(data.x, data.y, data.z));
+
+    const geometry = new THREE.CircleGeometry(this.baseRadius, 32);
+
+    const material = new THREE.MeshBasicMaterial({
+      color: this.color,
+      transparent: true,
+      opacity: 0.4, // semi-transparent center
+    });
+
+    const circle = new THREE.Mesh(geometry, material);
+
+    // Outline
+    const edges = new THREE.EdgesGeometry(geometry);
+    const outlineMaterial = new THREE.LineBasicMaterial({
+      color: this.color,
+    });
+
+    const outline = new THREE.LineSegments(edges, outlineMaterial);
+
+    circle.name = "visual";
+    outline.name = "outline";
+
+    const hitGeometry = new THREE.CircleGeometry(this.hitRadius, 32);
+
+    const hitMaterial = new THREE.MeshBasicMaterial({
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+    });
+
+    const hitbox = new THREE.Mesh(hitGeometry, hitMaterial);
+    hitbox.name = "hitbox";
+    const size = this.baseThickness / this.zoom;
+    circle.scale.set(size, size, 1);
+    outline.scale.set(size, size, 1);
+    outline.position.z = 0.001;
+    hitbox.scale.set(size, size, 1);
+    group.add(circle);
+    group.add(outline);
+    group.add(hitbox);
+    group.userData.id = data.id;
+
+    group.visible = this.visible;
+    this.sceneManager.scene.add(group);
+
+    this.objects.set(data.id, {
+      mesh: group,
+      isSelected: false,
+      isHovered: false,
+      isInValid: false,
+    });
+    this.sceneManager.render();
+    return group;
   }
+
   protected updateFromData(data: PointData) {
     this.setPosition(data.id, new THREE.Vector3(data.x, data.y, data.z));
   }
 
-  updateScale(zoom: number, id?: string) {
+  update(zoom: number, id?: string) {
     this.zoom = zoom;
     const size = this.baseThickness / zoom;
 
@@ -84,68 +132,6 @@ export class PointRenderer extends BaseRenderer<PointRenderData, PointData> {
     });
   }
 
-  addPoint(position: THREE.Vector3, id: string) {
-    const group = new THREE.Group();
-    group.position.copy(position);
-
-    // -----------------------------
-    // Visible Circle (Outline + Fill)
-    // -----------------------------
-
-    const geometry = new THREE.CircleGeometry(this.baseRadius, 32);
-
-    const material = new THREE.MeshBasicMaterial({
-      color: this.color,
-      transparent: true,
-      opacity: 0.4, // semi-transparent center
-    });
-
-    const circle = new THREE.Mesh(geometry, material);
-
-    // Outline
-    const edges = new THREE.EdgesGeometry(geometry);
-    const outlineMaterial = new THREE.LineBasicMaterial({
-      color: this.color,
-    });
-
-    const outline = new THREE.LineSegments(edges, outlineMaterial);
-
-    circle.name = "visual";
-    outline.name = "outline";
-
-    const hitGeometry = new THREE.CircleGeometry(this.hitRadius, 32);
-
-    const hitMaterial = new THREE.MeshBasicMaterial({
-      transparent: true,
-      opacity: 0, // invisible
-      depthWrite: false,
-    });
-
-    const hitbox = new THREE.Mesh(hitGeometry, hitMaterial);
-    hitbox.name = "hitbox";
-    const size = this.baseThickness / this.zoom;
-    circle.scale.set(size, size, 1);
-    outline.scale.set(size, size, 1);
-    outline.position.z = 0.001;
-    hitbox.scale.set(size, size, 1);
-    group.add(circle);
-    group.add(outline);
-    group.add(hitbox);
-    group.userData.id = id;
-
-    group.visible = this.visible;
-    this.sceneManager.scene.add(group);
-
-    this.objects.set(id, {
-      mesh: group,
-      isSelected: false,
-      isHovered: false,
-      isInValid: false,
-    });
-    this.sceneManager.render();
-    return group;
-  }
-
   setPosition(id: string, pos: THREE.Vector3) {
     const p = this.objects.get(id);
     if (!p) return;
@@ -155,19 +141,6 @@ export class PointRenderer extends BaseRenderer<PointRenderData, PointData> {
 
   getWorldPosition(id: string): THREE.Vector3 | null {
     return this.objects.get(id)?.mesh.position ?? null;
-  }
-
-  getFirstHoverablePoint(intersects: THREE.Intersection[]): string | null {
-    for (const hit of intersects) {
-      const id = hit.object.parent?.userData.id;
-      if (!id) continue;
-
-      const selected = this.selected.some((image) => image == id);
-      if (selected) continue;
-
-      return id;
-    }
-    return null;
   }
 
   setColorAll(color: string) {
@@ -208,6 +181,7 @@ export class PointRenderer extends BaseRenderer<PointRenderData, PointData> {
     const worldPos = this.sceneManager.getWorldPosition(event);
     let hoveredPointId = null;
     const thres = 0.1 / this.zoom;
+    
     for (const object of this.objects) {
       const pos = object[1].mesh.position;
       if (
@@ -220,18 +194,5 @@ export class PointRenderer extends BaseRenderer<PointRenderData, PointData> {
       }
     }
     return false;
-    // const rect = this.sceneManager.dom.getBoundingClientRect();
-
-    // this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    // this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-    // this.raycaster.setFromCamera(this.mouse, this.sceneManager.camera);
-
-    // const intersects = this.raycaster.intersectObjects(this.getHitboxes(), false);
-    // const hoveredPointId = this.getFirstHoverablePoint(intersects);
-    // if (hoveredPointId) {
-    //   this.setHovered(hoveredPointId);
-    //   return true;
-    // }
-    // return false;
   }
 }

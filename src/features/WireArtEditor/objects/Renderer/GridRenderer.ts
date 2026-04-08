@@ -18,37 +18,30 @@ export class GridRenderer extends BaseRenderer<GridRenderData, number> {
     this.createGrid(divisions);
   }
 
-  /* ---------------- BaseRenderer hooks ---------------- */
 
   protected getId() {
-    return 'grid';
+    return "grid";
   }
-  protected addFromData(divisions: number) {
+  public addFromData(divisions: number) {
     this.createGrid(divisions);
   }
   protected updateFromData(divisions: number) {
-    const grid = this.objects.get('grid');
+    const grid = this.objects.get("grid");
     if (!grid) return;
 
     if (grid.divisions === divisions) return;
-
     this.sceneManager.scene.remove(grid.mesh);
 
     grid.mesh.geometry.dispose();
-    //grid.mesh.material.dispose();
 
     this.createGrid(divisions);
   }
-  updateScale(zoom: number) {
+
+
+  update(zoom: number) {
     this.zoom = zoom;
-    this.update();
-  }
-
-  /* ---------------- Grid Logic ---------------- */
-
-  update() {
     const divisions = this.getSubdivisionDivisions();
-    this.sceneManager.updateOverlay(this.getGridStep()*10);
+    this.sceneManager.updateOverlay(this.getGridStep() * 10);
     this.sync([divisions]);
   }
 
@@ -60,10 +53,10 @@ export class GridRenderer extends BaseRenderer<GridRenderData, number> {
       divisions,
       isHovered: false,
       isSelected: false,
-      isInValid: false
+      isInValid: false,
     };
 
-    this.objects.set('grid', data);
+    this.objects.set("grid", data);
 
     data.mesh.visible = this.visible;
     this.sceneManager.scene.add(mesh);
@@ -103,8 +96,11 @@ export class GridRenderer extends BaseRenderer<GridRenderData, number> {
     }
 
     const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+    geometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(vertices, 3),
+    );
+    geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
 
     const material = new THREE.LineBasicMaterial({
       vertexColors: true,
@@ -113,8 +109,6 @@ export class GridRenderer extends BaseRenderer<GridRenderData, number> {
 
     return new THREE.LineSegments(geometry, material);
   }
-
-  /* ---------------- Grid Utility ---------------- */
 
   getSubdivisionDivisions() {
     if (this.zoom > 5) return 2000;
@@ -133,7 +127,7 @@ export class GridRenderer extends BaseRenderer<GridRenderData, number> {
   }
 
   snapToGrid(worldPos: THREE.Vector3) {
-    if(!this.visible) return null;
+    if (!this.visible) return null;
     const step = this.getGridStep();
 
     const snappedX = Math.round(worldPos.x / step) * step;
@@ -148,13 +142,10 @@ export class GridRenderer extends BaseRenderer<GridRenderData, number> {
     return null;
   }
 
-  /* ---------------- Hover ---------------- */
-
   handleHover(event: MouseEvent): boolean {
     const worldPos = this.sceneManager.getWorldPosition(event);
 
     const snapped = this.snapToGrid(worldPos);
-
     this.hoveredGrid = snapped;
 
     return snapped !== null;

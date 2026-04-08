@@ -1,6 +1,7 @@
 import { useState } from "react";
 import style from "./Login.module.css";
 import { useNavigate } from "react-router-dom";
+import { logInfo } from "../../utils/error/errorHandler";
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 
@@ -19,10 +20,23 @@ export function Login() {
     const data = await res.json();
     if (data.token) {
       localStorage.setItem("token", data.token);
-      alert("Logged in!");
-      navigate("/");
+      logInfo("Erfolgreich eingeloggt",{
+        function: "Login/login",
+        token: data.token,
+        email: email,
+        UIvisible: true,
+      });
+      setTimeout(() => {
+        navigate("/");
+      }, 1000)
     } else {
-      alert(data.message || "Login failed");
+      logInfo("Benutzername oder Passwort falsch", {
+        function: "Login/login",
+        token: data.token,
+        message: data.message,
+        email: email,
+        UIvisible: true,
+      });
     }
   };
 

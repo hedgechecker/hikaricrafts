@@ -39,10 +39,9 @@ export class CameraController {
     domElement.addEventListener("touchend", this.onTouchEnd);
   }
 
-  // =======================
-  // ZOOM TO CURSOR (DESKTOP)
-  // =======================
-
+  /**
+   * Handles Zooming on mouseWheel
+   */
   private onWheel = (event: WheelEvent) => {
     event.preventDefault();
 
@@ -56,19 +55,17 @@ export class CameraController {
     this.zoomToPoint(mouse, event.deltaY > 0 ? 0.9 : 1.1);
   };
 
-  // =======================
-  // TOUCH HANDLING
-  // =======================
-
   private onTouchStart = (event: TouchEvent) => {
     this.rect = this.domElement.getBoundingClientRect();
 
+    // Set to Panning mode
     if (event.touches.length === 1) {
       const t = event.touches[0];
       this.isPanning = true;
       this.lastMouse.set(t.clientX, t.clientY);
     }
 
+    //Set to Zoom mode
     if (event.touches.length === 2) {
       this.isPanning = false;
       this.lastTouchDistance = this.getTouchDistance(event);
@@ -77,6 +74,7 @@ export class CameraController {
 
   private onTouchMove = (event: TouchEvent) => {
     event.preventDefault();
+    //Move the scene based on pointer position
     if (this.panEnabled && event.touches.length === 1 && this.isPanning) {
       const t = event.touches[0];
 
@@ -94,12 +92,9 @@ export class CameraController {
       this.camera.position.x -= moveX;
       this.camera.position.y += moveY;
       this.lastMouse.set(t.clientX, t.clientY);
-      if (!this.isRendering) {
-        this.isRendering = true;
-        requestAnimationFrame(this.applyPan);
-      }
     }
 
+    //zoom based on pointer pos
     if (event.touches.length === 2) {
       const newDistance = this.getTouchDistance(event);
       const center = this.getTouchCenter(event);
@@ -115,15 +110,16 @@ export class CameraController {
 
       this.lastTouchDistance = newDistance;
     }
+
+    if (!this.isRendering) {
+      this.isRendering = true;
+      requestAnimationFrame(this.applyPan);
+    }
   };
 
   private onTouchEnd = () => {
     this.isPanning = false;
   };
-
-  // =======================
-  // SHARED ZOOM LOGIC
-  // =======================
 
   private zoomToPoint(mouse: THREE.Vector2, factor: number) {
     const beforeZoom = this.screenToWorld(mouse);
@@ -136,10 +132,6 @@ export class CameraController {
 
     const offset = beforeZoom.sub(afterZoom);
     this.camera.position.add(offset);
-    if (!this.isRendering) {
-      this.isRendering = true;
-      requestAnimationFrame(this.applyPan);
-    }
   }
 
   private screenToWorld(mouse: THREE.Vector2) {
@@ -147,10 +139,6 @@ export class CameraController {
     vector.unproject(this.camera);
     return vector;
   }
-
-  // =======================
-  // MOUSE PAN
-  // =======================
 
   private onMouseDown = (event: MouseEvent) => {
     if (event.button === 0) return;
@@ -198,10 +186,6 @@ export class CameraController {
     this.isPanning = false;
   };
 
-  // =======================
-  // HELPERS
-  // =======================
-
   private getTouchDistance(event: TouchEvent) {
     const dx = event.touches[0].clientX - event.touches[1].clientX;
     const dy = event.touches[0].clientY - event.touches[1].clientY;
@@ -215,7 +199,6 @@ export class CameraController {
     );
   }
 
-  // =======================
 
   dispose() {
     this.domElement.removeEventListener("wheel", this.onWheel);

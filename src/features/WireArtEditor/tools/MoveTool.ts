@@ -130,7 +130,7 @@ export class MoveTool implements Tool {
       this.selectedPoint,
       this.currentPosition,
     );
-    this.context.lineRenderer.update();
+    this.context.lineRenderer.updateGeometry();
   }
 
   onPointerUp() {

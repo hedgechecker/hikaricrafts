@@ -109,8 +109,8 @@ export class ThreeEditor {
     this.model.images.clear();
     this.hasChanges = false;
 
-    this.toolManager.setActiveTool("move");
-    this.store.setTool("move");
+    this.toolManager.setActiveTool("line");
+    this.store.setTool("line");
 
     if (!data) {
       const project = this.storage.getEmptyProject();
@@ -201,11 +201,11 @@ export class ThreeEditor {
       this.sceneManager.update();
 
       if (camera instanceof OrthographicCamera && camera.zoom != lastZoom) {
-        this.pointRenderer.updateScale(camera.zoom);
-        this.lineRenderer.updateScale(camera.zoom);
-        this.imageRenderer.updateScale(camera.zoom);
-        this.gridRenderer.updateScale(camera.zoom);
-        this.gizmoRenderer.updateScale(camera.zoom);
+        this.pointRenderer.update(camera.zoom);
+        this.lineRenderer.update(camera.zoom);
+        this.imageRenderer.update(camera.zoom);
+        this.gridRenderer.update(camera.zoom);
+        this.gizmoRenderer.update(camera.zoom);
         lastZoom = camera.zoom;
       }
 

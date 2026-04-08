@@ -6,25 +6,24 @@ type CameraMode = "2D" | "3D";
 
 export class SceneManager {
   scene: THREE.Scene;
-
-  camera: THREE.OrthographicCamera | THREE.PerspectiveCamera;
-  orthoCamera: THREE.OrthographicCamera;
-  perspectiveCamera: THREE.PerspectiveCamera;
-
   controller!: CameraController | OrbitControls;
-  mode: CameraMode = "2D";
-
   renderer: THREE.WebGLRenderer;
   dom: HTMLCanvasElement;
+  container: HTMLDivElement;
+  rect: DOMRect;
+
+  camera: THREE.OrthographicCamera | THREE.PerspectiveCamera;
+  private orthoCamera: THREE.OrthographicCamera;
+  private perspectiveCamera: THREE.PerspectiveCamera;
 
   private overlay!: HTMLDivElement;
   private gridLabel!: HTMLDivElement;
-  container: HTMLDivElement;
   private animationId?: number;
 
   private raycaster = new THREE.Raycaster();
   private plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
   private mouse = new THREE.Vector2(0, 0);
+
   private count = 0;
 
   constructor(container: HTMLDivElement) {
@@ -34,16 +33,11 @@ export class SceneManager {
     const height = container.clientHeight;
 
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0xfaf7f2);
-    this.scene.add(new THREE.AmbientLight(0xffffff, 0.3));
-    const light = new THREE.SpotLight(0xffffff, 150, 100, Math.PI / 3, 0, 1);
-    light.position.set(0, 0, 50);
-    light.lookAt(0, 0, 0);
-    this.scene.add(light);
+    this.addLighting();
+
     const aspect = width / height;
     const frustumSize = 10;
 
-    // ORTHO
     this.orthoCamera = new THREE.OrthographicCamera(
       (-frustumSize * aspect) / 2,
       (frustumSize * aspect) / 2,
@@ -54,8 +48,6 @@ export class SceneManager {
     );
     this.orthoCamera.position.set(0, 0, 10);
     this.orthoCamera.zoom = 0.1;
-
-    // PERSPECTIVE
     this.perspectiveCamera = new THREE.PerspectiveCamera(60, aspect, 0.1, 1000);
     this.perspectiveCamera.position.set(0, 0, 10);
     this.perspectiveCamera.lookAt(0, 0, 0);
@@ -66,10 +58,10 @@ export class SceneManager {
     });
     this.renderer.setSize(width, height);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1));
-    this.dom = this.renderer.domElement;
-    container.appendChild(this.dom);
 
-    // active camera
+    this.dom = this.renderer.domElement;
+    this.rect = this.dom.getBoundingClientRect();
+    container.appendChild(this.dom);
     this.camera = this.orthoCamera;
     this.setCameraMode("2D");
 
@@ -83,7 +75,16 @@ export class SceneManager {
       this.count = 0;
       this.render();
     }, 1000);
-  } 
+  }
+
+  addLighting() {
+    this.scene.background = new THREE.Color(0xfaf7f2);
+    this.scene.add(new THREE.AmbientLight(0xffffff, 0.3));
+    const light = new THREE.SpotLight(0xffffff, 150, 100, Math.PI / 3, 0, 1);
+    light.position.set(0, 0, 50);
+    light.lookAt(0, 0, 0);
+    this.scene.add(light);
+  }
 
   render() {
     this.count++;
@@ -130,7 +131,7 @@ export class SceneManager {
     // const scale = width / referenceWidth;
     //const frustumSize = scale * width;
 
-    const frustumSize = 5;
+    const frustumSize = 7;
 
     if (this.camera instanceof THREE.OrthographicCamera) {
       this.camera.left = (-frustumSize * aspect) / 2;
@@ -145,10 +146,10 @@ export class SceneManager {
 
     this.renderer.setSize(width, height);
 
-    const rect = this.container.getBoundingClientRect();
+    this.rect = this.dom.getBoundingClientRect();
     this.overlay.style.position = "absolute";
-    this.overlay.style.top = rect.top + "px";
-    this.overlay.style.left = rect.left + "px";
+    this.overlay.style.top = this.rect.top + "px";
+    this.overlay.style.left = this.rect.left + "px";
   };
 
   update() {
@@ -160,7 +161,7 @@ export class SceneManager {
   }
 
   updateOverlay(step: number) {
-    this.gridLabel.innerText = `Grid: ${step.toFixed(0)} mm\n`;
+    this.gridLabel.innerText = `Gittergröße: ${step.toFixed(0)} mm\n`;
     // `Zoom: ${this.camera.zoom.toFixed(2)}\n` +
     // `Center: (${cameraPos.x.toFixed(2)}, ${cameraPos.y.toFixed(2)})`;
   }
@@ -171,7 +172,6 @@ export class SceneManager {
     this.renderer.dispose();
     this.container.removeChild(this.overlay);
 
-    // Remove canvas from DOM safely
     if (this.renderer.domElement.parentNode) {
       this.renderer.domElement.parentNode.removeChild(this.renderer.domElement);
     }
@@ -193,28 +193,18 @@ export class SceneManager {
   }
 
   setCameraMode(mode: CameraMode) {
-    //if (this.mode === mode) return;
-
-    this.mode = mode;
-
     if (mode === "2D") {
       this.camera = this.orthoCamera;
     } else {
-      //this.perspectiveCamera.position.copy(this.orthoCamera.position);
-
       this.camera = this.perspectiveCamera;
       this.renderer.render(this.scene, this.camera);
     }
-
-    // Smooth transition
     //this.camera.position.copy(prevCamera.position);
 
-    // Dispose old controller
     if (this.controller) {
       this.controller.dispose();
     }
 
-    // Create correct controller
     if (mode === "2D") {
       this.controller = new CameraController(this.orthoCamera, this.dom, this);
     } else {
@@ -230,7 +220,7 @@ export class SceneManager {
 
   setPanEnabled(enabled: boolean) {
     if (this.controller instanceof CameraController) {
-      this.controller.setPanEnabled(enabled); // needed for damping
+      this.controller.setPanEnabled(enabled);
     }
   }
 }

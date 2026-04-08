@@ -24,6 +24,7 @@ export default function NavBar({ selected }: NavBarProps) {
     setIsLoggedIn(false);
     localStorage.removeItem("token");
     closeMobile();
+    window.location.reload();
   };
 
   return (

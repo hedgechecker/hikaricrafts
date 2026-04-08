@@ -1,16 +1,12 @@
 import * as THREE from "three";
-import { BaseRenderer } from "./BaseRenderer";
+import { BaseRenderer, type RenderData } from "./BaseRenderer";
 import type { SceneManager } from "../SceneManager";
 
-interface GizmoRenderData {
-  mesh: THREE.Object3D;
-  isHovered: boolean;
-  isSelected: boolean;
-  isInValid: boolean;
+interface GizmoRenderData extends RenderData{
   type: string;
 }
 
-export interface GizmoData {
+interface GizmoData {
   id: string;
   type: string;
   pos: THREE.Vector3;
@@ -28,11 +24,7 @@ export class GizmoRenderer extends BaseRenderer<GizmoRenderData, GizmoData> {
   protected getId(data: GizmoData) {
     return data.id;
   }
-  protected addFromData(data: GizmoData) {
-    this.addGizmo(data);
-  }
-
-  public addGizmo(data: GizmoData) {
+  public addFromData(data: GizmoData) {
     const group = new THREE.Group();
     const baseRadius = 0.1;
     const hitRadius = 0.25;
@@ -116,7 +108,7 @@ export class GizmoRenderer extends BaseRenderer<GizmoRenderData, GizmoData> {
     return object.type;
   }
 
-  updateScale(zoom: number) {
+  update(zoom: number) {
     this.zoom = zoom;
     const size = 1.0 / zoom;
     this.objects.forEach((object) => {
@@ -138,18 +130,17 @@ export class GizmoRenderer extends BaseRenderer<GizmoRenderData, GizmoData> {
   }
 
   handleHover(event: MouseEvent): boolean {
-    const rect = this.sceneManager.dom.getBoundingClientRect();
-    let mouse = new THREE.Vector2();
-    let raycaster = new THREE.Raycaster();
-    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-    raycaster.setFromCamera(mouse, this.sceneManager.camera);
+    const rect = this.sceneManager.rect;
+    this.mouse = new THREE.Vector2();
+    this.raycaster = new THREE.Raycaster();
+    this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    this.raycaster.setFromCamera(this.mouse, this.sceneManager.camera);
 
-    const intersects = raycaster.intersectObjects(this.getHitboxes(), false);
+    const intersects = this.raycaster.intersectObjects(this.getHitboxes(), false);
     const hoveredId = this.getFirstHoverableGizmo(intersects);
     this.setHovered(hoveredId);
     if (hoveredId) {
-      
       return true;
     }
     return false;
