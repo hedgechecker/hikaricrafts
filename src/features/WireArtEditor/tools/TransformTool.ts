@@ -183,40 +183,33 @@ export class TransformTool implements Tool {
     bottomLeft: { x: number; y: number };
     topLeft: { x: number; y: number };
   }) {
-    this.context.gizmoRenderer.updateGizmo({
-      id: "1",
-      type: "resize",
-      pos: new THREE.Vector3(rect.topRight.x, rect.topRight.y, 0),
-    });
-    this.context.gizmoRenderer.updateGizmo({
-      id: "2",
-      type: "resize",
-      pos: new THREE.Vector3(rect.bottomRight.x, rect.bottomRight.y, 0),
-    });
-    this.context.gizmoRenderer.updateGizmo({
-      id: "3",
-      type: "resize",
-      pos: new THREE.Vector3(rect.bottomLeft.x, rect.bottomLeft.y, 0),
-    });
-    this.context.gizmoRenderer.updateGizmo({
-      id: "4",
-      type: "resize",
-      pos: new THREE.Vector3(rect.topLeft.x, rect.topLeft.y, 0),
-    });
-    this.context.gizmoRenderer.updateGizmo({
-      id: "5",
-      type: "rotate",
-      pos: new THREE.Vector3(
+    this.context.gizmoRenderer.updateGizmo(
+      "1",
+      new THREE.Vector3(rect.topRight.x, rect.topRight.y, 0),
+    );
+    this.context.gizmoRenderer.updateGizmo(
+      "2",
+      new THREE.Vector3(rect.bottomRight.x, rect.bottomRight.y, 0),
+    );
+    this.context.gizmoRenderer.updateGizmo(
+      "3",
+      new THREE.Vector3(rect.bottomLeft.x, rect.bottomLeft.y, 0),
+    );
+    this.context.gizmoRenderer.updateGizmo(
+      "4",
+      new THREE.Vector3(rect.topLeft.x, rect.topLeft.y, 0),
+    );
+    this.context.gizmoRenderer.updateGizmo(
+      "5",
+      new THREE.Vector3(
         rect.topLeft.x + (rect.topRight.x - rect.topLeft.x) / 2,
         rect.topLeft.y + (rect.topRight.y - rect.topLeft.y) / 2,
         0,
       ),
-    });
+    );
   }
 
-  unattach(){
-
-  }
+  unattach() {}
 
   //Enable Hover only for Images
   handleHover(event: PointerEvent) {

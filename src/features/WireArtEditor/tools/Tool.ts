@@ -7,7 +7,7 @@ import type { ImageRenderer } from '../objects/Renderer/ImageRenderer';
 import type { LineRenderer } from '../objects/Renderer/LineRenderer';
 import type { PointRenderer } from '../objects/Renderer/PointRenderer';
 import type { SceneManager } from '../objects/SceneManager';
-export type ToolType = 'point' | 'line' | 'move'  | 'verify' | 'delete' | 'resize' | null;
+export type ToolType = 'point' | 'line' | 'move'  | 'verify' | 'delete' | 'resize' | 'direct' | null;
 
 
 export interface Tool {

@@ -179,8 +179,6 @@ function isCollinear(a: Vector2, b: Vector2, c: Vector2, eps = 1e-6) {
   return Math.abs((b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)) < eps;
 }
 
-
-
 export function findPoygons(
   points: Map<string, PointData>,
   lines: Map<string, LineData>,
@@ -246,33 +244,31 @@ export function findPoygons(
       }
     }
   }
-  polygons.sort(
-    (a, b) => polygonArea(b) - polygonArea(a),
-  );
+  polygons.sort((a, b) => polygonArea(b) - polygonArea(a));
 
- const components = findComponents(adjList);
+  const components = findComponents(adjList);
 
- const result: Vertex[][] = [];
+  const result: Vertex[][] = [];
 
- for (const comp of components) {
-   const compSet = new Set(comp);
+  for (const comp of components) {
+    const compSet = new Set(comp);
 
-   const compPolys = polygons.filter((p) =>
-     polygonBelongsToComponent(p, compSet),
-   );
+    const compPolys = polygons.filter((p) =>
+      polygonBelongsToComponent(p, compSet),
+    );
 
-   if (compPolys.length === 0) continue;
+    if (compPolys.length === 0) continue;
 
-   // sort largest → smallest
-   compPolys.sort((a, b) => polygonArea(b) - polygonArea(a));
+    // sort largest → smallest
+    compPolys.sort((a, b) => polygonArea(b) - polygonArea(a));
 
-   // 🔥 remove THIS component's outer face
-   compPolys.shift();
+    // 🔥 remove THIS component's outer face
+    compPolys.shift();
 
-   result.push(...compPolys);
- }
+    result.push(...compPolys);
+  }
 
- return result;
+  return result;
 }
 
 export function polygonArea(poly: Vertex[]) {
@@ -477,4 +473,44 @@ function getPolygonWinding(polygon: Vertex[]): number {
     area += p1.x * p2.y - p2.x * p1.y;
   }
   return Math.sign(area); // +1 CCW, -1 CW
+}
+
+export function getPolygonCentroid(vertices: Vertex[]): Vector2 {
+  let area = 0;
+  let cx = 0;
+  let cy = 0;
+
+  const n = vertices.length;
+
+  for (let i = 0; i < n; i++) {
+    const current = vertices[i].position;
+    const next = vertices[(i + 1) % n].position;
+
+    const cross = current.x * next.y - next.x * current.y;
+
+    area += cross;
+    cx += (current.x + next.x) * cross;
+    cy += (current.y + next.y) * cross;
+  }
+
+  area *= 0.5;
+
+  if (area === 0) {
+    // fallback: average of points
+    const sum = vertices.reduce(
+      (acc, v) => {
+        acc.x += v.position.x;
+        acc.y += v.position.y;
+        return acc;
+      },
+      { x: 0, y: 0 },
+    );
+
+    return new Vector2(sum.x / n, sum.y / n);
+  }
+
+  cx /= 6 * area;
+  cy /= 6 * area;
+
+  return new Vector2(cx, cy);
 }

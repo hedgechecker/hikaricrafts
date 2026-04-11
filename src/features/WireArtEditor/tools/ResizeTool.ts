@@ -93,11 +93,7 @@ export class ResizeTool implements Tool {
 
     pos.copy(this.center).add(dir);
 
-    this.context.gizmoRenderer.updateGizmo({
-      id: "0",
-      type: "resize",
-      pos: pos,
-    });
+    this.context.gizmoRenderer.updateGizmo("0", pos);
   }
 
   private computeBoundingRect() {

@@ -7,7 +7,7 @@ export default defineConfig({
     host: "0.0.0.0",      // listen on all network interfaces
     port: 5173,
     hmr: false,            // optional: disable HMR behind tunnel
-    allowedHosts: ["nowakl.org", "192.168.178.31", "localhost"] // <-- allow your Cloudflare hostname
+    allowedHosts: ["nowakl.org", "192.168.178.31", "localhost", "hikaricraft.de" , "hikaricraft.xyz"]
   },
   build: {
     outDir: 'dist',

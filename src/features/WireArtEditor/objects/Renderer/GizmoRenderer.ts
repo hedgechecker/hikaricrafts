@@ -2,18 +2,18 @@ import * as THREE from "three";
 import { BaseRenderer, type RenderData } from "./BaseRenderer";
 import type { SceneManager } from "../SceneManager";
 
-interface GizmoRenderData extends RenderData{
+interface GizmoRenderData extends RenderData {
   type: string;
 }
 
-interface GizmoData {
+export interface GizmoData {
   id: string;
   type: string;
   pos: THREE.Vector3;
+  rotation?: number;
 }
 
 export class GizmoRenderer extends BaseRenderer<GizmoRenderData, GizmoData> {
-  private color = "#999999";
   private readonly hoverThickness = 2.0;
 
   constructor(sceneManager: SceneManager) {
@@ -29,24 +29,17 @@ export class GizmoRenderer extends BaseRenderer<GizmoRenderData, GizmoData> {
     const baseRadius = 0.1;
     const hitRadius = 0.25;
 
-    const geometry = new THREE.CircleGeometry(baseRadius, 32);
+    const texture = new THREE.TextureLoader().load("/icons/"+data.type+".svg");
 
+    const geometry = new THREE.CircleGeometry(baseRadius, 32);
     const material = new THREE.MeshBasicMaterial({
-      color: this.color,
+      map: texture,
+      transparent: true, // important if your image has transparency
     });
 
     const circle = new THREE.Mesh(geometry, material);
 
-    // Outline
-    const edges = new THREE.EdgesGeometry(geometry);
-    const outlineMaterial = new THREE.LineBasicMaterial({
-      color: 0x000000,
-    });
-
-    const outline = new THREE.LineSegments(edges, outlineMaterial);
-
     circle.name = "visual";
-    outline.name = "outline";
 
     const hitGeometry = new THREE.CircleGeometry(hitRadius, 32);
 
@@ -60,10 +53,8 @@ export class GizmoRenderer extends BaseRenderer<GizmoRenderData, GizmoData> {
     hitbox.name = "hitbox";
     const size = 1.0 / this.zoom;
     circle.scale.set(size, size, 1);
-    outline.scale.set(size, size, 1);
     hitbox.scale.set(size, size, 1);
     group.add(circle);
-    group.add(outline);
     group.add(hitbox);
 
     group.userData.type = data.type;
@@ -85,13 +76,14 @@ export class GizmoRenderer extends BaseRenderer<GizmoRenderData, GizmoData> {
   }
 
   protected updateFromData(data: GizmoData) {
-    this.updateGizmo(data);
+    this.updateGizmo(data.id, data.pos, data.rotation);
   }
 
-  updateGizmo(data: GizmoData) {
-    const p = this.objects.get(data.id);
+  updateGizmo(id: string, pos?: THREE.Vector3, rotation?: number) {
+    const p = this.objects.get(id);
     if (!p) return;
-    p.mesh.position.copy(data.pos);
+    if (pos) p.mesh.position.copy(pos);
+    if (rotation) p.mesh.rotation.z = rotation;
   }
 
   getFirstHoverableGizmo(intersects: THREE.Intersection[]): string | null {
@@ -106,6 +98,10 @@ export class GizmoRenderer extends BaseRenderer<GizmoRenderData, GizmoData> {
     const object = this.objects.get(id);
     if (!object) return "any";
     return object.type;
+  }
+
+  getWorldPosition(id: string): THREE.Vector3 | null {
+    return this.objects.get(id)?.mesh.position ?? null;
   }
 
   update(zoom: number) {
@@ -137,7 +133,10 @@ export class GizmoRenderer extends BaseRenderer<GizmoRenderData, GizmoData> {
     this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     this.raycaster.setFromCamera(this.mouse, this.sceneManager.camera);
 
-    const intersects = this.raycaster.intersectObjects(this.getHitboxes(), false);
+    const intersects = this.raycaster.intersectObjects(
+      this.getHitboxes(),
+      false,
+    );
     const hoveredId = this.getFirstHoverableGizmo(intersects);
     this.setHovered(hoveredId);
     if (hoveredId) {

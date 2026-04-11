@@ -26,6 +26,8 @@ app.use(
     origin: [
       "https://hikaricrafts.xyz",
       "https://api.hikaricrafts.xyz",
+      "https://hikaricrafts.de",
+      "https://api.hikaricrafts.de",
       "https://nowakl.org",
       "https://api.nowakl.org",
       "http://localhost:5173",

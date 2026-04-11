@@ -98,6 +98,7 @@ export class VerifyTool implements Tool {
         this.context.executeCommand(new CompositeCommand(commands));
       } else {
         this.context.pointRenderer.setInvalid([...singleConn, ...noConn]);
+        this.context.sceneManager.render();
         return;
       }
     }
@@ -121,6 +122,7 @@ export class VerifyTool implements Tool {
         this.splitLines();
       } else {
         this.context.lineRenderer.setInvalid(uniqueIds);
+        this.context.sceneManager.render();
         return;
       }
     }
@@ -160,6 +162,7 @@ export class VerifyTool implements Tool {
           this.previewMeshes.push(mesh);
         });
         this.context.pointRenderer.setInvalid(invalidVertecies);
+        this.context.sceneManager.render();
         return;
       }
     }
@@ -194,6 +197,7 @@ export class VerifyTool implements Tool {
           this.previewMeshes.push(mesh);
         });
         this.context.pointRenderer.setInvalid(invalidVertecies);
+        this.context.sceneManager.render();
         return;
       }
     }

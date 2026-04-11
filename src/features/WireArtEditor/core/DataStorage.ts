@@ -216,9 +216,9 @@ export class DataStorage {
     copy.id = null;
     const json = JSON.stringify(copy);
 
-    const encrypted = CryptoJS.AES.encrypt(json, CRYPT_KEY).toString();
+    //const encrypted = CryptoJS.AES.encrypt(json, CRYPT_KEY).toString();
 
-    const blob = new Blob([encrypted], { type: "text/plain" });
+    const blob = new Blob([json], { type: "text/plain" });
 
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

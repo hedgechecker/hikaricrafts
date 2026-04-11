@@ -100,6 +100,7 @@ export default function Toolbar({ engine }: Props) {
         "3": "line",
         "4": "delete",
         "5": "resize",
+        "6": "direct",
       };
 
       const tool = toolMap[key];

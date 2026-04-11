@@ -74,7 +74,6 @@ export class DeleteTool implements Tool {
     if (this.context.pointRenderer.handleHover(event)) {
       this.context.cursorManager.setCursor("pointer");
       this.context.lineRenderer.setHovered(null);
-
       return;
     }
     if (this.context.lineRenderer.handleHover(event)) {

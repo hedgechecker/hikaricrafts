@@ -1,5 +1,6 @@
 import { DeleteTool } from './DeleteTool';
 import { DragTool } from './DragTool';
+import { GrainDirectionTool } from './GrainDirectionTool';
 import { LineTool } from './LineTool';
 import { PointTool } from './PointTool';
 import { ResizeTool } from './ResizeTool';
@@ -29,6 +30,7 @@ export class ToolManager {
     this.tools.set('verify', new VerifyTool(toolContext));
     this.tools.set('delete', new DeleteTool(toolContext));
     this.tools.set("resize", new ResizeTool(toolContext));
+    this.tools.set("direct", new GrainDirectionTool(toolContext));
     this.setActiveTool('move');
   }
 
