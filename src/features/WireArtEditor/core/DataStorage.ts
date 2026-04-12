@@ -1,10 +1,10 @@
 import { logError, logInfo, logWarn } from "../../../utils/error/errorHandler";
 import type { Project } from "../models/Project";
-import CryptoJS from "crypto-js";
+//import CryptoJS from "crypto-js";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 const LOCALSTORAGE_KEY = "Project";
-const CRYPT_KEY = "ernieUndBert";
+//const CRYPT_KEY = "ernieUndBert";
 
 export class DataStorage {
   /**
