@@ -59,9 +59,11 @@
 
 .dontImage{
   border: var(--space-xs) solid var(--color-warning);
-  width: 300px
+  width: 300px;
+  max-width: 45%;
 }
 .doImage{
   border: var(--space-xs) solid var(--color-success);
-  width: 300px
+  width: 300px;
+  max-width: 45%;
 }
