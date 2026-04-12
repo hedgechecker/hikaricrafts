@@ -336,5 +336,6 @@ export class ThreeEditor {
     window.removeEventListener("keydown", this.onKeyDown);
     this.toolManager.dispose();
     this.sceneManager.dispose();
+    this.gridRenderer.dispose();
   }
 }

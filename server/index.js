@@ -33,6 +33,8 @@ app.use(
       "http://localhost:5173",
       "http://192.168.178.42:5173",
       "http://192.168.178.22:5173",
+      "http://192.168.0.186:5173",
+      "http://192.168.0.186:5173",
       "*", // for local dev
     ],
     methods: "GET,POST,PUT,DELETE",

@@ -34,15 +34,21 @@ export class GizmoRenderer extends BaseRenderer<GizmoRenderData, GizmoData> {
     const geometry = new THREE.CircleGeometry(baseRadius, 32);
     const material = new THREE.MeshBasicMaterial({
       map: texture,
-      transparent: true, // important if your image has transparency
+      transparent: true,
     });
-
     const circle = new THREE.Mesh(geometry, material);
-
     circle.name = "visual";
 
-    const hitGeometry = new THREE.CircleGeometry(hitRadius, 32);
+    const geometry2 = new THREE.CircleGeometry(baseRadius * 1.5, 32);
+    const material2 = new THREE.MeshBasicMaterial({
+      transparent: true,
+      color: 0xffffff,
+    });
+    const circle2 = new THREE.Mesh(geometry2, material2);
+    circle2.name = "visual";
+    circle2.position.z = -0.5;
 
+    const hitGeometry = new THREE.CircleGeometry(hitRadius, 32);
     const hitMaterial = new THREE.MeshBasicMaterial({
       transparent: true,
       opacity: 0,
@@ -53,8 +59,10 @@ export class GizmoRenderer extends BaseRenderer<GizmoRenderData, GizmoData> {
     hitbox.name = "hitbox";
     const size = 1.0 / this.zoom;
     circle.scale.set(size, size, 1);
+    circle2.scale.set(size, size, 1);
     hitbox.scale.set(size, size, 1);
     group.add(circle);
+    group.add(circle2);
     group.add(hitbox);
 
     group.userData.type = data.type;
@@ -64,6 +72,7 @@ export class GizmoRenderer extends BaseRenderer<GizmoRenderData, GizmoData> {
     group.userData.id = data.id;
     group.position.copy(data.pos);
     group.visible = this.visible;
+    if(data.rotation) group.rotation.z = data.rotation;
     this.sceneManager.scene.add(group);
 
     this.objects.set(data.id, {

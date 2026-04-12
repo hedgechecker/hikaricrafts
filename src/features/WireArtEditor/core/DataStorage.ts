@@ -248,14 +248,14 @@ export class DataStorage {
         try {
           const text = await file.text();
 
-          const bytes = CryptoJS.AES.decrypt(text, CRYPT_KEY);
-          const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+          // const bytes = CryptoJS.AES.decrypt(text, CRYPT_KEY);
+          // const decrypted = bytes.toString(CryptoJS.enc.Utf8);
 
-          if (!decrypted) {
-            throw new Error("Invalid or corrupted file");
-          }
+          // if (!decrypted) {
+          //   throw new Error("Invalid or corrupted file");
+          // }
 
-          const project: Project = JSON.parse(decrypted);
+          const project: Project = JSON.parse(text);
 
           resolve(project);
         } catch (err) {

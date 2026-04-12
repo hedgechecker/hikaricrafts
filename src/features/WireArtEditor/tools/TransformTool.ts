@@ -44,6 +44,7 @@ export class TransformTool implements Tool {
     this.context.gizmoRenderer.addFromData({
       id: "2",
       type: "resize",
+      rotation: Math.PI / 2,
       pos: new THREE.Vector3(10000, 0, 0),
     });
     this.context.gizmoRenderer.addFromData({
@@ -54,6 +55,7 @@ export class TransformTool implements Tool {
     this.context.gizmoRenderer.addFromData({
       id: "4",
       type: "resize",
+      rotation: Math.PI / 2,
       pos: new THREE.Vector3(10000, 0, 0),
     });
     this.context.gizmoRenderer.addFromData({

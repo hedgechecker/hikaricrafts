@@ -46,6 +46,8 @@ export class ToolManager {
     this.toolContext.gridRenderer.setHovered(null);
     this.toolContext.imageRenderer.setHovered(null);
     this.toolContext.cursorManager.setCursor('default');
+
+    this.toolContext.sceneManager.render();
   }
 
   private handlePointerDown = (e: PointerEvent) => {

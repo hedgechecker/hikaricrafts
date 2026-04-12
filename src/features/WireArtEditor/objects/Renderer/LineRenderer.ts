@@ -192,6 +192,11 @@ export class LineRenderer extends BaseRenderer<LineRenderData, LineData> {
         ? this.hoverThickness / zoom
         : this.baseThickness / zoom;
       line.mesh.scale.set(length, thickness, thickness);
+      if (line.isInValid) {
+        this.setColor(id, this.colorInValid);
+      } else {
+        this.setColor(id, this.color);
+      }
       return;
     }
     for (const [id, line] of this.objects) {

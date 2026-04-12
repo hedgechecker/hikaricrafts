@@ -39,7 +39,7 @@ export function log(level: LogLevel, message: string, context?: AppLogContext) {
     });
   }
   const flatContext = flattenContext(context);
-  if (import.meta.env.DEV) {
+  if (import.meta.env.DEV || true) {
     let err;
     switch (level) {
       case "error":

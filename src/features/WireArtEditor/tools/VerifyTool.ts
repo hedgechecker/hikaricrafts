@@ -85,7 +85,7 @@ export class VerifyTool implements Tool {
         });
 
         singleConn.forEach((id) => {
-          const pointId = this.getClosestPoint(id);
+          const pointId = this.getClosestPoint(id, noConn);
           if (pointId)
             commands.push(
               new AddLineCommand({
@@ -405,13 +405,17 @@ export class VerifyTool implements Tool {
       return (p.y - linestart.y) / dy;
     }
   }
-  getClosestPoint(id: string) {
+  getClosestPoint(id: string, excludedIds: string[]) {
     let closest = null;
     let minDist = Number.MAX_SAFE_INTEGER;
     const point = this.context.model.points.get(id);
     if (!point) return;
     this.context.model.points.forEach((p, pid) => {
-      if (pid == id || this.context.lineRenderer.hasLineBetween(pid, id))
+      if (
+        pid == id ||
+        excludedIds.some((i) => (i == pid)) ||
+          this.context.lineRenderer.hasLineBetween(pid, id)
+      )
         return;
       const x2 = p.x;
       const y2 = p.y;

@@ -100,6 +100,11 @@ export class PointRenderer extends BaseRenderer<RenderData, PointData> {
         } else {
           child.scale.set(size, size, 1);
         }
+        if (isInValid) {
+          this.setColor(id, this.colorInValid);
+        } else {
+          this.setColor(id, this.color);
+        }
       });
       return;
     }
