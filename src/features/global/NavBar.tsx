@@ -34,7 +34,7 @@ export default function NavBar({ selected }: NavBarProps) {
 
       <nav className={styles.bar}>
         <Link to="/" onClick={closeMobile} className={`${styles.logo}`}>
-          HikariCraft
+          HikariCrafts
         </Link>
         <img src="./icons/shopping-box.svg" className={styles.cart} />
 

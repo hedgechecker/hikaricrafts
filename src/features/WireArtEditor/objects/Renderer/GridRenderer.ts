@@ -95,26 +95,25 @@ export class GridRenderer extends BaseRenderer<GridRenderData, number> {
       colors.push(colorLineY.r, colorLineY.g, colorLineY.b);
       colors.push(colorLineY.r, colorLineY.g, colorLineY.b);
 
-      if(pos == 0){
-        const scale = 0.2 / this.zoom;
-        const label = this.createTextSprite((pos * 10).toFixed(0)+" mm");
+      const scale = step/5;
+
+      if (pos == 0) {
+        const label = this.createTextSprite((pos * 10).toFixed(0) + " mm");
         label.scale.set(2 * scale, scale, 1);
         label.position.set(pos + scale, scale / 4, 0); // X axis labels
         group.add(label);
         continue;
       }
 
-      const scale = 0.2 / this.zoom;
-      const label = this.createTextSprite((pos*10).toFixed(0));
-      label.scale.set(2* scale, scale, 1);
-      label.position.set(pos +scale, scale/4, 0); // X axis labels
+      const label = this.createTextSprite((pos * 10).toFixed(0));
+      label.scale.set(2 * scale, scale, 1);
+      label.position.set(pos + scale, scale / 4, 0); // X axis labels
       group.add(label);
 
-        const labelY = this.createTextSprite((pos*10).toFixed(0));
-        labelY.scale.set(2*scale, scale, 1);
-        labelY.position.set(scale, pos +scale/4, 0); // Y axis labels
-        group.add(labelY);
-      
+      const labelY = this.createTextSprite((pos * 10).toFixed(0));
+      labelY.scale.set(2 * scale, scale, 1);
+      labelY.position.set(scale, pos + scale / 4, 0); // Y axis labels
+      group.add(labelY);
     }
 
     const geometry = new THREE.BufferGeometry();
@@ -140,7 +139,7 @@ export class GridRenderer extends BaseRenderer<GridRenderData, number> {
     const fontSize = 24;
     context.font = `${fontSize}px Arial`;
 
-    canvas.width = fontSize*4;
+    canvas.width = fontSize * 4;
     canvas.height = fontSize * 1.2;
 
     context.font = `${fontSize}px Arial`;

@@ -184,5 +184,9 @@ export class PointTool implements Tool {
       this.context.cursorManager.setCursor("crosshair");
       return;
     }
+
+    this.context.pointRenderer.setHovered(null);
+    this.context.lineRenderer.setHovered(null);
+    this.context.gridRenderer.setHovered(null);
   }
 }

@@ -48,7 +48,7 @@ export class CommandManager {
    * @returns if Redoing was successfull
    */
   redo(model: SceneModel): boolean {
-    const cmd = this.redoStack[this.undoStack.length - 1];
+    const cmd = this.redoStack[this.redoStack.length - 1];
     if (!cmd) return false;
 
     const result = cmd.execute(model);
@@ -67,13 +67,5 @@ export class CommandManager {
     if (stack.length > this.maxHistory) {
       stack.shift();
     }
-  }
-
-  canUndo(): boolean {
-    return this.undoStack.length > 0;
-  }
-
-  canRedo(): boolean {
-    return this.redoStack.length > 0;
   }
 }

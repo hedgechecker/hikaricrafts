@@ -4,6 +4,7 @@ import * as THREE from "three";
 import type { Tool, ToolContext } from "./Tool";
 import { UpdateImageCommand } from "../commands/UpdateImageCommand";
 import type { ImageData } from "../models/Image";
+import { DeleteImageCommand } from "../commands/DeleteImageCommand";
 
 /**
  * Handles the Transformation of Images supports Scaling, Moving and Rotation
@@ -63,6 +64,11 @@ export class TransformTool implements Tool {
       type: "rotate",
       pos: new THREE.Vector3(10000, 0, 0),
     });
+    this.context.gizmoRenderer.addFromData({
+      id: "6",
+      type: "delete",
+      pos: new THREE.Vector3(10000, 0, 0),
+    });
   }
 
   //check for Hit with existing Image
@@ -79,7 +85,14 @@ export class TransformTool implements Tool {
       const type = this.context.gizmoRenderer.getType(handle);
       if (type == "rotate") {
         this.dragMode = "rotate";
-      } else {
+      } else if(type == "delete"){
+        console.log(this.lastImage)
+        if(this.lastImage) this.context.executeCommand(new DeleteImageCommand(this.lastImage));
+        this.context.sceneManager.render();
+        this.lastImage = null;
+        this.updateHandles(null);
+        return;
+      }else{
         this.dragMode = "resize";
       }
     } else {
@@ -176,6 +189,7 @@ export class TransformTool implements Tool {
     this.dragMode = "none";
     this.context.cursorManager.setCursor("default");
     this.context.imageRenderer.setSelected([]);
+    this.updateHandles(null);
     this.handleHover(event);
   };
 
@@ -184,7 +198,34 @@ export class TransformTool implements Tool {
     bottomRight: { x: number; y: number };
     bottomLeft: { x: number; y: number };
     topLeft: { x: number; y: number };
-  }) {
+  } | null) {
+    if(!rect){
+      this.context.gizmoRenderer.updateGizmo(
+        "1",
+        new THREE.Vector3(100000, 100000, 0),
+      );
+      this.context.gizmoRenderer.updateGizmo(
+        "2",
+        new THREE.Vector3(100000, 100000, 0),
+      );
+      this.context.gizmoRenderer.updateGizmo(
+        "3",
+        new THREE.Vector3(100000, 100000, 0),
+      );
+      this.context.gizmoRenderer.updateGizmo(
+        "4",
+        new THREE.Vector3(100000, 100000, 0),
+      );
+      this.context.gizmoRenderer.updateGizmo(
+        "5",
+        new THREE.Vector3(100000, 100000, 0),
+      );
+      this.context.gizmoRenderer.updateGizmo(
+        "6",
+        new THREE.Vector3(100000, 100000, 0),
+      );
+      return;
+    }
     this.context.gizmoRenderer.updateGizmo(
       "1",
       new THREE.Vector3(rect.topRight.x, rect.topRight.y, 0),
@@ -209,9 +250,15 @@ export class TransformTool implements Tool {
         0,
       ),
     );
+    this.context.gizmoRenderer.updateGizmo(
+      "6",
+      new THREE.Vector3(
+        rect.topLeft.x + (rect.topRight.x - rect.topLeft.x) * 3/8,
+        rect.topLeft.y + (rect.topRight.y - rect.topLeft.y) * 3/8,
+        0,
+      ),
+    );
   }
-
-  unattach() {}
 
   //Enable Hover only for Images
   handleHover(event: PointerEvent) {
@@ -230,6 +277,7 @@ export class TransformTool implements Tool {
       this.context.gizmoRenderer.setHovered(null);
       this.context.gizmoRenderer.setVisible(true);
       const img = this.context.imageRenderer.getHovered();
+      console.log(img)
       if (img) {
         const rect = this.context.imageRenderer.getBoundingRect(img);
         this.updateHandles(rect!);
@@ -239,6 +287,7 @@ export class TransformTool implements Tool {
       this.lastImage = hovered;
       return;
     }
+    this.updateHandles(null);
   }
 
   dispose(): void {
@@ -247,6 +296,7 @@ export class TransformTool implements Tool {
     this.context.gizmoRenderer.remove("3");
     this.context.gizmoRenderer.remove("4");
     this.context.gizmoRenderer.remove("5");
+    this.context.gizmoRenderer.remove("6");
     this.context.gizmoRenderer.setVisible(false);
   }
 }

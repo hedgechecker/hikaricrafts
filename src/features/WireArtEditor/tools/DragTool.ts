@@ -35,9 +35,7 @@ export class DragTool implements Tool {
       this.context.imageRenderer.setHovered(null);
       this.moveTool.onPointerDown(event);
       return;
-    }
-
-    if (
+    } else if (
       this.context.imageRenderer.handleHover(event) ||
       this.context.gizmoRenderer.handleHover(event)
     ) {
@@ -45,9 +43,11 @@ export class DragTool implements Tool {
       this.context.pointRenderer.setHovered(null);
       this.transformTool.onPointerDown(event);
       return;
+    } else {
+      this.activeTool = "none";
+      //this.moveTool.onPointerDown(event);
+      //this.transformTool.onPointerDown(event);
     }
-
-    this.activeTool = "none";
   }
 
   onPointerMove(event: PointerEvent) {
@@ -89,11 +89,14 @@ export class DragTool implements Tool {
       this.context.imageRenderer.handleHover(event) ||
       this.context.gizmoRenderer.handleHover(event)
     ) {
+      this.context.imageRenderer.setHovered(null);
       this.context.pointRenderer.setHovered(null);
       //this.context.gizmoRenderer.setVisible(true);
-
       return;
     }
+
+    this.context.imageRenderer.setHovered(null);
+    this.context.pointRenderer.setHovered(null);
   }
 
   dispose(): void {

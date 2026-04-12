@@ -11,16 +11,14 @@ export default function OptionSquares({
   values,
   selected,
   disabledValues,
-  onSelect
+  onSelect,
 }: OptionSquaresProps) {
   return (
     <div style={{ marginBottom: "1rem" }}>
-      <div style={{ fontWeight: "bold", marginBottom: "0.5rem" }}>
-        {label}
-      </div>
+      <div style={{ fontWeight: "bold", marginBottom: "0.5rem" }}>{label}</div>
 
       <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-        {values.map(v => {
+        {values.map((v) => {
           const isDisabled = !disabledValues.has(v.id);
           const isSelected = v.id === selected;
 
@@ -34,9 +32,11 @@ export default function OptionSquares({
                 borderRadius: "6px",
                 cursor: isDisabled ? "not-allowed" : "pointer",
                 opacity: isDisabled ? 0.4 : 1,
-                border: isSelected ? "2px solid black" : "1px solid #ccc",
-                background: isSelected ? "#f0f0f0" : "white",
-                color: "var(--color-primary)"
+                border: isSelected
+                  ? "2px solid var(--color-accent)"
+                  : "1px solid var(--color-border)",
+                background: "var(--color-background)",
+                color: "var(--color-primary)",
               }}
             >
               {v.value}
