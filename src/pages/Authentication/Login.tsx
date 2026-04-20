@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { logInfo } from "../../utils/error/errorHandler";
 const BASE_URL = import.meta.env.VITE_API_URL;
 
-
 export function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -14,13 +13,13 @@ export function Login() {
     const res = await fetch(`${BASE_URL}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email, password }),
     });
 
     const data = await res.json();
     if (data.token) {
       localStorage.setItem("token", data.token);
-      logInfo("Erfolgreich eingeloggt",{
+      logInfo("Erfolgreich eingeloggt", {
         function: "Login/login",
         token: data.token,
         email: email,
@@ -28,7 +27,7 @@ export function Login() {
       });
       setTimeout(() => {
         navigate("/");
-      }, 1000)
+      }, 1000);
     } else {
       logInfo("Benutzername oder Passwort falsch", {
         function: "Login/login",
@@ -42,14 +41,14 @@ export function Login() {
 
   return (
     <div className={style.container}>
-      
       <h2 className={style.title}>Anmelden</h2>
 
       <input
         className={style.input}
         placeholder="Email"
         value={email}
-        onChange={e => setEmail(e.target.value)}
+        onChange={(e) => setEmail(e.target.value)}
+        tabIndex={1}
       />
 
       <input
@@ -57,17 +56,29 @@ export function Login() {
         placeholder="Passwort"
         type="password"
         value={password}
-        onChange={e => setPassword(e.target.value)}
+        onChange={(e) => setPassword(e.target.value)}
+        tabIndex={1}
+        onKeyDown={(e) => {
+          if (e.key == "Enter") login();
+        }}
       />
 
-      <p>Noch keinen Account? <a className={style.link} onClick={() => navigate("/register")}>Registrieren</a></p>
-
-      <button className={style.button} onClick={login}>
+      <p>
+        Noch keinen Account?{" "}
+        <a className={style.link} onClick={() => navigate("/register")}>
+          Registrieren
+        </a>
+      </p>
+      <button className={style.button} onClick={login} tabIndex={1}>
         Anmelden
       </button>
-      <button className={style.backButton} onClick={() => {
-        navigate("/");
-      }}>
+      <button
+        className={style.backButton}
+        onClick={() => {
+          navigate("/");
+        }}
+        tabIndex={1}
+      >
         Abbrechen
       </button>
     </div>

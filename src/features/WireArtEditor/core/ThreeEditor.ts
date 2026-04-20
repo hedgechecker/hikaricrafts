@@ -17,9 +17,6 @@ import { type Project } from "../models/Project";
 import type { Settings } from "../models/Settings";
 
 import { AddImageCommand } from "../commands/AddImageCommand";
-import { DeleteImageCommand } from "../commands/DeleteImageCommand";
-import { DeleteLineCommand } from "../commands/DeleteLineCommand";
-import { DeletePointCommand } from "../commands/DeletePointCommand";
 
 import { generateId } from "../utils/id";
 import type { Command } from "../commands/Command";
@@ -133,6 +130,12 @@ export class ThreeEditor {
     for (const image of this.project.images) {
       this.model.images.set(image.id, { ...image });
     }
+    if (this.project.viewPoint) {
+      this.sceneManager.camera.position.copy(this.project.viewPoint.pos);
+      this.sceneManager.camera.zoom = this.project.viewPoint.zoom;
+      this.sceneManager.update();
+      this.sceneManager.render();
+    }
     this.saveLocal();
     this.syncSceneFromModel();
   }
@@ -143,6 +146,10 @@ export class ThreeEditor {
     }
     this.hasChanges = false;
     this.project.version = this.project.version + 1;
+    this.project.viewPoint = {
+      pos: this.sceneManager.camera.position,
+      zoom: this.sceneManager.camera.zoom,
+    };
     const id = this.project.id;
     this.saveLocal();
     await this.saveGlobal();
@@ -178,6 +185,7 @@ export class ThreeEditor {
     logInfo("Executed Command", { command: command });
     this.history.execute(command, this.model);
     this.syncSceneFromModel();
+    this.syncUnReDo();
   }
 
   public redo() {
@@ -185,12 +193,23 @@ export class ThreeEditor {
       this.syncSceneFromModel();
       this.hasChanges = true;
     }
+    this.syncUnReDo();
   }
 
   public undo() {
     if (this.history.undo(this.model)) {
       this.syncSceneFromModel();
       this.hasChanges = true;
+    }
+    this.syncUnReDo();
+  }
+
+  private syncUnReDo() {
+    if (this.history.hasRedo() != this.store.getState().hasRedo) {
+      this.store.setHasRedo(this.history.hasRedo());
+    }
+    if (this.history.hasUndo() != this.store.getState().hasUndo) {
+      this.store.setHasUndo(this.history.hasUndo());
     }
   }
 
@@ -229,7 +248,7 @@ export class ThreeEditor {
         y: 0,
         z: -0.5,
         rotation: 0,
-        height: 10,
+        height: 60,
       }),
     );
   }
@@ -308,24 +327,6 @@ export class ThreeEditor {
     if ((e.ctrlKey || e.metaKey) && e.key === "y") {
       e.preventDefault();
       this.redo();
-    }
-
-    if (e.key === "Delete" || e.key === "Backspace") {
-      const hoveredPoint = this.pointRenderer.getHovered();
-      if (hoveredPoint) {
-        this.executeCommand(new DeletePointCommand(hoveredPoint));
-        this.syncSceneFromModel();
-      }
-      const hoveredLine = this.lineRenderer.getHovered();
-      if (hoveredLine) {
-        this.executeCommand(new DeleteLineCommand(hoveredLine));
-        this.syncSceneFromModel();
-      }
-      const hoveredImage = this.imageRenderer.getHovered();
-      if (hoveredImage) {
-        this.executeCommand(new DeleteImageCommand(hoveredImage));
-        this.syncSceneFromModel();
-      }
     }
   };
 

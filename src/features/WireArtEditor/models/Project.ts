@@ -2,6 +2,7 @@ import type { LineData } from "./Line";
 import type { PointData } from "./Point";
 import type { ImageData } from './Image';
 import type { Settings } from "./Settings";
+import type { Vector3 } from "three";
 
 export interface Project {
   /** Unique identifier */
@@ -22,4 +23,7 @@ export interface Project {
 
   /** The custom settings for display actions*/
   settings: Settings;
+
+  /** The last saved ViewPoint for easy project switch*/
+  viewPoint?: {pos: Vector3, zoom: number}
 }

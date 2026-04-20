@@ -31,7 +31,9 @@ export default function Toolbar({ engine }: Props) {
 
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement | null>(null);
-  const { settings, tool } = useEditorStore(engine.getStore());
+  const { settings, tool, hasRedo, hasUndo } = useEditorStore(
+    engine.getStore(),
+  );
 
   /**
    * Update a single editor setting.
@@ -87,10 +89,11 @@ export default function Toolbar({ engine }: Props) {
       const target = e.target as HTMLElement | null;
 
       // Check if the user is typing in an input, textarea, or contenteditable
-      const isTyping = target &&(
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.isContentEditable);
+      const isTyping =
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable);
 
       if (isTyping) return;
 
@@ -128,13 +131,26 @@ export default function Toolbar({ engine }: Props) {
     };
   }, []);
 
+  async function handleBack() {
+    if (engine.hasChanges) {
+      const result = await showDialog({
+        type: "confirm",
+        message:
+          "Das Projekt hat ungespeicherte Änderungen, wollen sie diese Verwerfen?",
+      });
+      if (!result) {
+        return;
+      }
+    }
+    navigate("/wireart");
+  }
   return (
     <div className={styles.toolbar} id="toolbar">
       {/* Navigation */}
       <ToolButton
         label="Zurück zur Übersicht"
         image="/icons/back-arrow.svg"
-        onClick={() => navigate("/wireart")}
+        onClick={() => handleBack()}
         id="backToOverview"
       />
 
@@ -187,6 +203,7 @@ export default function Toolbar({ engine }: Props) {
           label=""
           image="/icons/undo.svg"
           toolTip="Rückgängig machen"
+          inactive={!hasUndo}
           onClick={() => {
             engine.undo();
           }}
@@ -197,7 +214,10 @@ export default function Toolbar({ engine }: Props) {
           label=""
           image="/icons/redo.svg"
           toolTip="Wiederherstellen"
-          onClick={() => engine.redo()}
+          inactive={!hasRedo}
+          onClick={() => {
+            engine.redo();          
+          }}
           id="redoButton"
         />
       </div>

@@ -6,5 +6,10 @@ basket site
 Import SVG?
 
 Scale Tool
+delete Image
+Snap to grid Line
+Deselect Polygons
+Multiselect Points
+Crtl- Move Scene // explain right click
 
 Refactor Kumiko Editor

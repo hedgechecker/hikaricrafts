@@ -48,8 +48,8 @@ export default function Feedback() {
             <h2 className={styles.title}>Feedback</h2>
             <p>
               {' '}
-              Diese Seite is noch in der Entstehungsphase und dient nur als Vorschau verschiedener
-              Produkte. Wenn Sie Fehler/Bugs oder nervige Kleinigkeiten finden würde es mir sehr
+              Diese Seite ist noch in der Entstehungsphase und dient nur als Vorschau verschiedener
+              Produkte. Wenn Sie Fehler/Bugs oder nervige Kleinigkeiten finden, würde es mir sehr
               helfen, wenn Sie diese hier anonym melden würden.
             </p>
             <textarea

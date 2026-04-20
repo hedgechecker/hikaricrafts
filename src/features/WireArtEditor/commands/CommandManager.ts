@@ -68,4 +68,12 @@ export class CommandManager {
       stack.shift();
     }
   }
+
+  public hasUndo(): boolean {
+    return this.undoStack.length > 0;
+  }
+
+  public hasRedo(): boolean {
+    return this.redoStack.length > 0;
+  }
 }

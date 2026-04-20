@@ -35,7 +35,7 @@ export default function Contact() {
 
   return (
     <div className={styles.page}>
-      <NavBar selected={'contact'} />
+      <NavBar selected={"contact"} />
       <div className={styles.container}>
         <div className={styles.labeling}>
           <h2 className={styles.title}>Kontakt</h2>
@@ -49,8 +49,9 @@ export default function Contact() {
           </div> */}
         </div>
         <p>
-          {' '}
-          ProjektIdeen, Fragen zu Produkten oder allgemeine Fragen gerne einfach mir direkt stellen
+          {" "}
+          Sie können mir hier gerne Ihre Projektideen, Fragen zu Produkten oder
+          allgemeine Fragen direkt stellen.
         </p>
 
         {!success && (
@@ -58,10 +59,10 @@ export default function Contact() {
             <h2>Eine Nachricht senden</h2>
             <div
               style={{
-                display: 'flex',
-                flexDirection: 'row',
-                flexWrap: 'wrap',
-                justifyContent: 'space-between',
+                display: "flex",
+                flexDirection: "row",
+                flexWrap: "wrap",
+                justifyContent: "space-between",
               }}
             >
               <div className={styles.inputField}>
@@ -118,7 +119,7 @@ export default function Contact() {
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 maxLength={4000}
-                style={{ minHeight: '400px' }}
+                style={{ minHeight: "400px" }}
               />
             </div>
             <button
@@ -128,14 +129,19 @@ export default function Contact() {
               }}
             >
               Absenden
-            </button>{' '}
+            </button>{" "}
           </>
         )}
 
         {success && (
           <div className={styles.successAnimation}>
             <svg viewBox="0 0 52 52">
-              <path d="M14 27 L22 35 L38 17" fill="none" stroke="#4BB543" strokeWidth="5" />
+              <path
+                d="M14 27 L22 35 L38 17"
+                fill="none"
+                stroke="#4BB543"
+                strokeWidth="5"
+              />
             </svg>
             <h2> Nachricht wurde abgeschickt</h2>
           </div>

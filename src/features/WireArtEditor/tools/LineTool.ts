@@ -29,6 +29,7 @@ export class LineTool implements Tool {
   private inputOverlay: InputOverlay;
   private worldPos = new THREE.Vector3();
   private downPos = new THREE.Vector2();
+  private clickOffset = 3.0;
 
   constructor(context: ToolContext) {
     this.context = context;
@@ -58,7 +59,7 @@ export class LineTool implements Tool {
     if (
       Math.pow(event.x - this.downPos.x, 2) +
         Math.pow(event.y - this.downPos.y, 2) >
-      1.5
+      this.clickOffset
     )
       return;
 

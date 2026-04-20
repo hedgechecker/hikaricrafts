@@ -9,6 +9,8 @@ interface EditorState {
   project: Project | null;
   settings: Settings | null;
   tool: ToolType;
+  hasUndo: boolean;
+  hasRedo: boolean;
 }
 
 export class EditorStore {
@@ -16,6 +18,8 @@ export class EditorStore {
     project: null,
     settings: null,
     tool: "line",
+    hasUndo: false,
+    hasRedo: false,
   };
 
   private listeners: Listener[] = [];
@@ -38,11 +42,23 @@ export class EditorStore {
   setProject(project: Project) {
     this.state.project = project;
     this.state.settings = project.settings;
+    this.state.hasRedo = false;
+    this.state.hasUndo = false;
     this.emit();
   }
 
   setTool(tool: ToolType) {
     this.state.tool = tool;
+    this.emit();
+  }
+
+  setHasUndo(has: boolean) {
+    this.state.hasUndo = has;
+    this.emit();
+  }
+
+  setHasRedo(has: boolean) {
+    this.state.hasRedo = has;
     this.emit();
   }
 

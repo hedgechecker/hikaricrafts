@@ -55,6 +55,10 @@ export class DataStorage {
    */
   async saveGlobal(project: Project): Promise<Project | null> {
     const token = localStorage.getItem("token");
+    localStorage.setItem(
+      "WireArt" + project.id,
+      JSON.stringify(project.viewPoint),
+    );
 
     if (!token) {
       logWarn("Global Saving aborted, User is not logged In", {
@@ -152,7 +156,7 @@ export class DataStorage {
     }
 
     const updatedProject = await res.json();
-    logInfo("Project updated", {project:updatedProject});
+    logInfo("Project updated", { project: updatedProject });
     return true;
   }
 
@@ -172,7 +176,7 @@ export class DataStorage {
         function: "DataStorage/renameProject",
         res: res,
         id: id,
-        name: name
+        name: name,
       });
     }
   }
@@ -188,16 +192,22 @@ export class DataStorage {
     });
 
     if (!res.ok) {
-      logWarn("Failed to load Project", {
+      logError("Failed to load Project", {
         function: "DataStorage/renameProject",
         res: res,
         id: id,
+        UIvisible: true,
       });
       return null;
     }
 
     const project = await res.json();
     const data = project.data;
+    const val = localStorage.getItem("WireArt" + project.id);
+    let viewPoint = undefined;
+    if (val) {
+      viewPoint = JSON.parse(val);
+    }
 
     return {
       version: project.version,
@@ -208,6 +218,7 @@ export class DataStorage {
       lines: data.lines,
       images: data.images,
       settings: data.settings,
+      viewPoint: viewPoint,
     };
   }
 
