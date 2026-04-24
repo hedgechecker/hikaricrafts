@@ -36,6 +36,8 @@ export class LineTool implements Tool {
 
     this.inputOverlay = new InputOverlay(
       this.context.sceneManager.dom.parentElement!,
+      "mm",
+      "°",
       () => this.handleMouseMove(),
     );
 
@@ -226,14 +228,14 @@ export class LineTool implements Tool {
     if (mouseDistance > 0) dir.normalize();
 
     // update inputField when no manual Input
-    if (this.inputOverlay.manualLength === null) {
-      this.inputOverlay.setLength(mouseDistance * 10);
+    if (this.inputOverlay.InputVal1 === null) {
+      this.inputOverlay.setValue1(mouseDistance * 10);
     }
     // update inputField when no manual Input
-    if (this.inputOverlay.manualAngle === null) {
+    if (this.inputOverlay.InputVal2 === null) {
       const angleRad = Math.atan2(dir.y, dir.x);
       const angleDeg = THREE.MathUtils.radToDeg(angleRad);
-      this.inputOverlay.setAngle((angleDeg + 360) % 360);
+      this.inputOverlay.setValue2((angleDeg + 360) % 360);
     }
 
     this.previewLine.geometry.setFromPoints([
@@ -316,7 +318,7 @@ export class LineTool implements Tool {
   } {
     //1 Snap to User Input Values
     const hasUserInputLength =
-      (this.inputOverlay.manualAngle || this.inputOverlay.manualLength) &&
+      (this.inputOverlay.InputVal1 || this.inputOverlay.InputVal2) &&
       this.lastPointId;
     if (hasUserInputLength) {
       return {
@@ -435,15 +437,15 @@ export class LineTool implements Tool {
     if (distance > 0) dir.normalize();
 
     // enforce manual angle
-    if (this.inputOverlay.manualAngle) {
-      const angleRad = THREE.MathUtils.degToRad(this.inputOverlay.manualAngle);
+    if (this.inputOverlay.InputVal2) {
+      const angleRad = THREE.MathUtils.degToRad(this.inputOverlay.InputVal2);
       dir.set(Math.cos(angleRad), Math.sin(angleRad), 0).normalize();
     }
     // enforce manual length
-    if (this.inputOverlay.manualLength) {
+    if (this.inputOverlay.InputVal1) {
       endPosition = start
         .clone()
-        .add(dir.multiplyScalar(this.inputOverlay.manualLength));
+        .add(dir.multiplyScalar(this.inputOverlay.InputVal1/10));
     } else {
       endPosition = start.clone().add(dir.multiplyScalar(distance));
     }
@@ -454,7 +456,6 @@ export class LineTool implements Tool {
   private onKeyDown = (event: KeyboardEvent) => {
     if (event.key === "Shift") this.isShiftPressed = true;
     if (event.key === "Escape") this.cancelLine();
-    if (event.key === "Tab") this.inputOverlay.switchInput(event);
   };
 
   private onKeyUp = (event: KeyboardEvent) => {

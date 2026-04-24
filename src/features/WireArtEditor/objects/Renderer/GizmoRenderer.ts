@@ -24,12 +24,20 @@ export class GizmoRenderer extends BaseRenderer<GizmoRenderData, GizmoData> {
   protected getId(data: GizmoData) {
     return data.id;
   }
+
+  private textureCache = new Map<string, THREE.Texture>();
+  
   public addFromData(data: GizmoData) {
     const group = new THREE.Group();
     const baseRadius = 0.1;
     const hitRadius = 0.25;
 
-    const texture = new THREE.TextureLoader().load("/icons/"+data.type+".svg");
+    let texture = this.textureCache.get(data.type);
+    if (!texture) {
+      texture = new THREE.TextureLoader().load(`/icons/${data.type}.svg`);
+      texture.minFilter = THREE.LinearFilter; // Faster initial render
+      this.textureCache.set(data.type, texture);
+    }
 
     const geometry = new THREE.CircleGeometry(baseRadius, 32);
     const material = new THREE.MeshBasicMaterial({
@@ -66,13 +74,10 @@ export class GizmoRenderer extends BaseRenderer<GizmoRenderData, GizmoData> {
     group.add(hitbox);
 
     group.userData.type = data.type;
-    // group.userData.corner = i;
-    // this.handles.push(group);
-
     group.userData.id = data.id;
     group.position.copy(data.pos);
     group.visible = this.visible;
-    if(data.rotation) group.rotation.z = data.rotation;
+    if (data.rotation) group.rotation.z = data.rotation;
     this.sceneManager.scene.add(group);
 
     this.objects.set(data.id, {
@@ -82,6 +87,7 @@ export class GizmoRenderer extends BaseRenderer<GizmoRenderData, GizmoData> {
       isInValid: false,
       type: data.type,
     });
+    this.sceneManager.render();
   }
 
   protected updateFromData(data: GizmoData) {

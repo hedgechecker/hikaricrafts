@@ -191,7 +191,7 @@ export class PointRenderer extends BaseRenderer<RenderData, PointData> {
       const pos = object[1].mesh.position;
       if (
         Math.pow(pos.x - worldPos.x, 2) + Math.pow(pos.y - worldPos.y, 2) <
-        thres
+        thres && !this.selected.some((point) => point == object[0])
       ) {
         hoveredPointId = object[0];
         this.setHovered(hoveredPointId);

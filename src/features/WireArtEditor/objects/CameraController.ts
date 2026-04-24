@@ -7,6 +7,8 @@ export class CameraController {
   private sceneManager: SceneManager;
 
   private isPanning = false;
+  private isShiftPressed = false;
+  private isCrtlPressed = false;
   private panEnabled = true;
   private lastMouse = new THREE.Vector2();
 
@@ -37,7 +39,18 @@ export class CameraController {
       passive: false,
     });
     domElement.addEventListener("touchend", this.onTouchEnd);
+    window.addEventListener("keydown", this.onKeyDown);
+    window.addEventListener("keyup", this.onKeyUp);
   }
+
+  private onKeyDown = (event: KeyboardEvent) => {
+    if (event.key === "Shift") this.isShiftPressed = true;
+    if (event.key === "Control") this.isCrtlPressed = true;
+  };
+  private onKeyUp = (event: KeyboardEvent) => {
+    if (event.key === "Shift") this.isShiftPressed = false;
+    if (event.key === "Control") this.isCrtlPressed = false;
+  };
 
   /**
    * Handles Zooming on mouseWheel
@@ -145,7 +158,7 @@ export class CameraController {
   }
 
   private onMouseDown = (event: MouseEvent) => {
-    if (event.button === 0) return;
+    if (event.button === 0 && !this.isCrtlPressed && !this.isShiftPressed) return;
     if (event.button == 1) event.preventDefault();
     this.rect = this.domElement.getBoundingClientRect();
     this.isPanning = true;
@@ -212,6 +225,9 @@ export class CameraController {
     this.domElement.removeEventListener("touchstart", this.onTouchStart);
     this.domElement.removeEventListener("touchmove", this.onTouchMove);
     this.domElement.removeEventListener("touchend", this.onTouchEnd);
+
+    window.removeEventListener("keydown", this.onKeyDown);
+    window.removeEventListener("keyup", this.onKeyUp);
   }
 
   setPanEnabled(enabled: boolean) {

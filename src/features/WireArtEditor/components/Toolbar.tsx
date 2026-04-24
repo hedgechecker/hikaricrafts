@@ -136,7 +136,7 @@ export default function Toolbar({ engine }: Props) {
       const result = await showDialog({
         type: "confirm",
         message:
-          "Das Projekt hat ungespeicherte Änderungen, wollen sie diese Verwerfen?",
+          "Das Projekt hat ungespeicherte Änderungen, die womöglich nicht gespeichert werden, sicher zurück?",
       });
       if (!result) {
         return;
@@ -192,6 +192,15 @@ export default function Toolbar({ engine }: Props) {
           id="deletetool"
         />
 
+        <ToolButton
+          label=""
+          image="/icons/scale.svg"
+          toolTip="Projekt Skalieren"
+          active={tool === "resize"}
+          onClick={() => changeTool("resize")}
+          id="resizetool"
+        />
+
         {/* Upload background reference image */}
         <ImageUploader
           onImageSelected={(img) => {
@@ -216,7 +225,7 @@ export default function Toolbar({ engine }: Props) {
           toolTip="Wiederherstellen"
           inactive={!hasRedo}
           onClick={() => {
-            engine.redo();          
+            engine.redo();
           }}
           id="redoButton"
         />

@@ -3,35 +3,45 @@ import type { Tool, ToolContext } from "./Tool";
 import { UpdatePointCommand } from "../commands/UpdatePointCommand";
 import { CompositeCommand } from "../commands/CompositeCommand";
 import { computeBoundingRect } from "../utils/math";
+import { InputOverlay } from "./InputOverlay";
 
 export class ResizeTool implements Tool {
   private context: ToolContext;
+  private inputOverlay: InputOverlay;
 
   private isDragging = false;
 
   private center = new THREE.Vector3(0, 0, 0);
   private startDistance = 1;
-  private currentScale = 1;
+  private currentScaleX = 1;
+  private currentScaleY = 1;
 
   private rect = { top: 0, left: 0, right: 0, bottom: 0 };
+  private lastApplyScaleTime = 0;
 
   constructor(context: ToolContext) {
     this.context = context;
 
-    this.computeBoundingRect();
-    this.updateHandlePosition();
+    this.inputOverlay = new InputOverlay(
+      this.context.sceneManager.dom.parentElement!,
+      "mm",
+      "mm",
+      () => this.handleInput(),
+    );
   }
 
   onClick() {
-    this.currentScale = 1;
+    this.currentScaleX = 1;
+    this.currentScaleY = 1;
     this.computeBoundingRect();
-    this.context.gizmoRenderer.setVisible(true);
     this.context.gizmoRenderer.addFromData({
       id: "0",
       type: "resize",
       pos: new THREE.Vector3(0, 0, 0),
     });
     this.updateHandlePosition();
+    this.context.gizmoRenderer.setVisible(true);
+    this.isDragging = false;
   }
 
   onPointerDown(event: PointerEvent): void {
@@ -42,17 +52,20 @@ export class ResizeTool implements Tool {
     if (hovered) {
       this.isDragging = true;
       this.context.sceneManager.setPanEnabled(false);
+      this.inputOverlay.show(event.clientX, event.clientY);
+      this.inputOverlay.reset();
 
       this.computeBoundingRect();
 
       const worldPos = this.context.sceneManager.getWorldPosition(event);
 
       this.startDistance = worldPos.distanceTo(this.center);
+      this.updateHandlePosition();
     }
   }
 
   onPointerUp(event: PointerEvent): void {
-    if (!event.isPrimary || event.button !== 0) return;
+    if (!event.isPrimary || event.button !== 0 || !this.isDragging) return;
     this.isDragging = false;
     this.context.sceneManager.setPanEnabled(true);
     const points = this.context.model.points;
@@ -65,10 +78,16 @@ export class ResizeTool implements Tool {
       );
     }
     this.context.executeCommand(new CompositeCommand(commands));
+    if (event.pointerType != "touch") {
+      this.inputOverlay.focus();
+    }
   }
 
   onPointerMove(event: PointerEvent) {
     this.handleHover(event);
+
+    //if (!this.isDragging) this.inputOverlay.hide();
+
     if (!event.isPrimary) return;
     if (this.isDragging) {
       const worldPos = this.context.sceneManager.getWorldPosition(event);
@@ -79,21 +98,40 @@ export class ResizeTool implements Tool {
       let scale = currentDistance / this.startDistance;
       scale = THREE.MathUtils.clamp(scale, 0.2, 5);
 
-      this.currentScale = scale;
+      this.currentScaleX = scale;
+      this.currentScaleY = scale;
 
-      this.applyScale(scale);
+      if (Date.now() - this.lastApplyScaleTime > 10) {
+        this.applyScale(this.currentScaleX, this.currentScaleY);
+        this.lastApplyScaleTime = Date.now();
+      }
+
       this.updateHandlePosition();
     }
   }
 
+  handleInput() {
+    console.log(this.inputOverlay.InputVal1);
+  }
+
   private updateHandlePosition() {
-    const pos = new THREE.Vector3(this.rect.right, this.rect.top, 0);
+    const pos = new THREE.Vector3(this.rect.right + 1, this.rect.top + 1, 0);
     const dir = new THREE.Vector3().subVectors(pos, this.center);
-    dir.multiplyScalar(this.currentScale);
+    dir.multiplyScalar(this.currentScaleX);
 
     pos.copy(this.center).add(dir);
 
     this.context.gizmoRenderer.updateGizmo("0", pos);
+    if (this.inputOverlay.InputVal1 === null) {
+      this.inputOverlay.setValue1(
+        (this.rect.right - this.rect.left) * this.currentScaleX * 10,
+      );
+    }
+    if (this.inputOverlay.InputVal2 === null) {
+      this.inputOverlay.setValue2(
+        (this.rect.top - this.rect.bottom) * this.currentScaleY * 10,
+      );
+    }
   }
 
   private computeBoundingRect() {
@@ -102,14 +140,15 @@ export class ResizeTool implements Tool {
     this.center.y = (this.rect.top - this.rect.bottom) / 2 + this.rect.bottom;
   }
 
-  private applyScale(scale: number) {
+  private applyScale(scaleX: number, scaleY: number) {
     const points = this.context.model.points;
 
     for (const p of points) {
       const pos = new THREE.Vector3(p[1].x, p[1].y, p[1].z);
       if (!pos) continue;
       const dir = new THREE.Vector3().subVectors(pos, this.center);
-      dir.multiplyScalar(scale);
+      dir.x *= scaleX;
+      dir.y *= scaleY;
 
       pos.copy(this.center).add(dir);
       this.context.pointRenderer.setPosition(p[0], pos);
@@ -120,6 +159,7 @@ export class ResizeTool implements Tool {
   dispose(): void {
     this.context.gizmoRenderer.remove("0");
     this.context.gizmoRenderer.setVisible(false);
+    this.inputOverlay.hide();
   }
 
   private handleHover(event: PointerEvent) {

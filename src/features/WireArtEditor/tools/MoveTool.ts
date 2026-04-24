@@ -55,8 +55,6 @@ export class MoveTool implements Tool {
     let snappedPosition = rawPosition.clone();
 
     const constraints: { origin: THREE.Vector3; dir: THREE.Vector3 }[] = [];
-    // const planeConstraints: { p1: THREE.Vector3; p2: THREE.Vector3 }[] =
-    //   [];
 
     for (let i = 0; i < connectedPoints.length; i++) {
       for (let j = i + 1; j < connectedPoints.length; j++) {
@@ -77,12 +75,6 @@ export class MoveTool implements Tool {
           const dir = p2.clone().sub(p1).normalize();
           constraints.push({ origin: p1, dir });
         }
-        // if (Math.abs(dot) < 0.03) {
-        //   planeConstraints.push({
-        //     p1: p1,
-        //     p2: p2,
-        //   });
-        // }
       }
     }
 
@@ -96,28 +88,6 @@ export class MoveTool implements Tool {
           .clone()
           .add(c.dir.clone().multiplyScalar(projectedLength));
       }
-
-      // for (const c of planeConstraints) {
-      //   const A = c.p1;
-      //   const B = c.p2;
-
-      //   const SA = snappedPosition.clone().sub(A);
-      //   const SB = snappedPosition.clone().sub(B);
-
-      //   const dot = SA.dot(SB);
-
-      //   if (Math.abs(dot) > 1e-6) {
-      //     const grad = SA.clone().add(SB);
-      //     const denom = grad.lengthSq();
-
-      //     if (denom > 1e-6) {
-      //       const lambda = dot / denom;
-      //       snappedPosition = snappedPosition
-      //         .clone()
-      //         .sub(grad.multiplyScalar(lambda));
-      //     }
-      //   }
-      // }
     }
 
     if (rawPosition.distanceTo(snappedPosition) < 0.3 / this.context.sceneManager.camera.zoom) {

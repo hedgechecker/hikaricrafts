@@ -35,6 +35,7 @@ export class DeleteTool implements Tool {
       0.5
     )
       return;
+      this.handleHover(event);
     const hoveredPoint = this.context.pointRenderer.getHovered();
     const hoveredLine = this.context.lineRenderer.getHovered();
 
@@ -57,13 +58,13 @@ export class DeleteTool implements Tool {
     const hoveredLine = this.context.lineRenderer.getHovered();
     
     if (hoveredPoint) {
-      this.context.executeCommand(new DeletePointCommand(hoveredPoint));
       this.context.pointRenderer.remove(hoveredPoint);
+      this.context.executeCommand(new DeletePointCommand(hoveredPoint));
     }
 
     if (hoveredLine) {
-      this.context.executeCommand(new DeleteLineCommand(hoveredLine));
       this.context.lineRenderer.remove(hoveredLine);
+      this.context.executeCommand(new DeleteLineCommand(hoveredLine));
     }
   }
 
@@ -82,4 +83,5 @@ export class DeleteTool implements Tool {
       return;
     }
   }
+  
 }
