@@ -9,7 +9,7 @@ interface GridRenderData extends RenderData {
 
 export class GridRenderer extends BaseRenderer<GridRenderData, number> {
   private size = 200;
-  private hoveredGrid: THREE.Vector3 | null = null;
+  private hoveredPoint: THREE.Vector3 | null = null;
 
   constructor(sceneManager: SceneManager) {
     super(sceneManager);
@@ -189,10 +189,28 @@ export class GridRenderer extends BaseRenderer<GridRenderData, number> {
     const snappedX = Math.round(worldPos.x / step) * step;
     const snappedY = Math.round(worldPos.y / step) * step;
 
-    const point = new THREE.Vector3(snappedX, snappedY, 0);
+    const pointIntersect = new THREE.Vector3(snappedX, snappedY, 0);
+    const pointXLine = new THREE.Vector3(snappedX, worldPos.y, 0);
+    const pointYLine = new THREE.Vector3(worldPos.x, snappedY, 0);
 
-    if (worldPos.distanceTo(point) < step / 6) {
-      return point;
+    let minDist = Infinity;
+    let closestPoint: THREE.Vector3 | null = null;
+
+    const dist = worldPos.distanceTo(pointIntersect);
+    if (dist < step/6) {
+      return pointIntersect;
+    }
+    
+    if(worldPos.distanceTo(pointXLine)<worldPos.distanceTo(pointYLine)){
+      closestPoint = pointXLine;
+      minDist = worldPos.distanceTo(pointXLine);
+    }else{
+      closestPoint = pointYLine;
+      minDist = worldPos.distanceTo(pointYLine);
+    }
+
+    if (minDist < step / 6) {
+      return closestPoint;
     }
 
     return null;
@@ -202,13 +220,13 @@ export class GridRenderer extends BaseRenderer<GridRenderData, number> {
     const worldPos = this.sceneManager.getWorldPosition(event);
 
     const snapped = this.snapToGrid(worldPos);
-    this.hoveredGrid = snapped;
+    this.hoveredPoint = snapped;
 
     return snapped !== null;
   }
 
-  getHoveredGrid() {
-    return this.hoveredGrid;
+  getHoveredPoint() {
+    return this.hoveredPoint;
   }
 
   dispose() {

@@ -113,7 +113,7 @@ export class PointTool implements Tool {
     }
 
     //Snap to Grid
-    const point = this.context.gridRenderer.getHoveredGrid();
+    const point = this.context.gridRenderer.getHoveredPoint();
     if (point) {
       worldPos = point;
     }

@@ -361,7 +361,7 @@ export class LineTool implements Tool {
         };
     }
     //5 Snap to next grid Point
-    const snapGridPoint = this.context.gridRenderer.getHoveredGrid();
+    const snapGridPoint = this.context.gridRenderer.getHoveredPoint();
     if (snapGridPoint) {
       return {
         pointId: null,

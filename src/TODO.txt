@@ -4,7 +4,6 @@ basket site
 Import SVG?
 Deselect Polygons
 
-Snap to grid Line
 Multiselect Points
 
 Refactor Kumiko Editor

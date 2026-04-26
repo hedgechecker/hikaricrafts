@@ -141,7 +141,7 @@ export class MoveTool implements Tool {
       }
     } // Else Move the Point
     else {
-      const point = this.context.gridRenderer.getHoveredGrid();
+      const point = this.context.gridRenderer.getHoveredPoint();
       if (point) {
         this.currentPosition.copy(point);
       }
