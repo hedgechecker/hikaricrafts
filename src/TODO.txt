@@ -4,8 +4,6 @@ basket site
 Import SVG?
 Deselect Polygons
 
-Scale Tool
-
 Snap to grid Line
 Multiselect Points
 

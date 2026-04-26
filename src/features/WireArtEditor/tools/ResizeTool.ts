@@ -27,6 +27,9 @@ export class ResizeTool implements Tool {
       "mm",
       "mm",
       () => this.handleInput(),
+      () => {
+        (this.applyGlobal(), this.inputOverlay.hide());
+      },
     );
   }
 
@@ -52,8 +55,10 @@ export class ResizeTool implements Tool {
     if (hovered) {
       this.isDragging = true;
       this.context.sceneManager.setPanEnabled(false);
-      this.inputOverlay.show(event.clientX, event.clientY);
-      this.inputOverlay.reset();
+      if (event.pointerType != "touch") {
+        this.inputOverlay.reset();
+        this.inputOverlay.show(event.clientX, event.clientY);
+      }
 
       this.computeBoundingRect();
 
@@ -68,16 +73,8 @@ export class ResizeTool implements Tool {
     if (!event.isPrimary || event.button !== 0 || !this.isDragging) return;
     this.isDragging = false;
     this.context.sceneManager.setPanEnabled(true);
-    const points = this.context.model.points;
-    const commands = [];
-    for (const p of points) {
-      const pos = this.context.pointRenderer.getWorldPosition(p[0]);
-      if (!pos) continue;
-      commands.push(
-        new UpdatePointCommand({ id: p[0], x: pos.x, y: pos.y, z: pos.z }),
-      );
-    }
-    this.context.executeCommand(new CompositeCommand(commands));
+
+    this.applyGlobal();
     if (event.pointerType != "touch") {
       this.inputOverlay.focus();
     }
@@ -111,7 +108,15 @@ export class ResizeTool implements Tool {
   }
 
   handleInput() {
-    console.log(this.inputOverlay.InputVal1);
+    if (this.inputOverlay.InputVal1) {
+      this.currentScaleX =
+        this.inputOverlay.InputVal1 / 10 / (this.rect.right - this.rect.left);
+    }
+    if (this.inputOverlay.InputVal2) {
+      this.currentScaleY =
+        this.inputOverlay.InputVal2 / 10 / (this.rect.top - this.rect.bottom);
+    }
+    this.applyScale(this.currentScaleX, this.currentScaleY);
   }
 
   private updateHandlePosition() {
@@ -154,12 +159,33 @@ export class ResizeTool implements Tool {
       this.context.pointRenderer.setPosition(p[0], pos);
     }
     this.context.lineRenderer.updateGeometry();
+    this.context.sceneManager.render();
+  }
+
+  private applyGlobal() {
+    const points = this.context.model.points;
+    const commands = [];
+    for (const p of points) {
+      const pos = this.context.pointRenderer.getWorldPosition(p[0]);
+      if (!pos) continue;
+      commands.push(
+        new UpdatePointCommand({ id: p[0], x: pos.x, y: pos.y, z: pos.z }),
+      );
+    }
+    this.context.executeCommand(new CompositeCommand(commands));
+    this.context.lineRenderer.updateGeometry();
+    this.context.sceneManager.render();
+    this.currentScaleX = 1;
+    this.currentScaleY = 1;
+    this.computeBoundingRect();
+    this.updateHandlePosition();
   }
 
   dispose(): void {
     this.context.gizmoRenderer.remove("0");
     this.context.gizmoRenderer.setVisible(false);
     this.inputOverlay.hide();
+    this.applyScale(1, 1);
   }
 
   private handleHover(event: PointerEvent) {

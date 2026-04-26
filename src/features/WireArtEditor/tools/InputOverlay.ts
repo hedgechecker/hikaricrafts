@@ -6,6 +6,7 @@ export class InputOverlay {
   private Input1: HTMLInputElement;
   private Input2: HTMLInputElement;
   private onChange: () => void;
+  private onEnter?: () => void;
   private focusedElement: 1 | 2 = 1;
 
   InputVal1: number | null | undefined = null;
@@ -18,8 +19,10 @@ export class InputOverlay {
     unit1: string,
     unit2: string,
     onChange: () => void,
+    onEnter?: () => void,
   ) {
     this.onChange = onChange;
+    this.onEnter = onEnter;
     this.Input1 = this.createInput();
     this.Input2 = this.createInput();
     this.unit1 = unit1;
@@ -110,6 +113,7 @@ export class InputOverlay {
 
   private onKeyDown = (event: KeyboardEvent) => {
     if (event.key === "Tab") this.switchInput(event);
+    if (event.key === "Enter" && this.onEnter) this.onEnter();
   };
 
   focus() {
