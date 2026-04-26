@@ -40,9 +40,6 @@ export class LineTool implements Tool {
       "°",
       () => this.handleMouseMove(),
     );
-
-    window.addEventListener("keydown", this.onKeyDown);
-    window.addEventListener("keyup", this.onKeyUp);
   }
 
   onPointerDown(event: PointerEvent): void {
@@ -453,12 +450,12 @@ export class LineTool implements Tool {
     return endPosition;
   }
 
-  private onKeyDown = (event: KeyboardEvent) => {
+  onKeyDown = (event: KeyboardEvent) => {
     if (event.key === "Shift") this.isShiftPressed = true;
     if (event.key === "Escape") this.cancelLine();
   };
 
-  private onKeyUp = (event: KeyboardEvent) => {
+  onKeyUp = (event: KeyboardEvent) => {
     if (event.key === "Shift") this.isShiftPressed = false;
   };
 

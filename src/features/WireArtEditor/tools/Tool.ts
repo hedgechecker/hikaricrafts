@@ -14,6 +14,8 @@ export interface Tool {
   onPointerDown?(event: PointerEvent): void;
   onPointerMove?(event: PointerEvent): void;
   onPointerUp?(event: PointerEvent): void;
+  onKeyDown?(event: KeyboardEvent): void;
+  onKeyUp?(event: KeyboardEvent): void;
   onClick?(): void;
   dispose?(): void;
 }

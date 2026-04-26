@@ -6,7 +6,7 @@ function logToService(
   message: string,
   context?: AppLogContext,
 ) {
-  // later: send to Sentry / Datadog etc.
+  // TODO: send to Sentry / Datadog etc.
   level;
   message;
   context;
@@ -39,7 +39,7 @@ export function log(level: LogLevel, message: string, context?: AppLogContext) {
     });
   }
   const flatContext = flattenContext(context);
-  if (import.meta.env.DEV || true) {
+  if (import.meta.env.DEV) {
     let err;
     switch (level) {
       case "error":

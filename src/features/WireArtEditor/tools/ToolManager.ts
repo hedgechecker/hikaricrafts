@@ -20,18 +20,20 @@ export class ToolManager {
   constructor(domElement: HTMLElement, toolContext: ToolContext) {
     this.domElement = domElement;
     this.toolContext = toolContext;
-    this.domElement.addEventListener('pointerdown', this.handlePointerDown);
-    this.domElement.addEventListener('pointermove', this.handlePointerMove);
-    this.domElement.addEventListener('pointerup', this.handlePointerUp);
+    this.domElement.addEventListener("pointerdown", this.handlePointerDown);
+    this.domElement.addEventListener("pointermove", this.handlePointerMove);
+    this.domElement.addEventListener("pointerup", this.handlePointerUp);
+    this.domElement.addEventListener("keydown", this.handleKeyDown);
+    this.domElement.addEventListener("keyup", this.handleKeyUp);
 
     this.tools.set("point", new PointTool(toolContext));
-    this.tools.set('line', new LineTool(toolContext));
-    this.tools.set('move', new DragTool(toolContext));
-    this.tools.set('verify', new VerifyTool(toolContext));
-    this.tools.set('delete', new DeleteTool(toolContext));
+    this.tools.set("line", new LineTool(toolContext));
+    this.tools.set("move", new DragTool(toolContext));
+    this.tools.set("verify", new VerifyTool(toolContext));
+    this.tools.set("delete", new DeleteTool(toolContext));
     this.tools.set("resize", new ResizeTool(toolContext));
     this.tools.set("direct", new GrainDirectionTool(toolContext));
-    this.setActiveTool('move');
+    this.setActiveTool("move");
   }
 
   setActiveTool(name: ToolType) {
@@ -45,7 +47,7 @@ export class ToolManager {
 
     this.toolContext.gridRenderer.setHovered(null);
     this.toolContext.imageRenderer.setHovered(null);
-    this.toolContext.cursorManager.setCursor('default');
+    this.toolContext.cursorManager.setCursor("default");
 
     this.toolContext.sceneManager.render();
   }
@@ -62,11 +64,20 @@ export class ToolManager {
     this.activeTool?.onPointerUp?.(e);
   };
 
+  private handleKeyUp = (e: KeyboardEvent) => {
+    this.activeTool?.onKeyUp?.(e);
+  };
+
+  private handleKeyDown = (e: KeyboardEvent) => {
+    this.activeTool?.onKeyDown?.(e);
+  };
 
   dispose() {
-    this.domElement.removeEventListener('pointerdown', this.handlePointerDown);
-    this.domElement.removeEventListener('pointermove', this.handlePointerMove);
-    this.domElement.removeEventListener('pointerup', this.handlePointerUp);
+    this.domElement.removeEventListener("pointerdown", this.handlePointerDown);
+    this.domElement.removeEventListener("pointermove", this.handlePointerMove);
+    this.domElement.removeEventListener("pointerup", this.handlePointerUp);
+    this.domElement.removeEventListener("keydown", this.handleKeyDown);
+    this.domElement.removeEventListener("keyup", this.handleKeyUp);
 
     this.activeTool?.dispose?.();
   }

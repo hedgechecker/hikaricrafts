@@ -35,7 +35,6 @@ export class GrainDirectionTool implements Tool {
       this.context.gizmoRenderer.addFromData(data);
     });
     this.context.gizmoRenderer.setVisible(true);
-    window.addEventListener("keydown", this.onKeyDown);
   }
 
   onPointerDown(event: PointerEvent): void {
@@ -70,7 +69,7 @@ export class GrainDirectionTool implements Tool {
     this.context.sceneManager.render();
   }
 
-  private onKeyDown = (event: KeyboardEvent) => {
+  onKeyDown = (event: KeyboardEvent) => {
     if (event.key === "e") this.exportPolygons();
   };
 
