@@ -86,7 +86,6 @@ export class TransformTool implements Tool {
       if (type == "rotate") {
         this.dragMode = "rotate";
       } else if(type == "delete"){
-        console.log(this.lastImage)
         if(this.lastImage) this.context.executeCommand(new DeleteImageCommand(this.lastImage));
         this.context.sceneManager.render();
         this.lastImage = null;
@@ -277,7 +276,6 @@ export class TransformTool implements Tool {
       this.context.gizmoRenderer.setHovered(null);
       this.context.gizmoRenderer.setVisible(true);
       const img = this.context.imageRenderer.getHovered();
-      console.log(img)
       if (img) {
         const rect = this.context.imageRenderer.getBoundingRect(img);
         this.updateHandles(rect!);

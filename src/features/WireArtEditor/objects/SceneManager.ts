@@ -66,7 +66,7 @@ export class SceneManager {
     );
 
     setInterval(() => {
-      //console.log("renders/sec:", this.count);
+      //logInfo("renders/sec:", this.count);
       this.count = 0;
       this.render();
     }, 1000);

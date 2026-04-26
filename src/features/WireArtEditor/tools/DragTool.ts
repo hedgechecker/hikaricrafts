@@ -26,6 +26,15 @@ export class DragTool implements Tool {
     this.transformTool.onClick();
   }
 
+  onKeyDown(event: KeyboardEvent): void {
+    this.moveTool.onKeyDown(event);
+    //this.transformTool.onKeyDown(event);
+  }
+  onKeyUp(event: KeyboardEvent): void {
+    this.moveTool.onKeyUp(event);
+    //this.transformTool.onKeyUp(event);
+  }
+
   onPointerDown(event: PointerEvent) {
     if (event.button !== 0) return;
 

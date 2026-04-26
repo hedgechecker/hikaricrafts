@@ -10,16 +10,23 @@ import { CompositeCommand } from "../commands/CompositeCommand";
  * Merges Points and Lines if necessary
  */
 export class MoveTool implements Tool {
-  private selectedPoint: string | null = null;
+  private selectedPoints: string[] = [];
   private startPosition = new THREE.Vector3();
   private currentPosition = new THREE.Vector3();
 
+  private isCrtlPressed: boolean = false;
   private context: ToolContext;
 
   constructor(context: ToolContext) {
     this.context = context;
   }
 
+  onKeyDown(event: KeyboardEvent): void {
+    if (event.key == "Control") this.isCrtlPressed = true;
+  }
+  onKeyUp(event: KeyboardEvent): void {
+    if (event.key == "Control") this.isCrtlPressed = false;
+  }
   //check for Hit with existing Point
   onPointerDown(event: PointerEvent) {
     this.handleHover(event);
@@ -28,88 +35,104 @@ export class MoveTool implements Tool {
     if (!hovered) return;
     const pos = this.context.pointRenderer.getWorldPosition(hovered);
     if (!pos) return;
-    this.selectedPoint = hovered;
+    if (this.isCrtlPressed) {
+      this.selectedPoints.push(hovered);
+    } else {
+      this.selectedPoints = [hovered];
+    }
     this.startPosition.copy(pos);
     this.currentPosition.copy(pos);
 
-    this.context.pointRenderer.setSelected([this.selectedPoint]);
+    this.context.pointRenderer.setSelected(this.selectedPoints);
     this.context.sceneManager.setPanEnabled(false);
     this.context.cursorManager.setCursor("grabbing");
   }
 
   onPointerMove(event: PointerEvent) {
     this.handleHover(event);
-    if (!this.selectedPoint) return;
+    if (this.selectedPoints.length < 1) return;
 
     const rawPosition = this.context.sceneManager.getWorldPosition(event);
     if (!rawPosition) return;
+    this.currentPosition = rawPosition;
 
-    const connectedPoints = this.context.lineRenderer.getConnectedPoints(
-      this.selectedPoint,
-    );
-    const origin = this.context.pointRenderer.getWorldPosition(
-      this.selectedPoint,
-    );
-    if(!origin)return;
+    if (this.selectedPoints.length == 1) {
+      const connectedPoints = this.context.lineRenderer.getConnectedPoints(
+        this.selectedPoints[0],
+      );
+      const origin = this.context.pointRenderer.getWorldPosition(
+        this.selectedPoints[0],
+      );
+      if (!origin) return;
 
-    let snappedPosition = rawPosition.clone();
+      let snappedPosition = rawPosition.clone();
 
-    const constraints: { origin: THREE.Vector3; dir: THREE.Vector3 }[] = [];
+      const constraints: { origin: THREE.Vector3; dir: THREE.Vector3 }[] = [];
 
-    for (let i = 0; i < connectedPoints.length; i++) {
-      for (let j = i + 1; j < connectedPoints.length; j++) {
-        const p1 = this.context.pointRenderer.getWorldPosition(
-          connectedPoints[i],
-        );
-        const p2 = this.context.pointRenderer.getWorldPosition(
-          connectedPoints[j],
-        );
-        if (!p2 || !p1) continue;
+      for (let i = 0; i < connectedPoints.length; i++) {
+        for (let j = i + 1; j < connectedPoints.length; j++) {
+          const p1 = this.context.pointRenderer.getWorldPosition(
+            connectedPoints[i],
+          );
+          const p2 = this.context.pointRenderer.getWorldPosition(
+            connectedPoints[j],
+          );
+          if (!p2 || !p1) continue;
 
-        const d1 = p1.clone().sub(origin).normalize();
-        const d2 = p2.clone().sub(origin).normalize();
+          const d1 = p1.clone().sub(origin).normalize();
+          const d2 = p2.clone().sub(origin).normalize();
 
-        const dot = d1.dot(d2);
+          const dot = d1.dot(d2);
 
-        if (dot < -0.97) {
-          const dir = p2.clone().sub(p1).normalize();
-          constraints.push({ origin: p1, dir });
+          if (dot < -0.97) {
+            const dir = p2.clone().sub(p1).normalize();
+            constraints.push({ origin: p1, dir });
+          }
         }
       }
-    }
 
-    const ITERATIONS = 3;
+      const ITERATIONS = 3;
 
-    for (let k = 0; k < ITERATIONS; k++) {
-      for (const c of constraints) {
-        const v = snappedPosition.clone().sub(c.origin);
-        const projectedLength = v.dot(c.dir);
-        snappedPosition = c.origin
-          .clone()
-          .add(c.dir.clone().multiplyScalar(projectedLength));
+      for (let k = 0; k < ITERATIONS; k++) {
+        for (const c of constraints) {
+          const v = snappedPosition.clone().sub(c.origin);
+          const projectedLength = v.dot(c.dir);
+          snappedPosition = c.origin
+            .clone()
+            .add(c.dir.clone().multiplyScalar(projectedLength));
+        }
+      }
+
+      if (
+        rawPosition.distanceTo(snappedPosition) <
+        0.3 / this.context.sceneManager.camera.zoom
+      ) {
+        this.currentPosition = snappedPosition;
       }
     }
 
-    if (rawPosition.distanceTo(snappedPosition) < 0.3 / this.context.sceneManager.camera.zoom) {
-      this.currentPosition = snappedPosition;
-    } else {
-      this.currentPosition = rawPosition;
+    const delta = this.currentPosition.sub(this.startPosition);
+    for (const id of this.selectedPoints) {
+      const origin = this.context.model.points.get(id);
+      if (!origin) continue;
+      this.context.pointRenderer.setPosition(
+        id,
+        new THREE.Vector3(
+          origin.x + delta.x,
+          origin.y + delta.y,
+          origin.z + delta.z,
+        ),
+      );
     }
 
-    this.context.pointRenderer.setPosition(
-      this.selectedPoint,
-      this.currentPosition,
-    );
     this.context.lineRenderer.updateGeometry();
   }
 
   onPointerUp() {
     if (
-      !this.selectedPoint ||
+      this.selectedPoints.length < 1 ||
       this.currentPosition.equals(this.startPosition)
     ) {
-      this.selectedPoint = null;
-      this.context.pointRenderer.setSelected([]);
       this.context.cursorManager.setCursor("default");
       return;
     }
@@ -118,12 +141,18 @@ export class MoveTool implements Tool {
     const hoveredLine = this.context.lineRenderer.getHovered();
 
     //when Hovering a Point: merge
-    if (hoveredPoint && hoveredPoint != this.selectedPoint) {
+    if (
+      this.selectedPoints.length == 1 &&
+      hoveredPoint &&
+      hoveredPoint != this.selectedPoints[0]
+    ) {
       this.context.executeCommand(
-        new MergePointsCommand(this.selectedPoint, hoveredPoint),
+        new MergePointsCommand(this.selectedPoints[0], hoveredPoint),
       );
+      this.selectedPoints = [];
+      this.context.pointRenderer.setSelected([]);
     } //when hovering a Line: Split Line
-    else if (hoveredLine) {
+    else if (this.selectedPoints.length == 1 && hoveredLine) {
       const data = this.context.model.lines.get(hoveredLine);
       if (data) {
         const split = splitLine(
@@ -135,9 +164,11 @@ export class MoveTool implements Tool {
           this.context.executeCommand(
             new CompositeCommand([
               split?.command,
-              new MergePointsCommand(this.selectedPoint, split?.pointId),
+              new MergePointsCommand(this.selectedPoints[0], split?.pointId),
             ]),
           );
+        this.selectedPoints = [];
+        this.context.pointRenderer.setSelected([]);
       }
     } // Else Move the Point
     else {
@@ -145,25 +176,32 @@ export class MoveTool implements Tool {
       if (point) {
         this.currentPosition.copy(point);
       }
-      this.context.executeCommand(
-        new UpdatePointCommand({
-          id: this.selectedPoint,
-          x: this.currentPosition.x,
-          y: this.currentPosition.y,
-          z: this.currentPosition.z,
-        }),
-      );
+      let commands = [];
+      for (const id of this.selectedPoints) {
+        const pos = this.context.pointRenderer.getWorldPosition(id);
+        if (pos)
+          commands.push(
+            new UpdatePointCommand({
+              id: id,
+              x: pos.x,
+              y: pos.y,
+              z: pos.z,
+            }),
+          );
+      }
+      this.context.executeCommand(new CompositeCommand(commands));
+
+      this.selectedPoints = [];
+      this.context.pointRenderer.setSelected([]);
     }
 
-    this.selectedPoint = null;
-    this.context.pointRenderer.setSelected([]);
     this.context.cursorManager.setCursor("default");
   }
 
   //Enable Hover for Points, Lines and Grid
   handleHover(event: PointerEvent) {
     this.context.cursorManager.setCursor(
-      this.selectedPoint ? "grabbing" : "default",
+      this.selectedPoints.length > 0 ? "grabbing" : "default",
     );
 
     if (this.context.pointRenderer.handleHover(event)) {
@@ -172,7 +210,10 @@ export class MoveTool implements Tool {
       this.context.gridRenderer.setHovered(null);
       return;
     }
-    if (this.selectedPoint && this.context.lineRenderer.handleHover(event)) {
+    if (
+      this.selectedPoints.length == 1 &&
+      this.context.lineRenderer.handleHover(event)
+    ) {
       this.context.pointRenderer.setHovered(null);
       this.context.cursorManager.setCursor("pointer");
       this.context.gridRenderer.setHovered(null);
@@ -187,7 +228,5 @@ export class MoveTool implements Tool {
     }
   }
 
-  dispose(): void {
-    
-  }
+  dispose(): void {}
 }

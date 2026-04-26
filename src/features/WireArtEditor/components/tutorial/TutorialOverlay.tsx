@@ -2,6 +2,7 @@ import { useContext, useState, useEffect, useRef } from "react";
 import { tutorialSteps } from "./tutorialStep";
 import { TutorialContext } from "./TutorialProvider";
 import styles from "./tutorialOverlay.module.css";
+import { logError } from "../../../../utils/error/errorHandler";
 
 export function TutorialOverlay() {
   const context = useContext(TutorialContext);
@@ -26,7 +27,7 @@ export function TutorialOverlay() {
 
     const element = document.querySelector(step.target);
     if (!element) {
-      console.log(
+      logError(
         "The Element " +
           step.target +
           " specified by the TutorialStep " +

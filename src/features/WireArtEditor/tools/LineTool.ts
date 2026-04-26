@@ -64,7 +64,6 @@ export class LineTool implements Tool {
 
     this.worldPos.copy(this.context.sceneManager.getWorldPosition(event));
     let snapCandidate = this.getBestSnappingCandidate(this.worldPos);
-    console.log(snapCandidate);
 
     if (event.pointerType != "touch") {
       this.inputOverlay.reset();
@@ -81,7 +80,6 @@ export class LineTool implements Tool {
     }
 
     if (snapCandidate.intersection) {
-      console.log("intersection");
       const l1 = this.context.model.lines.get(
         snapCandidate.intersection.line1Id,
       );
@@ -183,7 +181,6 @@ export class LineTool implements Tool {
     if (!this.previewLine && event.pointerType != "touch") {
       this.createPreviewLine();
     }
-    console.log(this.lastPointId);
   }
 
   onPointerMove(event: PointerEvent) {

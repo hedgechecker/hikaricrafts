@@ -108,6 +108,9 @@ export class ThreeEditor {
 
     this.toolManager.setActiveTool("line");
     this.store.setTool("line");
+    this.store.setHasRedo(false);
+    this.store.setHasUndo(false);
+    this.history.clear();
 
     if (!data) {
       const project = this.storage.getEmptyProject();

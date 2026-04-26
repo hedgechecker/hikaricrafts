@@ -219,7 +219,6 @@ export class VerifyTool implements Tool {
 
     const rect = computeBoundingRect([...this.context.model.points.values()]);
     this.context.sceneManager.setCameraMode("3D");
-    console.log((rect.left + rect.right) / 2, (rect.bottom + rect.top) / 2);
     this.context.sceneManager.camera.position.set(
       (rect.left + rect.right) / 2,
       (rect.bottom + rect.top) / 2,

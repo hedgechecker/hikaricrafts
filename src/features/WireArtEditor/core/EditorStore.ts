@@ -42,8 +42,6 @@ export class EditorStore {
   setProject(project: Project) {
     this.state.project = project;
     this.state.settings = project.settings;
-    this.state.hasRedo = false;
-    this.state.hasUndo = false;
     this.emit();
   }
 

@@ -23,8 +23,8 @@ export class ToolManager {
     this.domElement.addEventListener("pointerdown", this.handlePointerDown);
     this.domElement.addEventListener("pointermove", this.handlePointerMove);
     this.domElement.addEventListener("pointerup", this.handlePointerUp);
-    this.domElement.addEventListener("keydown", this.handleKeyDown);
-    this.domElement.addEventListener("keyup", this.handleKeyUp);
+    window.addEventListener("keydown", this.handleKeyDown);
+    window.addEventListener("keyup", this.handleKeyUp);
 
     this.tools.set("point", new PointTool(toolContext));
     this.tools.set("line", new LineTool(toolContext));
@@ -76,8 +76,8 @@ export class ToolManager {
     this.domElement.removeEventListener("pointerdown", this.handlePointerDown);
     this.domElement.removeEventListener("pointermove", this.handlePointerMove);
     this.domElement.removeEventListener("pointerup", this.handlePointerUp);
-    this.domElement.removeEventListener("keydown", this.handleKeyDown);
-    this.domElement.removeEventListener("keyup", this.handleKeyUp);
+    window.removeEventListener("keydown", this.handleKeyDown);
+    window.removeEventListener("keyup", this.handleKeyUp);
 
     this.activeTool?.dispose?.();
   }

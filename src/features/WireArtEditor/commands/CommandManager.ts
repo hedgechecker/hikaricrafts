@@ -76,4 +76,9 @@ export class CommandManager {
   public hasRedo(): boolean {
     return this.redoStack.length > 0;
   }
+
+  public clear(){
+    this.undoStack = [];
+    this.redoStack = [];
+  }
 }

@@ -11,7 +11,6 @@ export default function NavBar({ selected }: NavBarProps) {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
 
   const handleDropdown = (name: string) => {
-    console.log(name)
     setOpenDropdown(openDropdown === name ? null : name);
   };
 

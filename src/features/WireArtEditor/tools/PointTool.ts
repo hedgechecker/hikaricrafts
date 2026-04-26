@@ -46,7 +46,6 @@ export class PointTool implements Tool {
       new THREE.Vector2(worldPos.x, worldPos.y),
     );
     if (intersection) {
-      console.log("intersection");
       const l1 = this.context.model.lines.get(intersection.line1Id);
       const l2 = this.context.model.lines.get(intersection.line2Id);
       if (!l1 || !l2) return;

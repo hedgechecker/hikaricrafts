@@ -45,8 +45,6 @@ export class GrainDirectionTool implements Tool {
 
   onPointerUp(event: PointerEvent): void {
     if (!event.isPrimary || event.button !== 0 || !this.selected) return;
-    console.log(this.polygons.at(Number(this.selected)));
-    console.log(this.gizmos.get(this.selected));
     this.selected = null;
   }
 
