@@ -1,0 +1,33 @@
+.wrapper,
+.center {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+}
+
+.wrapper {
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.center {
+  box-sizing: border-box;
+  padding: var(--space-md);
+  flex-direction: row;
+  gap: var(--space-md);
+  
+  height: 100%;
+}
+
+@media screen and (max-width: 900px) {
+  .center {
+    flex-direction: column-reverse;
+    align-items: center;
+    height: fit-content;
+  }
+}

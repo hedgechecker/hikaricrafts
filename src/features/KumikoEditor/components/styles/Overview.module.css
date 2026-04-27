@@ -1,0 +1,74 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.container {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--color-background);
+  margin: var(--space-md);
+  padding: var(--space-md);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  align-items: center;
+}
+
+.title {
+  text-align: center;
+  font-size: var(--font-size-2xl);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-sm);
+}
+.image {
+  min-width: 90px;
+  max-width: 20%;
+}
+.imagecontainer {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.buttoncontainer {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: var(--space-xs);
+}
+/* svg:hover{
+    fill: rgba(0, 0, 0, 1)
+} */
+.button {
+  padding: var(--space-sm);
+  background: var(--color-text-primary);
+  color: var(--color-background);
+  /* border: var(--space-border) solid var(--color-accent); */
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: var(--font-size-md);
+  transition: background 0.2s ease;
+  align-items: center;
+  display: flex;
+  text-decoration: none;
+}
+
+a {
+  text-decoration: none;
+}
+
+.button:hover {
+  background: var(--color-accent);
+}
+
+.card {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+}

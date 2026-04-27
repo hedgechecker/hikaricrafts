@@ -1,0 +1,68 @@
+.toolbar {
+  display: flex;
+  justify-content: left;
+  align-items: center;
+  padding: var(--space-md);
+  width: 100%;
+  box-sizing: border-box;
+  background-color: var(--color-background);
+  gap: var(--space-xs);
+  font-size: var(--font-size-xl);
+  color: var(--color-primary-dark);
+  flex-wrap: wrap;
+}
+.title {
+  margin: 0;
+}
+.toolSection {
+  display: flex;
+  flex-direction: row;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+  min-width: 0;
+
+}
+.settingsMenu {
+  position: absolute;
+  top: var(--space-xl);
+  right: var(--space-md);
+
+  background: var(--color-background);
+  /* border: var(--space-border) solid var(--color-border); */
+  border: none;
+  border-radius: var(--space-md);
+
+  padding: var(--space-sm);
+  width: fit-content;
+  height: fit-content;
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  z-index: 20;
+}
+
+.settingsMenu label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--font-size-md);
+}
+
+.settingsMenu h4 {
+  margin: 0 0 8px 0;
+}
+
+.checkbox{
+  accent-color: var(--color-accent);
+}
+
+.colorInput{
+  
+  padding: 5px;
+  cursor: pointer;
+  background: none;
+  border: none;
+}

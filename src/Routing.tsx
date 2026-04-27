@@ -1,16 +1,16 @@
 import { Routes, Route } from "react-router-dom";
-import App from "./KumikoEditor/KumikoEditor.tsx";
-import Login from "./Authentication/Login.tsx";
-import "../styles/theme.css";
-import { Register } from "./Authentication/Register.tsx";
-import Feedback from "./Contact/Feedback.tsx";
-import AllProductsPage from "../features/products/AllProducts.tsx";
-import SingleProduct from "./Product/SingleProduct.tsx";
-import Contact from "./Contact/Contact.tsx";
-import WireArtEditor from "./WireArtEditor/WireArtEditor.tsx";
-import Overview from "../features/WireArtEditor/components/Overview.tsx";
-import { setupGlobalErrorHandling } from "../utils/error/errorHandler.ts";
-import { useDialog } from "../features/global/useDialog.tsx";
+import App from "./pages/KumikoEditor/KumikoEditor.tsx";
+import Login from "./pages/Authentication/Login.tsx";
+import "./theme.css";
+import { Register } from "./pages/Authentication/Register.tsx";
+import Feedback from "./pages/Contact/Feedback.tsx";
+import AllProductsPage from "./features/products/AllProducts.tsx";
+import SingleProduct from "./pages/Product/SingleProduct.tsx";
+import Contact from "./pages/Contact/Contact.tsx";
+import WireArtEditor from "./pages/WireArtEditor/WireArtEditor.tsx";
+import Overview from "./features/WireArtEditor/components/Overview.tsx";
+import { setupGlobalErrorHandling } from "./utils/error/errorHandler.ts";
+import { useDialog } from "./features/global/useDialog.tsx";
 
 export default function Routing() {
   const { dialogComponent } = useDialog();

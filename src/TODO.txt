@@ -3,7 +3,9 @@ basket site
 
 Import SVG?
 Deselect Polygons
+open example Projects in Editor
 
-Multiselect Points
+
+export Kumiko SVG?
 
 Refactor Kumiko Editor
