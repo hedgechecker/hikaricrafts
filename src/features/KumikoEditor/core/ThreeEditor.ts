@@ -47,7 +47,7 @@ export class ThreeEditor {
     this.project = this.storage.getEmptyProject();
 
     this.cursorManager = new CursorManager(this.container);
-    this.sceneManager = new SceneManager(this.container);
+    this.sceneManager = new SceneManager(this.container, this.project.settings);
     this.patternRenderer = new PatternRenderer(this.sceneManager);
     this.gridRenderer = new GridRenderer(this.sceneManager);
     this.gizmoRenderer = new GizmoRenderer(this.sceneManager);
@@ -198,7 +198,7 @@ export class ThreeEditor {
       this.sceneManager.update();
 
       if (camera instanceof OrthographicCamera && camera.zoom != lastZoom) {
-        this.patternRenderer.update(camera.zoom);
+        this.patternRenderer.update();
         this.gizmoRenderer.update(camera.zoom);
         lastZoom = camera.zoom;
       }
@@ -238,6 +238,9 @@ export class ThreeEditor {
     }
     this.project.settings = settings;
     this.store.updateSettings(settings);
+
+    this.sceneManager.settings = settings;
+    this.gridRenderer.addFromData(settings);
   }
 
   getProject() {

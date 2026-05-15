@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import type { WoodType } from "../models/Pattern";
 const loader = new THREE.TextureLoader();
 let oakPic: HTMLImageElement | null = null;
 let sprucePic: HTMLImageElement | null = null;
@@ -12,13 +13,13 @@ export const blackmaterial = new THREE.MeshBasicMaterial({
 });
 
 /**
- * @param index the Index of material
+ * @param type the Index of material
  * @returns THREE.Texture
  */
-export function getWoodTexture(index: number) {
+export function getWoodTexture(type: WoodType) {
   var texture;
-  switch (index) {
-    case 0:
+  switch (type) {
+    case "Pine":
       if (sprucePic) {
         const texture = new THREE.Texture(sprucePic);
         texture.needsUpdate = true;
@@ -31,7 +32,7 @@ export function getWoodTexture(index: number) {
         sprucePic = loadedTex.image;
       });
       break;
-    case 1:
+    case "Oak":
       if (oakPic) {
         const texture = new THREE.Texture(oakPic);
         texture.needsUpdate = true;
@@ -45,7 +46,7 @@ export function getWoodTexture(index: number) {
       });
       break;
 
-    case 2:
+    case "DouglasFir":
       if (douglasfir) {
         const texture = new THREE.Texture(douglasfir);
         texture.needsUpdate = true;
@@ -72,12 +73,12 @@ export function getWoodTexture(index: number) {
 
 /**
  *
- * @param index the index of the Material
+ * @param type the type of the Material
  * @returns THREE.MeshStandardMaterial
  */
-export function getMaterial(index: number) {
-  if (index == undefined) index = 0;
-  const map = getWoodTexture(index);
+export function getMaterial(type: WoodType) {
+  if (type == undefined) type = "Pine";
+  const map = getWoodTexture(type);
   return new THREE.MeshStandardMaterial({
     map: map,
     roughness: 1,
@@ -85,21 +86,21 @@ export function getMaterial(index: number) {
   });
 }
 
-export function getFastMaterial(index: number, opaque = false) {
+export function getFastMaterial(type: WoodType, opaque = false) {
   const material = new THREE.MeshStandardMaterial({
     roughness: 1,
     metalness: 0.0,
     opacity: opaque ? 0.5 : 1.0,
     transparent: opaque,
   });
-  switch (index) {
-    case 0:
+  switch (type) {
+    case "Pine":
       material.color = new THREE.Color("#eae8d5");
       break;
-    case 1:
+    case "Oak":
       material.color = new THREE.Color("#85390a");
       break;
-    case 2:
+    case "DouglasFir":
       material.color = new THREE.Color("#e36110");
       break;
     default:
@@ -111,12 +112,12 @@ export function getFastMaterial(index: number, opaque = false) {
 
 /**
  * Returns the Material with 50% Opacity
- * @param index the index of the Material
+ * @param type the type of the Material
  * @returns THREE.MeshStandardMaterial
  */
-export function getOpaqueMaterial(index: number) {
-  if (index == undefined) index = 0;
-  const map = getWoodTexture(index);
+export function getOpaqueMaterial(type: WoodType) {
+  if (type == undefined) type = "Pine";
+  const map = getWoodTexture(type);
   map.repeat.set(0.1, 0.1);
   return new THREE.MeshStandardMaterial({
     map: map,

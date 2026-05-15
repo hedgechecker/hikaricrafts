@@ -6,8 +6,15 @@ export interface PatternData {
   id: string;
 
   /** The type of pattern*/
-  patternType: "AsaNoHa" | "Gomagara";
-  /** Position X */
+  patternType: patternType;
+  /** Position*/
+  pos: PatternPos;
+
+  /** Matches the style to every single wooden piece per pattern */
+  materialMap: { woodType: WoodType, thickness: number }[];
+}
+
+export interface PatternPos {
   x: number;
   /** Position Y */
   y: number;
@@ -15,9 +22,7 @@ export interface PatternData {
   z: number;
   /** Rotation of the triangle (can only have three rotations)*/
   rotation: 0 | 1 | 2;
-
-  /** Matches the style to every single wooden piece per pattern */
-  materialMap: { woodType: WoodType, thickness: number }[];
 }
 
 export type WoodType = "Oak" | "Pine" | "DouglasFir";
+export type patternType = "AsaNoHa" | "Gomagara" | "Mystery";

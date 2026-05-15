@@ -1,27 +1,26 @@
 import * as THREE from "three";
-import type { PatternConfig } from "../Utils/InterfaceUtils";
-import { getFastMaterial } from "./Materials";
+import { getFastMaterial } from "./materials";
+import type { Settings } from "../models/Settings";
+import type { PatternData, patternType } from "../models/Pattern";
 
 /**
  * @param pattern the index of the wanted pattern
- * @param config includes the needed dimensions {spacing, lineWidth, depth}
+ * @param settings includes the needed dimensions {spacing, lineWidth, depth}
  * @param materialMap array of the materials
  * @returns a THREE.Group of the colorizable meshes
  */
 export function createPattern(
-  pattern: number,
-  config: PatternConfig,
+  pattern: PatternData,
+  settings: Settings,
   opaque = false,
-  materialMap?: number[]
 ): THREE.Group {
-  const factories: Record<number, () => THREE.Group> = {
-    [-1]: () => createOutline(config),
-    [0]: () => new THREE.Group(),
-    [1]: () => createPatternGroup("AsaNoHa", config, pattern, opaque, materialMap),
-    [2]: () => createPatternGroup("GomaGara", config, pattern, opaque, materialMap),
+  const factories: Record<patternType, () => THREE.Group> = {
+    ["Mystery"]: () => createOutline(settings),
+    ["AsaNoHa"]: () => createPatternGroup(pattern, settings, opaque),
+    ["Gomagara"]: () => createPatternGroup(pattern, settings, opaque),
   };
 
-  const factory = factories[pattern] ?? factories[1];
+  const factory = factories[pattern.patternType] ?? factories["Gomagara"];
   return factory();
 }
 
@@ -29,17 +28,17 @@ export function createPattern(
  * Create a generic pattern group (AsaNoHa or GomaGara)
  */
 function createPatternGroup(
-  type: "AsaNoHa" | "GomaGara",
-  config: PatternConfig,
-  index: number,
+  pattern: PatternData,
+  settings: Settings,
   opaque: boolean,
-  materialMap?: number[]
 ): THREE.Group {
-  const shape = createShapeFromPoints(getPatternPoints(index, config));
+  const points = getPatternPoints(pattern.patternType, settings);
+  const shape = createShapeFromPoints(points);
   const baseGeo = new THREE.ExtrudeGeometry(shape, {
-    depth: config.depth,
+    depth: settings.depth,
     bevelEnabled: false,
   });
+
 
   const group = new THREE.Group();
   const rotations = [0, Math.PI * (2 / 3), Math.PI * (4 / 3)];
@@ -47,14 +46,11 @@ function createPatternGroup(
   rotations.forEach((rot, i) => {
     const geo = baseGeo.clone();
     geo.rotateZ(rot);
-
-    const mesh = new THREE.Mesh(
-      geo,
-      getFastMaterial(materialMap?.[i] ?? 0, opaque)
-    );
+    const material = getFastMaterial(pattern.materialMap[i] ? pattern.materialMap[i].woodType : "Pine", opaque);
+    const mesh = new THREE.Mesh(geo, material);
 
     // GomaGara only: offset z slightly for each layer
-    if (type === "GomaGara") mesh.position.z = -i * 0.05;
+    if (pattern.patternType === "Gomagara") mesh.position.z = -i * 0.05;
 
     group.add(mesh);
   });
@@ -78,8 +74,10 @@ function createShapeFromPoints(points: THREE.Vector2[]): THREE.Shape {
 /**
  * Creates an outline pattern
  */
-function createOutline({ spacing, lineWidth, depth }: PatternConfig): THREE.Group {
-  const triangleHeight = Math.sqrt(spacing ** 2 - ((spacing / 2) * spacing) / 2);
+function createOutline({ spacing, lineWidth, depth }: Settings): THREE.Group {
+  const triangleHeight = Math.sqrt(
+    spacing ** 2 - ((spacing / 2) * spacing) / 2,
+  );
   const l = lineWidth / 2;
   const inward = (l * Math.sin(Math.PI / 3)) / Math.sin(Math.PI / 6);
 
@@ -91,7 +89,7 @@ function createOutline({ spacing, lineWidth, depth }: PatternConfig): THREE.Grou
   shape.lineTo(-spacing / 2, -triangleHeight / 3);
 
   const geo = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: false });
-  const material = getFastMaterial(0, true);
+  const material = getFastMaterial("Pine", true);
 
   const group = new THREE.Group();
   [0, Math.PI * (2 / 3), Math.PI * (4 / 3)].forEach((rot) => {
@@ -107,17 +105,16 @@ function createOutline({ spacing, lineWidth, depth }: PatternConfig): THREE.Grou
  * Computes pattern points
  */
 export function getPatternPoints(
-  index: number,
-  { spacing, lineWidth }: PatternConfig
+  type: patternType,
+  { spacing, lineWidth }: Settings,
 ): THREE.Vector2[] {
-  const triangleHeight = Math.sqrt(spacing ** 2 - ((spacing / 2) * spacing) / 2);
+  const triangleHeight = Math.sqrt(
+    spacing ** 2 - ((spacing / 2) * spacing) / 2,
+  );
   const innerHeight = triangleHeight - (3 * lineWidth) / 2;
 
-  switch (index) {
-    case 0:
-      return [];
-
-    case 1: {
+  switch (type) {
+    case "Gomagara": {
       const bottomAngleHeight =
         ((lineWidth / 2) * Math.sin(Math.PI / 6)) / Math.sin(Math.PI / 3);
       const topAngleHeight =
@@ -126,22 +123,29 @@ export function getPatternPoints(
       return [
         new THREE.Vector2(0, 0),
         new THREE.Vector2(lineWidth / 2, bottomAngleHeight),
-        new THREE.Vector2(lineWidth / 2, innerHeight * (2 / 3) - topAngleHeight),
+        new THREE.Vector2(
+          lineWidth / 2,
+          innerHeight * (2 / 3) - topAngleHeight,
+        ),
         new THREE.Vector2(0, innerHeight * (2 / 3)),
-        new THREE.Vector2(-lineWidth / 2, innerHeight * (2 / 3) - topAngleHeight),
+        new THREE.Vector2(
+          -lineWidth / 2,
+          innerHeight * (2 / 3) - topAngleHeight,
+        ),
         new THREE.Vector2(-lineWidth / 2, bottomAngleHeight),
         new THREE.Vector2(0, 0),
       ];
     }
 
-    case 2: {
+    case "AsaNoHa": {
       const bottom = -innerHeight / 3 + lineWidth;
       const b =
         ((innerHeight - (innerHeight / 3 + bottom)) * Math.sin(Math.PI / 2)) /
         Math.sin(Math.PI / 3);
       const leftLength = (b * Math.sin(Math.PI / 6)) / Math.sin(Math.PI / 2);
 
-      const b2 = (lineWidth * 2 * Math.sin(Math.PI / 2)) / Math.sin(Math.PI / 3);
+      const b2 =
+        (lineWidth * 2 * Math.sin(Math.PI / 2)) / Math.sin(Math.PI / 3);
       const leftTopDelta = (b2 * Math.sin(Math.PI / 6)) / Math.sin(Math.PI / 2);
 
       return [

@@ -26,8 +26,6 @@ export class PatternTool implements Tool {
     if (!event.isPrimary) return;
     if (event.button !== 0) return;
 
-    //No Placement on existing Points
-    if (this.context.patternRenderer.getHovered()) return;
     if (
       Math.pow(event.x - this.downPos.x, 2) +
         Math.pow(event.y - this.downPos.y, 2) >
@@ -37,18 +35,20 @@ export class PatternTool implements Tool {
     let worldPos = this.context.sceneManager.getWorldPosition(event);
 
     //Snap to Grid
-    const point = this.context.gridRenderer.getHoveredPoint();
-    if (point) {
-      worldPos = point;
+    const pos = this.context.gridRenderer.getHoveredPos();
+    if (pos) {
+      worldPos.x = pos.x;
+      worldPos.y = pos.y;
+      worldPos.z = pos.z;
     }
 
     this.context.executeCommand(
       new AddPatternCommand({
         id: generateId(),
-        x: worldPos.x,
+        pos: {x: worldPos.x,
         y: worldPos.y,
         z: worldPos.z,
-        rotation: 0,
+        rotation: pos? pos.rotation : 0},
         patternType: "AsaNoHa",
         materialMap: [],
       }),
@@ -60,7 +60,7 @@ export class PatternTool implements Tool {
     this.handleHover(event);
   }
 
-  //Enable Hover for Points, Lines and Grid
+  //Enable Hover for Patterns and Grid
   handleHover(event: PointerEvent) {
     this.context.cursorManager.setCursor("default");
 
@@ -71,7 +71,7 @@ export class PatternTool implements Tool {
     }
     if (this.context.gridRenderer.handleHover(event)) {
       this.context.patternRenderer.setHovered(null);
-      this.context.cursorManager.setCursor("crosshair");
+      this.context.cursorManager.setCursor("pointer");
       return;
     }
   }

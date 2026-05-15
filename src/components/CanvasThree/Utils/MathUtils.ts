@@ -2,37 +2,6 @@ import * as THREE from "three";
 import { BufferGeometryUtils } from "three/examples/jsm/Addons.js";
 import type { gridPosition, PanelConfig } from "./InterfaceUtils";
 
-/**
- * returns the distance between two parallels, that go through the points 1 and 2
- * @param x1 First Point
- * @param y1 First Point
- * @param x2 Second Point
- * @param y2 Second Point
- * @param angle angle in radians, in wich the lines go through the points
- * @returns distance between two parallels
- */
-export function distanceBetweenParallels(
-  x1: number,
-  y1: number,
-  x2: number,
-  y2: number,
-  angle: number
-) {
-  // Direction vector of the line (angle in radians)
-  const dx = Math.cos(angle);
-  const dy = Math.sin(angle);
-
-  // Normal vector
-  const nx = -dy;
-  const ny = dx;
-
-  // Vector between points
-  const vx = x2 - x1;
-  const vy = y2 - y1;
-
-  // Projection of v onto n (absolute value)
-  return Math.abs(vx * nx + vy * ny);
-}
 
 /**
  * Returns the intersection point of two infinite lines, each defined by a point and an angle.
@@ -100,29 +69,6 @@ export function mergeGroup(group: THREE.Group) {
   return new THREE.Mesh(merged, materials);
 }
 
-/**
- * Checks if the Point goes into the negative direction (120deg grid direction)
- * @param config the Panel Dimensions
- * @param point the point to get checked
- * @returns boolean
- */
-export function isZnegative(config: PanelConfig, point: THREE.Vector2) {
-  //Check if the 120 deg line goes into negative way
-  const a = new THREE.Vector3(
-    -config.width / 2 + config.frameWidth,
-    config.height / 2 - config.frameWidth,
-    0
-  );
-  const b = new THREE.Vector3(
-    -config.width / 2 +
-      config.frameWidth +
-      ((config.height - 2 * config.frameWidth) * Math.sin(Math.PI / 6)) /
-        Math.sin(Math.PI / 3),
-    -config.height / 2 + config.frameWidth,
-    0
-  );
-  return (b.x - a.x) * (point.y - a.y) - (b.y - a.y) * (point.x - a.x) < 0;
-}
 
 export function getGridXYZ(x: number, y: number, config: PanelConfig) {
   const triangleHeight = Math.sqrt(

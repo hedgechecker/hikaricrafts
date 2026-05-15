@@ -142,7 +142,7 @@ export class CameraController {
     const beforeZoom = this.screenToWorld(mouse);
 
     this.camera.zoom *= factor;
-    this.camera.zoom = THREE.MathUtils.clamp(this.camera.zoom, 0.02, 10);
+    this.camera.zoom = THREE.MathUtils.clamp(this.camera.zoom, 0.002, 100);
     this.camera.updateProjectionMatrix();
 
     const afterZoom = this.screenToWorld(mouse);

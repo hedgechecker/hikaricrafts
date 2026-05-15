@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { CameraController } from "./CameraController";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import type { Settings } from "../models/Settings";
 
 type CameraMode = "2D" | "3D";
 
@@ -10,6 +11,7 @@ export class SceneManager {
   renderer: THREE.WebGLRenderer;
   dom: HTMLCanvasElement;
   container: HTMLDivElement;
+  settings: Settings;
 
   camera: THREE.OrthographicCamera | THREE.PerspectiveCamera;
   private orthoCamera: THREE.OrthographicCamera;
@@ -20,11 +22,13 @@ export class SceneManager {
   private raycaster = new THREE.Raycaster();
   private plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
   private mouse = new THREE.Vector2(0, 0);
+  
 
   private count = 0;
 
-  constructor(container: HTMLDivElement) {
+  constructor(container: HTMLDivElement, settings: Settings) {
     this.container = container;
+    this.settings = settings;
     const width = container.clientWidth;
     const height = container.clientHeight;
 
