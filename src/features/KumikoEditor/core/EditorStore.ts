@@ -11,6 +11,7 @@ interface EditorState {
   tool: ToolType;
   hasUndo: boolean;
   hasRedo: boolean;
+  cameraMode: "3D" | "2D";
 }
 
 export class EditorStore {
@@ -20,6 +21,7 @@ export class EditorStore {
     tool: "move",
     hasUndo: false,
     hasRedo: false,
+    cameraMode: "2D"
   };
 
   private listeners: Listener[] = [];
@@ -57,6 +59,11 @@ export class EditorStore {
 
   setHasRedo(has: boolean) {
     this.state.hasRedo = has;
+    this.emit();
+  }
+
+  setCameraMode(mode: "2D" | "3D") {
+    this.state.cameraMode = mode;
     this.emit();
   }
 

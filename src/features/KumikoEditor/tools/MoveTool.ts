@@ -62,9 +62,9 @@ export class MoveTool implements Tool {
       this.context.patternRenderer.setPosition(
         id,
         new THREE.Vector3(
-          origin.x + delta.x,
-          origin.y + delta.y,
-          origin.z + delta.z,
+          origin.pos.x + delta.x,
+          origin.pos.y + delta.y,
+          origin.pos.z + delta.z,
         ),
       );
     }
@@ -98,10 +98,10 @@ export class MoveTool implements Tool {
       this.context.patternRenderer.setSelected([]);
     } // Else Move the Point
     else {
-      const point = this.context.gridRenderer.getHoveredPoint();
-      if (point) {
-        this.currentPosition.copy(point);
-      }
+      // const pattern = this.context.gridRenderer.getHovered();
+      // if (pattern) {
+      //   this.currentPosition.copy(pattern);
+      // }
       let commands = [];
       for (const id of this.selectedPatterns) {
         const pos = this.context.patternRenderer.getWorldPosition(id);
@@ -109,11 +109,12 @@ export class MoveTool implements Tool {
           commands.push(
             new UpdatePatternCommand({
               id: id,
-              x: pos.x,
+              pos: {x: pos.x,
               y: pos.y,
               z: pos.z,
-              patternType: "AsaNoHa",
               rotation: 0,
+              },
+              patternType: "AsaNoHa",
               materialMap: []
             }),
           );

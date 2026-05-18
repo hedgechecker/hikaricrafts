@@ -49,7 +49,7 @@ export class PatternTool implements Tool {
         y: worldPos.y,
         z: worldPos.z,
         rotation: pos? pos.rotation : 0},
-        patternType: "AsaNoHa",
+        patternType: "Gomagara",
         materialMap: [],
       }),
     );
@@ -62,7 +62,6 @@ export class PatternTool implements Tool {
 
   //Enable Hover for Patterns and Grid
   handleHover(event: PointerEvent) {
-    this.context.cursorManager.setCursor("default");
 
     if (this.context.patternRenderer.handleHover(event)) {
       this.context.cursorManager.setCursor("pointer");
@@ -74,5 +73,7 @@ export class PatternTool implements Tool {
       this.context.cursorManager.setCursor("pointer");
       return;
     }
+    this.context.cursorManager.setCursor("default");
+
   }
 }

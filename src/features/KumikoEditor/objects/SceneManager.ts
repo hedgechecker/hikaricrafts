@@ -1,13 +1,10 @@
 import * as THREE from "three";
-import { CameraController } from "./CameraController";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import type { Settings } from "../models/Settings";
 
-type CameraMode = "2D" | "3D";
-
 export class SceneManager {
   scene: THREE.Scene;
-  controller!: CameraController | OrbitControls;
+  controller!: OrbitControls;
   renderer: THREE.WebGLRenderer;
   dom: HTMLCanvasElement;
   container: HTMLDivElement;
@@ -22,7 +19,6 @@ export class SceneManager {
   private raycaster = new THREE.Raycaster();
   private plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
   private mouse = new THREE.Vector2(0, 0);
-  
 
   private count = 0;
 
@@ -33,7 +29,7 @@ export class SceneManager {
     const height = container.clientHeight;
 
     this.scene = new THREE.Scene();
-    this.addLighting();
+    this.addLighting(new THREE.Sphere());
 
     const aspect = width / height;
     const frustumSize = 10;
@@ -48,7 +44,7 @@ export class SceneManager {
     );
     this.orthoCamera.position.set(0, 0, 10);
     this.orthoCamera.zoom = 0.1;
-    this.perspectiveCamera = new THREE.PerspectiveCamera(60, aspect, 0.1, 1000);
+    this.perspectiveCamera = new THREE.PerspectiveCamera(60, aspect, 0.1, 5000);
     this.perspectiveCamera.position.set(0, 0, 10);
     this.perspectiveCamera.lookAt(0, 0, 0);
 
@@ -76,13 +72,30 @@ export class SceneManager {
     }, 1000);
   }
 
-  addLighting() {
+  addLighting(sphere: THREE.Sphere) {
     this.scene.background = new THREE.Color(0xfaf7f2);
-    this.scene.add(new THREE.AmbientLight(0xffffff, 0.3));
-    const light = new THREE.SpotLight(0xffffff, 150, 100, Math.PI / 3, 0, 1);
-    light.position.set(0, 0, 50);
-    light.lookAt(0, 0, 0);
+    //shines light from the front
+    const light = new THREE.DirectionalLight(0xfdf3c6, 1);
+    light.position.set(
+      sphere.center.x,
+      sphere.center.y,
+      sphere.center.z + sphere.radius,
+    );
+    light.target.position.copy(sphere.center);
     this.scene.add(light);
+
+    //shines light from the back
+    const light2 = new THREE.DirectionalLight(0xfdf3c6, 1);
+    light2.position.set(
+      sphere.center.x,
+      sphere.center.y,
+      sphere.center.z - sphere.radius,
+    );
+    light2.target.position.copy(sphere.center);
+    this.scene.add(light2);
+
+    //overall ligthing
+    this.scene.add(new THREE.AmbientLight(0xfdf3c6, 2));
   }
 
   render() {
@@ -90,16 +103,10 @@ export class SceneManager {
     this.renderer.render(this.scene, this.camera);
   }
 
-  
-
   onResize = () => {
     const width = this.container.clientWidth;
     const height = this.container.clientHeight;
     const aspect = width / height;
-    // const referenceWidth = 300; // "desktop baseline"
-    // const scale = width / referenceWidth;
-    //const frustumSize = scale * width;
-
     const frustumSize = 7;
 
     if (this.camera instanceof THREE.OrthographicCamera) {
@@ -149,35 +156,93 @@ export class SceneManager {
     return intersection;
   }
 
-  setCameraMode(mode: CameraMode) {
+  setCameraMode(mode: "2D" | "3D") {
     if (mode === "2D") {
       this.camera = this.orthoCamera;
     } else {
       this.camera = this.perspectiveCamera;
       this.renderer.render(this.scene, this.camera);
     }
-    //this.camera.position.copy(prevCamera.position);
 
     if (this.controller) {
       this.controller.dispose();
     }
 
-    if (mode === "2D") {
-      this.controller = new CameraController(this.orthoCamera, this.dom, this);
-    } else {
-      const controls = new OrbitControls(this.perspectiveCamera, this.dom);
-      controls.enableDamping = true;
-      controls.target.set(0, 0, 0);
-      this.controller = controls;
-      this.update();
-    }
+    const controls = new OrbitControls(this.camera, this.dom);
 
+    if (mode === "2D") {
+      this.camera.position.set(0, 0, 100);
+      this.camera.zoom = 0.01;
+      controls.enableRotate = false;
+    } else {
+      this.camera.position.set(0, 0, 100);
+      this.camera.zoom = 0.5;
+      controls.enableRotate = true;
+      controls.enableDamping = true;
+      controls.panSpeed = 2;
+    }
+    controls.enableZoom = true;
+    controls.zoomSpeed = 5;
+    controls.target.set(0, 0, 0);
+
+    this.controller = controls;
+
+    const minPan = new THREE.Vector3(
+      -this.settings.width / 2,
+      -this.settings.height / 2,
+      -10,
+    );
+    const maxPan = new THREE.Vector3(
+      this.settings.width / 2,
+      this.settings.height / 2,
+      10,
+    );
+
+    const dist = Math.max(this.settings.width, this.settings.height);
+    const minDistance = dist * 0.05;
+    const maxDistance = dist;
+    const minZoom = dist / 200000; // smaller number = zoomed out
+    const maxZoom = 0.5; // larger number = zoomed in
+    this.controller.removeEventListener("change", () => {});
+    this.controller.addEventListener("change", () => {
+      const _v = new THREE.Vector3();
+      _v.copy(this.controller.target);
+
+      // --- PAN CLAMP ---
+      this.controller.target.clamp(minPan, maxPan);
+      this.camera.position.add(this.controller.target.clone().sub(_v)); // keep relative offset
+      // --- ZOOM CLAMP ---
+      if (this.camera instanceof THREE.OrthographicCamera) {
+        this.camera.zoom = THREE.MathUtils.clamp(
+          this.camera.zoom,
+          minZoom,
+          maxZoom,
+        );
+        this.camera.updateProjectionMatrix();
+      } else if (this.camera instanceof THREE.PerspectiveCamera) {
+        const offset = new THREE.Vector3().subVectors(
+          this.camera.position,
+          controls.target,
+        );
+
+        const distance = offset.length();
+        if (distance < minDistance) {
+          offset.setLength(minDistance);
+          this.camera.position.copy(controls.target).add(offset);
+        } else if (distance > maxDistance) {
+          offset.setLength(maxDistance);
+          this.camera.position.copy(controls.target).add(offset);
+        }
+      }
+      this.render();
+      this.camera.updateProjectionMatrix();
+    });
+
+    this.update();
     this.onResize();
   }
 
   setPanEnabled(enabled: boolean) {
-    if (this.controller instanceof CameraController) {
-      this.controller.setPanEnabled(enabled);
-    }
+    this.controller.enablePan = enabled;
   }
 }

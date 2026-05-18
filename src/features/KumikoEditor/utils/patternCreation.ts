@@ -18,6 +18,7 @@ export function createPattern(
     ["Mystery"]: () => createOutline(settings),
     ["AsaNoHa"]: () => createPatternGroup(pattern, settings, opaque),
     ["Gomagara"]: () => createPatternGroup(pattern, settings, opaque),
+    ["Outline"]: () => createOutline(settings),
   };
 
   const factory = factories[pattern.patternType] ?? factories["Gomagara"];
@@ -25,7 +26,7 @@ export function createPattern(
 }
 
 /**
- * Create a generic pattern group (AsaNoHa or GomaGara)
+ * Create a generic pattern group 
  */
 function createPatternGroup(
   pattern: PatternData,
@@ -39,14 +40,16 @@ function createPatternGroup(
     bevelEnabled: false,
   });
 
-
   const group = new THREE.Group();
   const rotations = [0, Math.PI * (2 / 3), Math.PI * (4 / 3)];
 
   rotations.forEach((rot, i) => {
     const geo = baseGeo.clone();
     geo.rotateZ(rot);
-    const material = getFastMaterial(pattern.materialMap[i] ? pattern.materialMap[i].woodType : "Pine", opaque);
+    const material = getFastMaterial(
+      pattern.materialMap[i] ? pattern.materialMap[i].woodType : "Pine",
+      opaque,
+    );
     const mesh = new THREE.Mesh(geo, material);
 
     // GomaGara only: offset z slightly for each layer
@@ -54,6 +57,21 @@ function createPatternGroup(
 
     group.add(mesh);
   });
+
+  //Create the Hitbox outline
+  const hitshape = createShapeFromPoints(getPatternPoints("Mystery",settings));
+  const hitGeometry = new THREE.ExtrudeGeometry(hitshape, {
+    depth: settings.depth,
+    bevelEnabled: false,
+  });
+  const hitMaterial = new THREE.MeshBasicMaterial({
+    transparent: true,
+    opacity: 0,
+    depthWrite: false,
+  });
+  const hitbox = new THREE.Mesh(hitGeometry, hitMaterial);
+  hitbox.name = "hitbox";
+  group.add(hitbox);
 
   return group;
 }
@@ -157,7 +175,13 @@ export function getPatternPoints(
       ];
     }
 
+    //Return Hitbox Outline
     default:
-      return [new THREE.Vector2(0, 0), new THREE.Vector2(0, 0)];
+      return [
+        new THREE.Vector2(-triangleHeight/2, -innerHeight * 1/3),
+        new THREE.Vector2(triangleHeight/2, -innerHeight * 1/3),
+        new THREE.Vector2(0, innerHeight * 2/3),
+        new THREE.Vector2(-triangleHeight/2, -innerHeight * 1/3),
+      ];
   }
 }

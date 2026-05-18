@@ -243,6 +243,11 @@ export class ThreeEditor {
     this.gridRenderer.addFromData(settings);
   }
 
+  setCameraMode(mode : "3D" | "2D"){
+    this.sceneManager.setCameraMode(mode);
+    this.store.setCameraMode(mode);
+  }
+
   getProject() {
     return this.project;
   }

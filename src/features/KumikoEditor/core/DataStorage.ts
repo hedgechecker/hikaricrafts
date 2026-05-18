@@ -17,8 +17,8 @@ export class DataStorage {
       name: "",
       version: 0,
       settings: {
-        width: 500,
-        height: 1000,
+        width: 1000,
+        height: 500,
         depth: 18,
         lineWidth: 3,
         frameWidth: 10,

@@ -28,6 +28,9 @@ export default function Tooltip({ children, text }: TooltipProps) {
     });
 
     setVisible(true);
+    setTimeout(() => {
+      setVisible(false);
+    }, 1500)
   };
 
   const hideTooltip = () => setVisible(false);

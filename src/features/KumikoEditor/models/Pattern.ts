@@ -25,4 +25,4 @@ export interface PatternPos {
 }
 
 export type WoodType = "Oak" | "Pine" | "DouglasFir";
-export type patternType = "AsaNoHa" | "Gomagara" | "Mystery";
+export type patternType = "AsaNoHa" | "Gomagara" |  "Outline" | "Mystery";

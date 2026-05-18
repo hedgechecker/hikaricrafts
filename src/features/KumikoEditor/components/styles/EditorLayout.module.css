@@ -5,7 +5,6 @@
   width: 100%;
   user-select: none;
   -webkit-user-select: none;
-  -webkit-touch-callout: none;
   touch-action: manipulation;
 }
 
@@ -24,10 +23,22 @@
   height: 100%;
 }
 
+.sidebar{
+  width: 20%;
+  height: 100%;
+  gap: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
 @media screen and (max-width: 900px) {
   .center {
     flex-direction: column-reverse;
     align-items: center;
     height: fit-content;
+  }
+  .sidebar{
+    width: 100%;
   }
 }

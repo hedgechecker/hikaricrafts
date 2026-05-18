@@ -30,7 +30,7 @@ export default function Toolbar({ engine }: Props) {
 
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement | null>(null);
-  const { settings, tool, hasRedo, hasUndo } = useEditorStore(
+  const { settings, tool, hasRedo, hasUndo, cameraMode } = useEditorStore(
     engine.getStore(),
   );
 
@@ -163,8 +163,8 @@ export default function Toolbar({ engine }: Props) {
 
         <ToolButton
           label=""
-          image="/icons/single-pattern.svg"
-          toolTip="Einen Punkt zeichnen"
+          image="/icons/pattern.svg"
+          toolTip="Ein Muster einfügen"
           active={tool === "pattern"}
           onClick={() => changeTool("pattern")}
           id="patterntool"
@@ -238,6 +238,15 @@ export default function Toolbar({ engine }: Props) {
           toolTip="Sichtbarkeiten ändern"
           active={settingsOpen}
           onClick={() => setSettingsOpen(!settingsOpen)}
+        />
+
+        {/* Toggle 3D/2D */}
+        <ToolButton
+          id="dimensionButton"
+          label=""
+          image= {cameraMode == "3D" ? "/icons/3D.svg" : "/icons/2D.svg"} 
+          toolTip="Kamera Modus umschalten"
+          onClick={() => engine.setCameraMode(cameraMode == "3D" ? "2D" : "3D")}
         />
 
         {/* Settings menu */}

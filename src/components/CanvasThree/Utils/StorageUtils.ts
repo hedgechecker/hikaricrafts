@@ -176,18 +176,3 @@ function getFileFromUser(): Promise<File | null> {
     input.click();
   });
 }
-
-export function clearScene(){
-  const confirmed = window.confirm("Are you sure you want to clear the scene? Unsaved progress will be lost");
-  if (confirmed) {
-    localStorage.clear();
-    window.location.reload();
-  } else {
-    console.log("User canceled.");
-  }
-}
-
-export function undo(){
-
-}
-

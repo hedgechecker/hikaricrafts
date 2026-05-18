@@ -210,6 +210,8 @@ export class GridRenderer extends BaseRenderer<GridRenderData, Settings> {
     GroupType3.updateMatrix();
 
     var mesh = new THREE.Group().add(GroupType1, GroupType2, GroupType3);
+    const panelFrame = this.createPanelFrame(settings);
+    mesh.add(panelFrame);
 
     const data: GridRenderData = {
       mesh,
@@ -217,6 +219,7 @@ export class GridRenderer extends BaseRenderer<GridRenderData, Settings> {
       isSelected: false,
       isInValid: false,
     };
+
 
     this.objects.set("grid", data);
 

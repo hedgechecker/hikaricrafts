@@ -2,8 +2,6 @@ import * as THREE from "three";
 import { CameraController } from "./CameraController";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
-type CameraMode = "2D" | "3D";
-
 export class SceneManager {
   scene: THREE.Scene;
   controller!: CameraController | OrbitControls;
@@ -86,8 +84,6 @@ export class SceneManager {
     this.renderer.render(this.scene, this.camera);
   }
 
-  
-
   onResize = () => {
     const width = this.container.clientWidth;
     const height = this.container.clientHeight;
@@ -145,7 +141,7 @@ export class SceneManager {
     return intersection;
   }
 
-  setCameraMode(mode: CameraMode) {
+  setCameraMode(mode: "2D" | "3D") {
     if (mode === "2D") {
       this.camera = this.orthoCamera;
     } else {

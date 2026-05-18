@@ -18,7 +18,7 @@ export class DeleteTool implements Tool {
     this.downPos.x = event.x;
     this.downPos.y = event.y;
     this.handleHover(event);
-    this.dragging = true;
+    //this.dragging = true;
   }
 
   onPointerUp(event: PointerEvent): void {
@@ -54,12 +54,13 @@ export class DeleteTool implements Tool {
 
   //Enable Hover for Points, Lines and Grid
   handleHover(event: PointerEvent) {
-    this.context.cursorManager.setCursor("default");
 
     if (this.context.patternRenderer.handleHover(event)) {
       this.context.cursorManager.setCursor("pointer");
       return;
     }
+    this.context.cursorManager.setCursor("default");
+
   }
   
 }
