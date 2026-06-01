@@ -58,6 +58,8 @@ export class SceneManager {
     this.dom = this.renderer.domElement;
     container.appendChild(this.dom);
     this.camera = this.orthoCamera;
+
+    this.onResize();
     this.setCameraMode("2D");
 
     window.addEventListener("resize", this.onResize);
@@ -121,6 +123,7 @@ export class SceneManager {
     }
 
     this.renderer.setSize(width, height);
+    this.update();
   };
 
   update() {
@@ -173,6 +176,7 @@ export class SceneManager {
     if (mode === "2D") {
       this.camera.position.set(0, 0, 100);
       this.camera.zoom = 0.01;
+      this.camera.lookAt(0,0,0);
       controls.enableRotate = false;
     } else {
       this.camera.position.set(0, 0, 100);
@@ -184,6 +188,7 @@ export class SceneManager {
     controls.enableZoom = true;
     controls.zoomSpeed = 5;
     controls.target.set(0, 0, 0);
+    controls.update();
 
     this.controller = controls;
 
@@ -203,7 +208,6 @@ export class SceneManager {
     const maxDistance = dist;
     const minZoom = dist / 200000; // smaller number = zoomed out
     const maxZoom = 0.5; // larger number = zoomed in
-    this.controller.removeEventListener("change", () => {});
     this.controller.addEventListener("change", () => {
       const _v = new THREE.Vector3();
       _v.copy(this.controller.target);
@@ -238,7 +242,6 @@ export class SceneManager {
       this.camera.updateProjectionMatrix();
     });
 
-    this.update();
     this.onResize();
   }
 

@@ -26,7 +26,7 @@ export function createPattern(
 }
 
 /**
- * Create a generic pattern group 
+ * Create a generic pattern group
  */
 function createPatternGroup(
   pattern: PatternData,
@@ -59,7 +59,7 @@ function createPatternGroup(
   });
 
   //Create the Hitbox outline
-  const hitshape = createShapeFromPoints(getPatternPoints("Mystery",settings));
+  const hitshape = createShapeFromPoints(getPatternPoints("Mystery", settings));
   const hitGeometry = new THREE.ExtrudeGeometry(hitshape, {
     depth: settings.depth,
     bevelEnabled: false,
@@ -178,10 +178,10 @@ export function getPatternPoints(
     //Return Hitbox Outline
     default:
       return [
-        new THREE.Vector2(-triangleHeight/2, -innerHeight * 1/3),
-        new THREE.Vector2(triangleHeight/2, -innerHeight * 1/3),
-        new THREE.Vector2(0, innerHeight * 2/3),
-        new THREE.Vector2(-triangleHeight/2, -innerHeight * 1/3),
+        new THREE.Vector2(-triangleHeight / 2, (-innerHeight * 1) / 3),
+        new THREE.Vector2(triangleHeight / 2, (-innerHeight * 1) / 3),
+        new THREE.Vector2(0, (innerHeight * 2) / 3),
+        new THREE.Vector2(-triangleHeight / 2, (-innerHeight * 1) / 3),
       ];
   }
 }

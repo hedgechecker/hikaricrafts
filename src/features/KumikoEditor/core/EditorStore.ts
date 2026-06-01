@@ -2,6 +2,7 @@ import type { Settings } from "../models/Settings";
 import type { Project } from "../models/Project";
 import { useEffect, useState } from "react";
 import type { ToolType } from "../tools/Tool";
+import type { patternType } from "../models/Pattern";
 
 type Listener = () => void;
 
@@ -12,6 +13,7 @@ interface EditorState {
   hasUndo: boolean;
   hasRedo: boolean;
   cameraMode: "3D" | "2D";
+  selectedPattern: patternType;
 }
 
 export class EditorStore {
@@ -21,7 +23,8 @@ export class EditorStore {
     tool: "move",
     hasUndo: false,
     hasRedo: false,
-    cameraMode: "2D"
+    cameraMode: "2D",
+    selectedPattern: "Gomagara"
   };
 
   private listeners: Listener[] = [];
@@ -64,6 +67,11 @@ export class EditorStore {
 
   setCameraMode(mode: "2D" | "3D") {
     this.state.cameraMode = mode;
+    this.emit();
+  }
+
+  setSelectedPattern(pattern: patternType){
+    this.state.selectedPattern = pattern;
     this.emit();
   }
 

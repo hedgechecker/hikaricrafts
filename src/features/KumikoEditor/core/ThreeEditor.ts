@@ -19,6 +19,7 @@ import { EditorStore } from "./EditorStore";
 import type { ToolType } from "../tools/Tool";
 import { OrthographicCamera } from "three";
 import { logInfo } from "../../../utils/error/errorHandler";
+import type { patternType } from "../models/Pattern";
 
 export class ThreeEditor {
   private patternRenderer: PatternRenderer;
@@ -60,10 +61,11 @@ export class ThreeEditor {
       cursorManager: this.cursorManager,
       gizmoRenderer: this.gizmoRenderer,
       model: this.model,
+      store: this.store,
     };
     this.toolManager = new ToolManager(
       this.sceneManager.renderer.domElement,
-      toolContext,
+      toolContext
     );
 
     window.addEventListener("keydown", this.onKeyDown);
@@ -120,6 +122,7 @@ export class ThreeEditor {
     }
     this.saveLocal();
     this.syncSceneFromModel();
+    this.sceneManager.setCameraMode("2D")
   }
 
   public async save() {
@@ -243,9 +246,14 @@ export class ThreeEditor {
     this.gridRenderer.addFromData(settings);
   }
 
-  setCameraMode(mode : "3D" | "2D"){
+  setCameraMode(mode: "3D" | "2D") {
     this.sceneManager.setCameraMode(mode);
     this.store.setCameraMode(mode);
+  }
+
+  setSelectedPattern(pattern: patternType){
+    console.log(pattern);
+    this.store.setSelectedPattern(pattern);
   }
 
   getProject() {

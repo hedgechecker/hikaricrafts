@@ -21,7 +21,7 @@ export default function EditorLayout() {
         {/* Update class to trigger resizing event*/}
         <div className={`${engine ? styles.center : ""}`}>
           <div className={styles.sidebar}>
-            <PatternCanvas />
+            {engine && <PatternCanvas engine1={engine}/>}
             {engine && <SideBar engine={engine} />}
           </div>
 

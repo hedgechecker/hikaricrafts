@@ -25,4 +25,6 @@ export interface PatternPos {
 }
 
 export type WoodType = "Oak" | "Pine" | "DouglasFir";
-export type patternType = "AsaNoHa" | "Gomagara" |  "Outline" | "Mystery";
+
+export const PATTERNS = ["AsaNoHa", "Gomagara", "Outline", "Mystery"] as const;
+export type patternType = (typeof PATTERNS)[number];

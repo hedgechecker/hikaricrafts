@@ -1,4 +1,5 @@
 import type { Command } from '../commands/Command';
+import type { EditorStore } from '../core/EditorStore';
 import type { SceneModel } from '../models/SceneModel';
 import type { CursorManager } from '../objects/CursorManager';
 import type { GizmoRenderer } from '../objects/Renderer/GizmoRenderer';
@@ -25,5 +26,6 @@ export interface ToolContext {
   sceneManager: SceneManager;
   cursorManager: CursorManager;
   gizmoRenderer: GizmoRenderer;
+  store: EditorStore;
   readonly model: SceneModel;
 }

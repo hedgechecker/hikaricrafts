@@ -15,6 +15,7 @@
   user-select: none;
   -webkit-user-select: none;
   touch-action: manipulation;
+  padding-top: 5px;
 }
 .container canvas {
   height: 100%;
@@ -24,9 +25,16 @@
   -webkit-user-select: none;
   touch-action: manipulation;
 }
+.grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr; 
+  gap: var(--space-sm);
+}
 
- @media screen and (max-width: 900px) {
-  .container {
-    min-height: 400px;  
-  }
+.gridItem{
+  height: fit-content;
+  width: 100%;
+}
+.gridItem:hover{
+  cursor: pointer;
 }

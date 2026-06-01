@@ -1,16 +1,17 @@
-import { getPatternPoints } from "./CanvasThree/Objects/CanvasPatterns";
-import type { PatternConfig } from "./CanvasThree/Utils/InterfaceUtils";
+import type { patternType } from "../models/Pattern";
+import type { Settings } from "../models/Settings";
+import { getPatternPoints } from "../utils/patternCreation";
 
 interface SVGProps {
-  index: number;
+  type: patternType;
 }
 
-function SVG({index}:SVGProps) {
+function SVG({type}:SVGProps) {
   // Convert points to "x,y x,y ..." string format
-  const points = getPatternPoints(index, {
+  const points = getPatternPoints(type, {
     spacing: 10,
     lineWidth: 0.9,
-  } as PatternConfig);
+  } as Settings);
   const outline = [{x:4.3300,y:36.9338},{x:45.6699,y:36.9338},{x:25,y:1.1324},];
 
 

@@ -97,7 +97,7 @@ export default function Toolbar({ engine }: Props) {
       if (isTyping) return;
 
       const toolMap: Record<string, ToolType> = {
-        "1": "move",
+        "1": "pattern",
         "2": "pattern",
         "3": "delete",
       };
@@ -152,14 +152,14 @@ export default function Toolbar({ engine }: Props) {
 
       {/* Tool selection */}
       <div className={styles.toolSection} id="tools">
-        <ToolButton
+        {/* <ToolButton
           label=""
           image="/icons/move.svg"
           toolTip="Elemente bewegen"
           active={tool === "move"}
           onClick={() => changeTool("move")}
           id="movetool"
-        />
+        /> */}
 
         <ToolButton
           label=""

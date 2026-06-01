@@ -4,33 +4,29 @@ import { OrthographicCamera } from "three";
 import { DataStorage } from "./DataStorage";
 import * as THREE from "three";
 import { createPattern } from "../utils/patternCreation";
+import type { EditorStore } from "./EditorStore";
+import type { patternType } from "../models/Pattern";
+import type { Project } from "../models/Project";
 
 export class PatternEditor {
   public sceneManager: SceneManager;
   private cursorManager: CursorManager;
   private container: HTMLDivElement;
-  private pattern: THREE.Group;
+  private pattern: THREE.Group |null = null;
+  private project: Project;
 
-  constructor(container: HTMLDivElement) {
+  constructor(container: HTMLDivElement, store: EditorStore) {
     this.container = container;
+    store.subscribe(() => {this.setPattern(store.getState().selectedPattern)});
+
     const storage = new DataStorage();
-    const project = storage.getEmptyProject();
+    this.project = storage.getEmptyProject();
     this.cursorManager = new CursorManager(this.container);
     this.cursorManager.setCursor("default");
-    this.sceneManager = new SceneManager(this.container, project.settings);
+    this.sceneManager = new SceneManager(this.container, this.project.settings);
     this.sceneManager.setCameraMode("3D");
 
-    this.pattern = createPattern(
-      {
-        id: "pattern",
-        pos: { x: 0, y: 0, z: -9, rotation: 0 },
-        patternType: "Gomagara",
-        materialMap: [],
-      },
-      project.settings,
-    );
-    this.pattern.position.z = -9;
-    this.sceneManager.scene.add(this.pattern);
+    this.setPattern("Gomagara");
     const outline = createPattern(
       {
         id: "outline",
@@ -38,7 +34,7 @@ export class PatternEditor {
         patternType: "Outline",
         materialMap: [],
       },
-      project.settings,
+      this.project.settings,
       true,
     );
     outline.position.z = -9;
@@ -84,6 +80,24 @@ export class PatternEditor {
         console.log("Next");
     }
   };
+
+  private setPattern(type: patternType){
+    if(this.pattern){
+      this.sceneManager.scene.remove(this.pattern);
+    }
+    this.pattern = createPattern(
+      {
+        id: "pattern",
+        pos: { x: 0, y: 0, z: -9, rotation: 0 },
+        patternType: type,
+        materialMap: [],
+      },
+      this.project.settings,
+    );
+    this.pattern.position.z = -9;
+    this.sceneManager.scene.add(this.pattern);
+    this.sceneManager.update();
+  }
 
   dispose() {
     window.removeEventListener("keydown", this.onKeyDown);

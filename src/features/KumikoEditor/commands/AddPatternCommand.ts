@@ -23,7 +23,9 @@ export class AddPatternCommand implements Command {
       });
       return false;
     }
-    model.patterns.set(this.pattern.id, {...this.pattern});
+    model.patterns.set(this.pattern.id, {
+      ...this.pattern,
+    });
     return true;
   }
 

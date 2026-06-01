@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { loadDimensions,loadMaterial } from "../components/CanvasThree/Utils/StorageUtils";
 import type { PanelConfig } from "../components/CanvasThree/Utils/InterfaceUtils";
+import type { patternType } from "../features/KumikoEditor/models/Pattern";
 
 
 interface AppState {
@@ -10,8 +11,8 @@ interface AppState {
   materialMap: number[];
   setMaterialMap: (newMap: number[]) => void;
 
-  patternIndex: number;
-  setPatternIndex: (index: number) => void;
+  patternIndex: patternType;
+  setPatternIndex: (index: patternType) => void;
 
   mousePos: { x: number; y: number, z:number };
   setMousePos: (pos: { x: number; y: number, z: number }) => void;
@@ -38,8 +39,8 @@ export const useAppStore = create<AppState>((set) => ({
   materialMap: loadMaterial(1),
   setMaterialMap: (newMap:number[])  => set({materialMap:newMap}),
 
-  patternIndex: 1,
-  setPatternIndex: (index:number) => set({ patternIndex: index }),
+  patternIndex: "Mystery",
+  setPatternIndex: (index:patternType) => set({ patternIndex: index }),
 
   mousePos: { x: 0, y: 0, z:0},
   setMousePos: (pos) => set({ mousePos: pos }),
