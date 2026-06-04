@@ -2,7 +2,7 @@ import type { Settings } from "../models/Settings";
 import type { Project } from "../models/Project";
 import { useEffect, useState } from "react";
 import type { ToolType } from "../tools/Tool";
-import type { patternType } from "../models/Pattern";
+import type { patternType, woodType } from "../models/Pattern";
 
 type Listener = () => void;
 
@@ -14,6 +14,9 @@ interface EditorState {
   hasRedo: boolean;
   cameraMode: "3D" | "2D";
   selectedPattern: patternType;
+  selectedWood: woodType;
+  materialMap:  Array<{ woodType: woodType; thickness: number }>;
+  userRotation: number;
 }
 
 export class EditorStore {
@@ -24,7 +27,10 @@ export class EditorStore {
     hasUndo: false,
     hasRedo: false,
     cameraMode: "2D",
-    selectedPattern: "Gomagara"
+    selectedPattern: "Gomagara",
+    selectedWood: "Fichte",
+    materialMap: [],
+    userRotation: 0,
   };
 
   private listeners: Listener[] = [];
@@ -70,8 +76,23 @@ export class EditorStore {
     this.emit();
   }
 
-  setSelectedPattern(pattern: patternType){
+  setSelectedPattern(pattern: patternType) {
     this.state.selectedPattern = pattern;
+    this.emit();
+  }
+
+  setSelectedWood(wood: woodType) {
+    this.state.selectedWood = wood;
+    this.emit();
+  }
+
+  setMaterialMap(map: Array<{ woodType: woodType; thickness: number }>) {
+    this.state.materialMap = map;
+    this.emit();
+  }
+
+  setUserRotation(rotation: number) {
+    this.state.userRotation = rotation;
     this.emit();
   }
 

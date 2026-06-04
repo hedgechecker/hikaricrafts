@@ -47,7 +47,7 @@ function createPatternGroup(
     const geo = baseGeo.clone();
     geo.rotateZ(rot);
     const material = getFastMaterial(
-      pattern.materialMap[i] ? pattern.materialMap[i].woodType : "Pine",
+      pattern.materialMap[i] ? pattern.materialMap[i].woodType : "Fichte",
       opaque,
     );
     const mesh = new THREE.Mesh(geo, material);
@@ -67,6 +67,7 @@ function createPatternGroup(
   const hitMaterial = new THREE.MeshBasicMaterial({
     transparent: true,
     opacity: 0,
+    color: 0xff0000,
     depthWrite: false,
   });
   const hitbox = new THREE.Mesh(hitGeometry, hitMaterial);
@@ -107,7 +108,7 @@ function createOutline({ spacing, lineWidth, depth }: Settings): THREE.Group {
   shape.lineTo(-spacing / 2, -triangleHeight / 3);
 
   const geo = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: false });
-  const material = getFastMaterial("Pine", true);
+  const material = getFastMaterial("Fichte", true);
 
   const group = new THREE.Group();
   [0, Math.PI * (2 / 3), Math.PI * (4 / 3)].forEach((rot) => {

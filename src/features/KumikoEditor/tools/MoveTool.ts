@@ -55,18 +55,18 @@ export class MoveTool implements Tool {
     if (!rawPosition) return;
     this.currentPosition = rawPosition;
 
-    const delta = this.currentPosition.sub(this.startPosition);
+    //const delta = this.currentPosition.sub(this.startPosition);
     for (const id of this.selectedPatterns) {
       const origin = this.context.model.patterns.get(id);
       if (!origin) continue;
-      this.context.patternRenderer.setPosition(
-        id,
-        new THREE.Vector3(
-          origin.pos.x + delta.x,
-          origin.pos.y + delta.y,
-          origin.pos.z + delta.z,
-        ),
-      );
+      // this.context.patternRenderer.updateFromData(
+      //   id,
+      //   new THREE.Vector3(
+      //     origin.pos.x + delta.x,
+      //     origin.pos.y + delta.y,
+      //     origin.pos.z + delta.z,
+      //   ),
+      // );
     }
   }
 

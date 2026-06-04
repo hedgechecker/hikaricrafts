@@ -3,6 +3,7 @@ import type { Tool, ToolContext } from "./Tool";
 import { AddPatternCommand } from "../commands/AddPatternCommand";
 import { CompositeCommand } from "../commands/CompositeCommand";
 import { DeletePatternCommand } from "../commands/DeletePatternCommand";
+import type { PatternPos } from "../models/Pattern";
 
 /**
  * Manages the Placement of Points
@@ -11,9 +12,13 @@ import { DeletePatternCommand } from "../commands/DeletePatternCommand";
 export class PatternTool implements Tool {
   private context: ToolContext;
   private downPos = new THREE.Vector2();
+  private lastPos: PatternPos = { x: -1000, y: 0, z: 0, rotation: 0 };
 
   constructor(context: ToolContext) {
     this.context = context;
+    this.context.store.subscribe(() => {
+      this.previewPattern(true);
+    });
   }
 
   onPointerDown(event: PointerEvent): void {
@@ -39,6 +44,14 @@ export class PatternTool implements Tool {
     if (!pos) {
       return;
     }
+    const worldPos = this.context.sceneManager.getWorldPosition(event);
+    const state = this.context.store.getState();
+    const insideFrame =
+      worldPos.x < state.settings!.width / 2 &&
+      worldPos.x > -state.settings!.width / 2 &&
+      worldPos.y < state.settings!.height / 2 &&
+      worldPos.y > -state.settings!.height / 2;
+    if (!insideFrame) return;
 
     const cmds = [];
     const id = "X" + pos.x + "Y" + pos.y + "Z" + pos.z;
@@ -53,10 +66,16 @@ export class PatternTool implements Tool {
         x: pos.x,
         y: pos.y,
         z: pos.z,
-        rotation: pos ? pos.rotation : 0,
+        rotation: ((pos.rotation + state.userRotation * 2) % 6) as
+          | 0
+          | 1
+          | 2
+          | 3
+          | 4
+          | 5,
       },
-      patternType: this.context.store.getState().selectedPattern,
-      materialMap: [],
+      patternType: state.selectedPattern,
+      materialMap: state.materialMap,
     };
     cmds.push(new AddPatternCommand(pattern));
 
@@ -67,6 +86,52 @@ export class PatternTool implements Tool {
   onPointerMove(event: PointerEvent) {
     if (!event.isPrimary) return;
     this.handleHover(event);
+    this.context.gridRenderer.handleHover(event);
+
+    const worldPos = this.context.sceneManager.getWorldPosition(event);
+    const state = this.context.store.getState();
+    const insideFrame =
+      worldPos.x < state.settings!.width / 2 &&
+      worldPos.x > -state.settings!.width / 2 &&
+      worldPos.y < state.settings!.height / 2 &&
+      worldPos.y > -state.settings!.height / 2;
+    if (!insideFrame) {
+      this.context.patternRenderer.clearPreview();
+      return;
+    }
+    this.previewPattern();
+    
+  }
+
+  previewPattern(forced?: boolean){
+    const state = this.context.store.getState();
+    const pos = this.context.gridRenderer.getHoveredPos();
+    if (!pos) {
+      return;
+    }
+    if (pos == this.lastPos && !forced ) return;
+    const id = "PreviewX" + pos.x + "Y" + pos.y + "Z" + pos.z;
+    const pattern = {
+      id: id,
+      pos: {
+        x: pos.x,
+        y: pos.y,
+        z: pos.z,
+        rotation: ((pos.rotation + state.userRotation * 2) % 6) as
+          | 0
+          | 1
+          | 2
+          | 3
+          | 4
+          | 5,
+      },
+      patternType: state.selectedPattern,
+      materialMap: state.materialMap,
+    };
+    this.context.patternRenderer.clearPreview();
+    this.context.patternRenderer.addFromData(pattern, true);
+    this.lastPos = pos;
+    this.context.sceneManager.render();
   }
 
   //Enable Hover for Patterns and Grid
@@ -78,9 +143,13 @@ export class PatternTool implements Tool {
     }
     if (this.context.gridRenderer.handleHover(event)) {
       this.context.patternRenderer.setHovered(null);
-      this.context.cursorManager.setCursor("crosshair");
+      this.context.cursorManager.setCursor("pointer");
       return;
     }
     this.context.cursorManager.setCursor("default");
+  }
+
+  dispose(): void {
+    this.context.patternRenderer.clearPreview();
   }
 }

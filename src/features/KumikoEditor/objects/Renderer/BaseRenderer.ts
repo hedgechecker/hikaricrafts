@@ -31,7 +31,6 @@ export abstract class BaseRenderer<T extends RenderData, TInput> {
     this.sceneManager = sceneManager;
   }
 
-  abstract update(zoom: number, id?: string): void;
   protected abstract getId(data: TInput): string;
   public abstract addFromData(data: TInput): void;
   protected abstract updateFromData(data: TInput): void;
@@ -59,7 +58,6 @@ export abstract class BaseRenderer<T extends RenderData, TInput> {
     if (this.hovered) {
       const obj = this.objects.get(this.hovered);
       if (obj) obj.isHovered = false;
-      this.update(this.zoom, this.hovered);
     }
 
     this.hovered = id;
@@ -67,7 +65,6 @@ export abstract class BaseRenderer<T extends RenderData, TInput> {
     if (this.hovered) {
       const obj = this.objects.get(this.hovered);
       if (obj) obj.isHovered = true;
-      this.update(this.zoom, this.hovered);
     }
     this.sceneManager.render();
   }
@@ -76,7 +73,6 @@ export abstract class BaseRenderer<T extends RenderData, TInput> {
     this.selected.forEach((id) => {
       const obj = this.objects.get(id);
       if (obj) obj.isSelected = false;
-      this.update(this.zoom, id);
     });
 
     this.selected = ids;
@@ -84,7 +80,6 @@ export abstract class BaseRenderer<T extends RenderData, TInput> {
     this.selected.forEach((id) => {
       const obj = this.objects.get(id);
       if (obj) obj.isSelected = true;
-      this.update(this.zoom, id);
     });
     this.sceneManager.render();
   }
@@ -93,7 +88,6 @@ export abstract class BaseRenderer<T extends RenderData, TInput> {
     this.invalid.forEach((id) => {
       const obj = this.objects.get(id);
       if (obj) obj.isInValid = false;
-      this.update(this.zoom, id);
     });
 
     this.invalid = ids;
@@ -101,7 +95,6 @@ export abstract class BaseRenderer<T extends RenderData, TInput> {
     this.invalid.forEach((id) => {
       const obj = this.objects.get(id);
       if (obj) obj.isInValid = true;
-      this.update(this.zoom, id);
     });
     this.sceneManager.render();
   }

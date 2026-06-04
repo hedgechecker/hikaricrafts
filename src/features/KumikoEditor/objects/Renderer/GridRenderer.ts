@@ -4,7 +4,11 @@ import { BaseRenderer, type RenderData } from "./BaseRenderer";
 import type { SceneManager } from "../SceneManager";
 import type { Settings } from "../../models/Settings";
 import { getFastMaterial } from "../../utils/materials";
-import { distanceBetweenParallels, getGridXYZ, isZnegative } from "../../utils/math";
+import {
+  distanceBetweenParallels,
+  getGridXYZ,
+  isZnegative,
+} from "../../utils/math";
 import type { PatternPos } from "../../models/Pattern";
 
 interface GridRenderData extends RenderData {
@@ -21,9 +25,11 @@ export class GridRenderer extends BaseRenderer<GridRenderData, Settings> {
     return "grid";
   }
   public addFromData(settings: Settings) {
+    const grid = this.objects.get("grid");
+    if (grid) this.sceneManager.scene.remove(grid.mesh);
     this.createGrid(settings);
   }
-  protected updateFromData(settings: Settings) {
+  updateFromData(settings: Settings) {
     const grid = this.objects.get("grid");
     if (!grid) return;
 
@@ -31,8 +37,6 @@ export class GridRenderer extends BaseRenderer<GridRenderData, Settings> {
 
     this.createGrid(settings);
   }
-
-  update() {}
 
   /** Creates a Frame with size (width x height) and a thickness of (framewidth), the framewidth is built inwards,
    * so the total size of the frame stays (width x height)
@@ -42,31 +46,31 @@ export class GridRenderer extends BaseRenderer<GridRenderData, Settings> {
    * @param frameWidth the outside width
    * @returns THREE.Mesh
    */
-    createPanelFrame(settings: Settings) {
+  static createPanelFrame(settings: Settings) {
     //the frame gets created with a smaller rectangle cut out from a bigger rectangle
     const outerGeometry = new THREE.BoxGeometry(
       settings.width,
       settings.height,
-      settings.depth
+      settings.depth,
     );
     const innerGeometry = new THREE.BoxGeometry(
       settings.width - 2 * settings.frameWidth,
       settings.height - 2 * settings.frameWidth,
-      settings.depth
+      settings.depth,
     );
-  
+
     const outerMesh = new THREE.Mesh(outerGeometry);
     const innerMesh = new THREE.Mesh(innerGeometry);
     //subtract the meshes
     const frameMesh = CSG.subtract(outerMesh, innerMesh);
-  
-    frameMesh.material = getFastMaterial("Pine");
-  
+
+    frameMesh.material = getFastMaterial("Fichte");
+
     return frameMesh;
   }
 
   private createGrid(settings: Settings) {
-    const material = getFastMaterial("Pine");
+    const material = getFastMaterial("Fichte");
     const height = settings.height - 2 * settings.frameWidth;
     const width = settings.width - 2 * settings.frameWidth;
     //--------------------Constants --------------------
@@ -90,7 +94,7 @@ export class GridRenderer extends BaseRenderer<GridRenderData, Settings> {
       ((lineSideC * Math.sin(Math.PI / 2)) / Math.sin(Math.PI / 6)) * 2;
 
     //used to perform the cutting action on the different grid types
-    const cuttingTool = this.createPanelFrame({
+    const cuttingTool = GridRenderer.createPanelFrame({
       width: width + 20000,
       height: height + 20000,
       depth: 200,
@@ -210,7 +214,7 @@ export class GridRenderer extends BaseRenderer<GridRenderData, Settings> {
     GroupType3.updateMatrix();
 
     var mesh = new THREE.Group().add(GroupType1, GroupType2, GroupType3);
-    const panelFrame = this.createPanelFrame(settings);
+    const panelFrame = GridRenderer.createPanelFrame(settings);
     mesh.add(panelFrame);
 
     const data: GridRenderData = {
@@ -219,7 +223,6 @@ export class GridRenderer extends BaseRenderer<GridRenderData, Settings> {
       isSelected: false,
       isInValid: false,
     };
-
 
     this.objects.set("grid", data);
 
@@ -238,9 +241,7 @@ export class GridRenderer extends BaseRenderer<GridRenderData, Settings> {
       worldPos.x < this.sceneManager.settings.width / 2 &&
       worldPos.x > -this.sceneManager.settings.width / 2 &&
       worldPos.y < this.sceneManager.settings.height / 2 &&
-      worldPos.y > -this.sceneManager.settings.height / 2 
-      ;
-    
+      worldPos.y > -this.sceneManager.settings.height / 2;
     const snapped = this.snapToGrid(worldPos);
     this.hoveredPos = snapped;
 

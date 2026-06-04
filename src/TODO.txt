@@ -1,11 +1,7 @@
 basket info
 basket site
 
-Import SVG?
 Deselect Polygons
-open example Projects in Editor
 
-
-export Kumiko SVG?
-
-Refactor Kumiko Editor
+Wireart: export SVG?
+Kumiko: Quick move between last PatternTypes 

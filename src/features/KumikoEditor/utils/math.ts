@@ -1,7 +1,6 @@
 import * as THREE from "three";
 import type { Settings } from "../models/Settings";
 import type { PatternPos } from "../models/Pattern";
-import { getSceneXY } from "../../../components/CanvasThree/Utils/MathUtils";
 
 /**
  * Parses a String into a Math expression and evaluates it
@@ -168,5 +167,41 @@ export function getScenePos(pos: PatternPos, settings: Settings): PatternPos {
   scenePos.x = snappedPoint.x;
   scenePos.y = snappedPoint.y;
   scenePos.z = snappedPoint.z;
+  return scenePos;
+}
+
+export function getSceneXY(pos: PatternPos, settings: Settings) {
+  let snappedPoint = new THREE.Vector3(0, 0, -settings.depth / 2 + 0.25);
+  const triangleHeight = Math.sqrt(
+    settings.spacing * settings.spacing -
+      ((settings.spacing / 2) * settings.spacing) / 2,
+  );
+  var scenePos = {
+    pos: { x: 0, y: 0, z: 0 },
+    rotation: 0,
+  };
+  snappedPoint.x =
+    -settings.width / 2 +
+    settings.frameWidth +
+    (pos.y + pos.z + 1) * (settings.spacing / 2);
+  if (
+    (pos.x % 2 == 0 && (pos.y + pos.z) % 2 == 0) ||
+    (pos.x % 2 != 0 && (pos.y + pos.z) % 2 != 0)
+  ) {
+    snappedPoint.y =
+      settings.height / 2 -
+      settings.frameWidth -
+      pos.x * triangleHeight -
+      triangleHeight * (1 / 3);
+    scenePos.rotation = 1;
+  } else {
+    snappedPoint.y = snappedPoint.y =
+      settings.height / 2 -
+      settings.frameWidth -
+      pos.x * triangleHeight -
+      triangleHeight * (2 / 3);
+    scenePos.rotation = 0;
+  }
+  scenePos.pos = { x: snappedPoint.x, y: snappedPoint.y, z: snappedPoint.z };
   return scenePos;
 }

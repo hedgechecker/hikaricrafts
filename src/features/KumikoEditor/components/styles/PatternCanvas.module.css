@@ -25,6 +25,7 @@
   -webkit-user-select: none;
   touch-action: manipulation;
 }
+
 .grid{
   display: grid;
   grid-template-columns: 1fr 1fr 1fr; 
@@ -32,9 +33,42 @@
 }
 
 .gridItem{
-  height: fit-content;
   width: 100%;
+  display: flex;
+  justify-content: center;
 }
 .gridItem:hover{
   cursor: pointer;
+}
+
+.pattern{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  background-color: var(--color-background);
+  border-radius: var(--radius-md);
+  /* border: var(--space-border) solid var(--color-border); */
+}
+
+.wood{
+  height: var(--space-2xl);
+  width: var(--space-2xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.wood:hover, .pattern:hover, .selected{
+  
+  cursor: pointer;
+  border: var(--space-border) solid var(--color-border);
+  box-sizing: border-box;
+}
+
+.pattern:hover, .patternSelected{
+  filter: invert(1); 
+  border: none; 
 }

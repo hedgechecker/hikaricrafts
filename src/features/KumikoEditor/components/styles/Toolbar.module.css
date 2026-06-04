@@ -20,7 +20,6 @@
   gap: var(--space-xs);
   flex-wrap: wrap;
   min-width: 0;
-
 }
 .settingsMenu {
   position: absolute;
@@ -55,14 +54,55 @@
   margin: 0 0 8px 0;
 }
 
-.checkbox{
+.checkbox {
   accent-color: var(--color-accent);
 }
 
-.colorInput{
-  
+.colorInput {
   padding: 5px;
   cursor: pointer;
   background: none;
   border: none;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: fit-content;
+}
+
+.input {
+  font-size: 0.875rem;
+  border-radius: 8px;
+  border: 2px solid #e2e8f0;
+  padding: 0.5rem;
+  margin-bottom: 0.25rem;
+  width: 80px;
+}
+
+.label {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 0.75rem;
+}
+
+.slider {
+  appearance: none;
+  background-color: #e2e8f0;
+  height: 8px;
+  border-radius: 4px;
+  width: 100%;
+  accent-color: black;
+}
+
+.slider::-webkit-slider-thumb {
+  appearance: none;
+  background-color: white;
+  border: 2px solid black;
+  width: 20px;
+  height: 20px;
+  border-radius: 15px;
+  cursor: pointer;
 }

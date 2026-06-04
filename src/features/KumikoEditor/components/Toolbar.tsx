@@ -7,6 +7,8 @@ import type { ThreeEditor } from "../core/ThreeEditor";
 import { useEditorStore } from "../core/EditorStore";
 import type { ToolType } from "../tools/Tool";
 import { showDialog } from "../../global/useDialog";
+import { clamp } from "three/src/math/MathUtils.js";
+
 
 interface Props {
   engine: ThreeEditor;
@@ -33,6 +35,16 @@ export default function Toolbar({ engine }: Props) {
   const { settings, tool, hasRedo, hasUndo, cameraMode } = useEditorStore(
     engine.getStore(),
   );
+  const { width, height, spacing, frameWidth } = engine
+    .getStore()
+    .getState().settings!;
+
+  const [localSpacing, setLocalSpacing] = useState<number>(spacing);
+  const [localHeight, setLocalHeight] = useState<number>(height);
+  const [localWidth, setLocalWidth] = useState<number>(width);
+  const [localFrameWidth, setLocalFrameWidth] = useState<number>(frameWidth);
+  const [checked, setChecked] = useState(true);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /**
    * Update a single editor setting.
@@ -140,6 +152,92 @@ export default function Toolbar({ engine }: Props) {
     }
     navigate("/wireart");
   }
+
+  const handleSpacingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number(e.target.value);
+    setLocalSpacing(value); 
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      updateSetting("spacing", value);
+    }, 1000);
+  };
+
+  const handleWidthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number(e.target.value);
+    setLocalWidth(Math.ceil(value));
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      const val = clamp(value, 100, 1000);
+      updateSetting("width", val);
+    }, 500);
+  };
+
+  const handleHeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number(e.target.value);
+    setLocalHeight(Math.ceil(value))
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      updateSetting("height", Math.max(100, value));
+    }, 500);
+  };
+
+  const handleFrameWidthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number(e.target.value);
+    setLocalFrameWidth(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      updateSetting("frameWidth", value);
+    }, 1000);
+  };
+
+  //Clamp the Grid to a full triangle size, if the option is checked  
+  useEffect(() => {
+    const minSize = 100;
+    const maxSize = 5000;
+    if (!checked) return;
+    const triangleHeight = Math.sqrt(
+      spacing * spacing - ((spacing / 2) * spacing) / 2,
+    );
+
+    const minwidth =
+      Math.ceil((minSize - 2 * frameWidth) / (spacing / 2)) * (spacing / 2) +
+      2 * frameWidth;
+    const maxwidth =
+      Math.ceil((maxSize - 2 * frameWidth) / (spacing / 2)) * (spacing / 2) +
+      2 * frameWidth;
+    const minheight =
+      Math.ceil((minSize - 2 * frameWidth) / triangleHeight) * triangleHeight +
+      2 * frameWidth;
+    const maxheight =
+      Math.ceil((maxSize - 2 * frameWidth) / triangleHeight) * triangleHeight +
+      2 * frameWidth;
+    var height = Math.max(
+      Math.min(
+        maxheight,
+        Math.round((localHeight - 2 * frameWidth) / triangleHeight) *
+          triangleHeight +
+          2 * frameWidth,
+      ),
+      minheight,
+    );
+    height = Math.round(height * 10) / 10;
+    const width = Math.max(
+      Math.min(
+        maxwidth,
+        Math.round((localWidth - 2 * frameWidth) / (spacing / 2)) *
+          (spacing / 2) +
+          2 * frameWidth,
+      ),
+      minwidth,
+    );
+
+    setLocalWidth(width);
+    setLocalHeight(height);
+
+    //setPanelSize({ height: height, width: width });
+    //saveDimensions(panelSize);
+  }, [height, width, spacing, frameWidth, checked]);
+
   return (
     <div className={styles.toolbar} id="toolbar">
       {/* Navigation */}
@@ -244,7 +342,7 @@ export default function Toolbar({ engine }: Props) {
         <ToolButton
           id="dimensionButton"
           label=""
-          image= {cameraMode == "3D" ? "/icons/3D.svg" : "/icons/2D.svg"} 
+          image={cameraMode == "3D" ? "/icons/3D.svg" : "/icons/2D.svg"}
           toolTip="Kamera Modus umschalten"
           onClick={() => engine.setCameraMode(cameraMode == "3D" ? "2D" : "3D")}
         />
@@ -252,29 +350,78 @@ export default function Toolbar({ engine }: Props) {
         {/* Settings menu */}
         {settingsOpen && (
           <div ref={settingsRef} className={styles.settingsMenu}>
-            <h4>Ansicht</h4>
+            <div className={styles.container}>
+              <div className={styles.item}>
+                <label>
+                  Breite (mm)
+                  <input
+                    name="PanelWidthInput"
+                    className={styles.input}
+                    type="number"
+                    value={localWidth}
+                    onChange={handleWidthChange}
+                  />{" "}
+                </label>
+              </div>
+              <div className={styles.item}>
+                <label>
+                  Höhe (mm)
+                  <input
+                    name="PanelHeightInput"
+                    className={styles.input}
+                    type="number"
+                    value={localHeight}
+                    onChange={handleHeightChange}
+                  />
+                </label>
+              </div>
+            </div>
+            <div>
+              <div className={styles.label}>
+                <span>Größe ans Gitter anpassen</span>
+                <input
+                  name="SnapToGrid?"
+                  type="checkbox"
+                  style={{ accentColor: "#e2e8f0" }}
+                  checked={checked}
+                  onChange={(e) => {
+                    setChecked(e.target.checked);
+                  }}
+                ></input>
+              </div>
+            </div>
 
-            <label>
+            <div>
+              <div className={styles.label}>
+                <span>Zellgröße (mm)</span>
+                <span>{localSpacing}</span>
+              </div>
               <input
-                type="number"
-                value={settings?.width}
-                onChange={(e) => updateSetting("width", e.target.valueAsNumber)}
-                className={styles.checkbox}
+                type="range"
+                min={20}
+                max={60}
+                step={1}
+                value={localSpacing}
+                onChange={handleSpacingChange}
+                className={styles.slider}
               />
-              Panel-Breite
-            </label>
+            </div>
 
-            <label>
+            <div>
+              <div className={styles.label}>
+                <span>Rahmen-Breite (mm)</span>
+                <span>{localFrameWidth}</span>
+              </div>
               <input
-                type="number"
-                value={settings?.height}
-                onChange={(e) =>
-                  updateSetting("height", e.target.valueAsNumber)
-                }
-                className={styles.checkbox}
+                type="range"
+                min={0}
+                max={20}
+                step={1}
+                value={localFrameWidth}
+                onChange={handleFrameWidthChange}
+                className={styles.slider}
               />
-              Panel-Höhe
-            </label>
+            </div>
           </div>
         )}
       </div>

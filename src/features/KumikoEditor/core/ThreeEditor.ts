@@ -1,3 +1,4 @@
+import * as THREE from "three";
 import { GridRenderer } from "../objects/Renderer/GridRenderer";
 import { GizmoRenderer } from "../objects/Renderer/GizmoRenderer";
 import { PatternRenderer } from "../objects/Renderer/PatternRenderer";
@@ -65,7 +66,7 @@ export class ThreeEditor {
     };
     this.toolManager = new ToolManager(
       this.sceneManager.renderer.domElement,
-      toolContext
+      toolContext,
     );
 
     window.addEventListener("keydown", this.onKeyDown);
@@ -122,7 +123,8 @@ export class ThreeEditor {
     }
     this.saveLocal();
     this.syncSceneFromModel();
-    this.sceneManager.setCameraMode("2D")
+    this.gridRenderer.addFromData(this.project.settings);
+    this.sceneManager.setCameraMode("2D");
   }
 
   public async save() {
@@ -201,7 +203,6 @@ export class ThreeEditor {
       this.sceneManager.update();
 
       if (camera instanceof OrthographicCamera && camera.zoom != lastZoom) {
-        this.patternRenderer.update();
         this.gizmoRenderer.update(camera.zoom);
         lastZoom = camera.zoom;
       }
@@ -230,10 +231,16 @@ export class ThreeEditor {
         if (settings[key] !== oldSettings[key]) {
           switch (key) {
             case "width":
-              this.gridRenderer.sync([settings]);
+              this.gridRenderer.updateFromData(settings);
               break;
             case "height":
-              this.gridRenderer.sync([settings]);
+              this.gridRenderer.updateFromData(settings);
+              break;
+            case "frameWidth":
+              this.gridRenderer.updateFromData(settings);
+              break;
+            case "spacing":
+              this.gridRenderer.updateFromData(settings);
               break;
           }
         }
@@ -241,9 +248,8 @@ export class ThreeEditor {
     }
     this.project.settings = settings;
     this.store.updateSettings(settings);
-
     this.sceneManager.settings = settings;
-    this.gridRenderer.addFromData(settings);
+    this.syncSceneFromModel();
   }
 
   setCameraMode(mode: "3D" | "2D") {
@@ -251,8 +257,7 @@ export class ThreeEditor {
     this.store.setCameraMode(mode);
   }
 
-  setSelectedPattern(pattern: patternType){
-    console.log(pattern);
+  setSelectedPattern(pattern: patternType) {
     this.store.setSelectedPattern(pattern);
   }
 
@@ -294,6 +299,38 @@ export class ThreeEditor {
       e.preventDefault();
       this.redo();
     }
+
+    const panSpeed = 30;
+    let offset = new THREE.Vector3();
+    switch (e.key.toLocaleLowerCase()) {
+      case "w":
+        offset.set(0, panSpeed, 0);
+        break;
+      case "s":
+        offset.set(0, -panSpeed, 0);
+        break;
+      case "a":
+        offset.set(-panSpeed, 0, 0);
+        break;
+      case "d":
+        offset.set(panSpeed, 0, 0);
+        break;
+      case "r":
+        let rot = this.store.getState().userRotation - 1 % 3;
+        this.store.setUserRotation(rot);
+        break;
+      case "+":
+        const event2 = new WheelEvent("wheel", { deltaY: -100 });
+        this.sceneManager.dom.dispatchEvent(event2);
+        return;
+      case "-": 
+        const event3 = new WheelEvent("wheel", { deltaY: 100 });
+        this.sceneManager.dom.dispatchEvent(event3);
+        return;
+    }
+
+    this.sceneManager.camera.position.add(offset);
+    this.sceneManager.controller.target.add(offset);
   };
 
   dispose() {

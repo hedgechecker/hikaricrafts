@@ -11,7 +11,7 @@ export class AddPatternCommand implements Command {
   private pattern: PatternData;
 
   constructor(pattern: PatternData) {
-    this.pattern = pattern;
+    this.pattern = structuredClone(pattern);
   }
 
   execute(model: SceneModel) {

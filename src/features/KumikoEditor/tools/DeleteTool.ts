@@ -45,7 +45,6 @@ export class DeleteTool implements Tool {
     this.handleHover(event);
     if (!this.dragging) return;
     const hoveredPattern = this.context.patternRenderer.getHovered();
-    
     if (hoveredPattern) {
       this.context.patternRenderer.remove(hoveredPattern);
       this.context.executeCommand(new DeletePatternCommand(hoveredPattern));

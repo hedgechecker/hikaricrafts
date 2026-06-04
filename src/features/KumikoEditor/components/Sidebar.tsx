@@ -25,7 +25,7 @@ interface Props {
  * Integrates with Editor for loading/opening projects
  * and communicates with the backend API for project persistence.
  */
-export default function SideBar({ engine}: Props) {
+export default function SideBar({ engine }: Props) {
   //UI State
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -80,7 +80,8 @@ export default function SideBar({ engine}: Props) {
       });
       return;
     }
-
+    
+    
     const data = await res.json();
     setProjects(data);
   }
