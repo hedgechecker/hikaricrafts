@@ -13,10 +13,15 @@ export class PatternTool implements Tool {
   private context: ToolContext;
   private downPos = new THREE.Vector2();
   private lastPos: PatternPos = { x: -1000, y: 0, z: 0, rotation: 0 };
+  private unsubscribe: (() => void) | null = null;
 
   constructor(context: ToolContext) {
     this.context = context;
-    this.context.store.subscribe(() => {
+  }
+
+  onClick(): void {
+    if (this.unsubscribe) return;
+    this.unsubscribe = this.context.store.subscribe(() => {
       this.previewPattern(true);
     });
   }
@@ -100,16 +105,21 @@ export class PatternTool implements Tool {
       return;
     }
     this.previewPattern();
-    
   }
 
-  previewPattern(forced?: boolean){
+  previewPattern(forced?: boolean) {
     const state = this.context.store.getState();
     const pos = this.context.gridRenderer.getHoveredPos();
     if (!pos) {
       return;
     }
-    if (pos == this.lastPos && !forced ) return;
+    const noUpdate =
+      pos.x == this.lastPos.x &&
+      pos.y == this.lastPos.y &&
+      pos.z == this.lastPos.z &&
+      pos.rotation == this.lastPos.rotation &&
+      !forced;
+    if (noUpdate) return;
     const id = "PreviewX" + pos.x + "Y" + pos.y + "Z" + pos.z;
     const pattern = {
       id: id,
@@ -150,6 +160,11 @@ export class PatternTool implements Tool {
   }
 
   dispose(): void {
+    if (this.unsubscribe) {
+      this.unsubscribe();
+      this.unsubscribe = null;
+    }
     this.context.patternRenderer.clearPreview();
+    this.context.patternRenderer.setSelected([]);
   }
 }

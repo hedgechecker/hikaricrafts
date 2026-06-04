@@ -13,7 +13,7 @@ export class SceneManager {
   private orthoCamera: THREE.OrthographicCamera;
   private perspectiveCamera: THREE.PerspectiveCamera;
 
-  private animationId?: number;
+  private intervalId: number | null = null;
 
   private raycaster = new THREE.Raycaster();
   private plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
@@ -63,7 +63,7 @@ export class SceneManager {
       e.preventDefault(),
     );
 
-    setInterval(() => {
+     this.intervalId = setInterval(() => {
       //logInfo("renders/sec:", this.count);
       this.count = 0;
       this.render();
@@ -116,18 +116,6 @@ export class SceneManager {
     this.camera.updateProjectionMatrix();
   }
 
-  dispose() {
-    if (this.animationId) cancelAnimationFrame(this.animationId);
-    this.controller.dispose();
-    this.renderer.dispose();
-
-    if (this.renderer.domElement.parentNode) {
-      this.renderer.domElement.parentNode.removeChild(this.renderer.domElement);
-    }
-
-    window.removeEventListener("resize", this.onResize);
-  }
-
   getWorldPosition(event: MouseEvent): THREE.Vector3 {
     const rect = this.dom.getBoundingClientRect();
     this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
@@ -171,5 +159,21 @@ export class SceneManager {
     if (this.controller instanceof CameraController) {
       this.controller.setPanEnabled(enabled);
     }
+  }
+
+  dispose() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+    }
+    this.controller.dispose();
+    this.renderer.dispose();
+
+    if (this.renderer.domElement.parentNode) {
+      this.renderer.domElement.parentNode.removeChild(this.renderer.domElement);
+    }
+    this.scene.clear();
+
+    window.removeEventListener("resize", this.onResize);
   }
 }

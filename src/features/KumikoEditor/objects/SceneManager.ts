@@ -14,19 +14,21 @@ export class SceneManager {
   private orthoCamera: THREE.OrthographicCamera;
   private perspectiveCamera: THREE.PerspectiveCamera;
 
-  private animationId?: number;
+  private intervalId: number | null = null;
 
   private raycaster = new THREE.Raycaster();
   private plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
   private mouse = new THREE.Vector2(0, 0);
 
   private count = 0;
+  private start = Date.now();
 
   constructor(container: HTMLDivElement, settings: Settings) {
     this.container = container;
     this.settings = settings;
     const width = container.clientWidth;
     const height = container.clientHeight;
+    this.start = Date.now();
 
     this.scene = new THREE.Scene();
     this.addLighting(new THREE.Sphere());
@@ -67,7 +69,7 @@ export class SceneManager {
       e.preventDefault(),
     );
 
-    setInterval(() => {
+    this.intervalId = setInterval(() => {
       //logInfo("renders/sec:", this.count);
       this.count = 0;
       this.render();
@@ -101,6 +103,7 @@ export class SceneManager {
   }
 
   render() {
+    if(Date.now() - this.start < 700) { return;}
     this.count++;
     this.renderer.render(this.scene, this.camera);
   }
@@ -129,21 +132,8 @@ export class SceneManager {
   update() {
     if (this.controller instanceof OrbitControls) {
       this.controller.update();
-      this.render();
     }
     this.camera.updateProjectionMatrix();
-  }
-
-  dispose() {
-    if (this.animationId) cancelAnimationFrame(this.animationId);
-    this.controller.dispose();
-    this.renderer.dispose();
-
-    if (this.renderer.domElement.parentNode) {
-      this.renderer.domElement.parentNode.removeChild(this.renderer.domElement);
-    }
-
-    window.removeEventListener("resize", this.onResize);
   }
 
   getWorldPosition(event: MouseEvent): THREE.Vector3 {
@@ -176,7 +166,7 @@ export class SceneManager {
     if (mode === "2D") {
       this.camera.position.set(0, 0, 100);
       this.camera.zoom = 0.01;
-      this.camera.lookAt(0,0,0);
+      this.camera.lookAt(0, 0, 0);
       controls.enableRotate = false;
     } else {
       this.camera.position.set(0, 0, 100);
@@ -248,4 +238,20 @@ export class SceneManager {
   setPanEnabled(enabled: boolean) {
     this.controller.enablePan = enabled;
   }
+
+  dispose() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+    }
+    this.controller.dispose();
+    this.renderer.dispose();
+
+    if (this.renderer.domElement.parentNode) {
+      this.renderer.domElement.parentNode.removeChild(this.renderer.domElement);
+    }
+    this.scene.clear();
+
+    window.removeEventListener("resize", this.onResize);
+  } 
 }

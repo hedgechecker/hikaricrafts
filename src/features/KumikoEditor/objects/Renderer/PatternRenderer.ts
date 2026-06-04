@@ -6,7 +6,11 @@ import { createPattern } from "../../utils/patternCreation";
 import { GridRenderer } from "./GridRenderer";
 import { CSG } from "three-csg-ts";
 
-export class PatternRenderer extends BaseRenderer<RenderData, PatternData> {
+interface PatternRenderData extends RenderData {
+  data: PatternData;
+}
+
+export class PatternRenderer extends BaseRenderer<PatternRenderData, PatternData> {
   protected getId(data: PatternData) {
     return data.id;
   }
@@ -51,11 +55,11 @@ export class PatternRenderer extends BaseRenderer<RenderData, PatternData> {
       isSelected: opaque ? opaque : false,
       isHovered: false,
       isInValid: false,
+      data: data,
     });
     if (opaque) {
       this.selected.push(data.id);
     }
-    this.sceneManager.render();
   }
 
   clearPreview() {
@@ -71,7 +75,21 @@ export class PatternRenderer extends BaseRenderer<RenderData, PatternData> {
 
   updateFromData(data: PatternData) {
     const prev = this.objects.get(data.id);
-    if (prev) this.sceneManager.scene.remove(prev.mesh);
+
+    if(prev){
+      const needsUpdate =
+        data.patternType != prev.data.patternType ||
+        data.pos.x != prev.data.pos.x ||
+        data.pos.y != prev.data.pos.y ||
+        data.pos.z != prev.data.pos.z ||
+        data.pos.rotation != prev.data.pos.rotation ||
+        data.materialMap != prev.data.materialMap;
+      ;
+      if(!needsUpdate) {
+        return;}
+      if (prev) this.sceneManager.scene.remove(prev.mesh);
+    }
+    
     this.addFromData(data);
   }
 

@@ -80,7 +80,6 @@ export class ThreeEditor {
 
   private syncSceneFromModel() {
     this.patternRenderer.sync([...this.model.patterns.values()]);
-    //this.toolManager.setActiveTool(this.store.getState().tool);
     this.saveLocal();
     this.sceneManager.render();
   }
@@ -307,7 +306,7 @@ export class ThreeEditor {
         offset.set(0, panSpeed, 0);
         break;
       case "s":
-        offset.set(0, -panSpeed, 0);
+        if (!e.ctrlKey && !e.metaKey) offset.set(0, -panSpeed, 0);
         break;
       case "a":
         offset.set(-panSpeed, 0, 0);

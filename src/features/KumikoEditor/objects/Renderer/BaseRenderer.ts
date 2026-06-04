@@ -153,7 +153,7 @@ export abstract class BaseRenderer<T extends RenderData, TInput> {
       const id = this.getId(item);
       if (!this.has(id)) {
         this.addFromData(item);
-      } else {
+      } else{
         this.updateFromData(item);
       }
       existing.delete(id);

@@ -32,6 +32,7 @@ export class ToolManager {
     this.activeTool?.dispose?.();
     this.activeTool = name ? (this.tools.get(name) ?? null) : null;
     this.activeTool?.onClick?.();
+    this.toolContext.patternRenderer.clearPreview();
     this.toolContext.patternRenderer.setHovered(null);
     this.toolContext.patternRenderer.setSelected([]);
 
