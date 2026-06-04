@@ -14,7 +14,7 @@ export class SceneManager {
   private orthoCamera: THREE.OrthographicCamera;
   private perspectiveCamera: THREE.PerspectiveCamera;
 
-  private intervalId: number | null = null;
+  private intervalId: any | null = null;
 
   private raycaster = new THREE.Raycaster();
   private plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
