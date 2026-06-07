@@ -28,14 +28,10 @@ app.use(
       "https://api.hikaricrafts.xyz",
       "https://hikaricrafts.de",
       "https://api.hikaricrafts.de",
-      "https://nowakl.org",
-      "https://api.nowakl.org",
       "http://localhost:5173",
       "http://192.168.178.42:5173",
       "http://192.168.178.22:5173",
-      "http://192.168.0.173:5173",
-      "http://192.168.0.173:5173",
-      "*", // for local dev
+      "http://192.168.0.186:5173",
     ],
     methods: "GET,POST,PUT,DELETE",
     credentials: true,
@@ -44,7 +40,6 @@ app.use(
 
 app.use(express.json({ limit: '10mb' }));
 
-const JWT_SECRET = 'your-secret-key'; // move into process.env later
 const { authRequired, adminRequired, optionalAuth } = require('./authMiddleware');
 
 app.post('/contact', contactLimiter, async (req, res) => {
