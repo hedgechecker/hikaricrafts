@@ -40,6 +40,7 @@ app.use(
 
 app.use(express.json({ limit: '10mb' }));
 
+const JWT_SECRET = 'your-secret-key';
 const { authRequired, adminRequired, optionalAuth } = require('./authMiddleware');
 
 app.post('/contact', contactLimiter, async (req, res) => {
