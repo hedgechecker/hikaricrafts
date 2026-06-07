@@ -1,9 +1,7 @@
 basket info
 basket site
 
-Import SVG?
 Deselect Polygons
 
-Multiselect Points
-
-Refactor Kumiko Editor
+Wireart: export SVG?
+Kumiko: Quick move between last PatternTypes 

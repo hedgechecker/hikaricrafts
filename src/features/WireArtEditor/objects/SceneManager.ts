@@ -2,8 +2,6 @@ import * as THREE from "three";
 import { CameraController } from "./CameraController";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
-type CameraMode = "2D" | "3D";
-
 export class SceneManager {
   scene: THREE.Scene;
   controller!: CameraController | OrbitControls;
@@ -15,7 +13,7 @@ export class SceneManager {
   private orthoCamera: THREE.OrthographicCamera;
   private perspectiveCamera: THREE.PerspectiveCamera;
 
-  private animationId?: number;
+  private intervalId: any | null = null;
 
   private raycaster = new THREE.Raycaster();
   private plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
@@ -65,7 +63,7 @@ export class SceneManager {
       e.preventDefault(),
     );
 
-    setInterval(() => {
+     this.intervalId = setInterval(() => {
       //logInfo("renders/sec:", this.count);
       this.count = 0;
       this.render();
@@ -85,8 +83,6 @@ export class SceneManager {
     this.count++;
     this.renderer.render(this.scene, this.camera);
   }
-
-  
 
   onResize = () => {
     const width = this.container.clientWidth;
@@ -120,18 +116,6 @@ export class SceneManager {
     this.camera.updateProjectionMatrix();
   }
 
-  dispose() {
-    if (this.animationId) cancelAnimationFrame(this.animationId);
-    this.controller.dispose();
-    this.renderer.dispose();
-
-    if (this.renderer.domElement.parentNode) {
-      this.renderer.domElement.parentNode.removeChild(this.renderer.domElement);
-    }
-
-    window.removeEventListener("resize", this.onResize);
-  }
-
   getWorldPosition(event: MouseEvent): THREE.Vector3 {
     const rect = this.dom.getBoundingClientRect();
     this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
@@ -145,7 +129,7 @@ export class SceneManager {
     return intersection;
   }
 
-  setCameraMode(mode: CameraMode) {
+  setCameraMode(mode: "2D" | "3D") {
     if (mode === "2D") {
       this.camera = this.orthoCamera;
     } else {
@@ -175,5 +159,21 @@ export class SceneManager {
     if (this.controller instanceof CameraController) {
       this.controller.setPanEnabled(enabled);
     }
+  }
+
+  dispose() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+    }
+    this.controller.dispose();
+    this.renderer.dispose();
+
+    if (this.renderer.domElement.parentNode) {
+      this.renderer.domElement.parentNode.removeChild(this.renderer.domElement);
+    }
+    this.scene.clear();
+
+    window.removeEventListener("resize", this.onResize);
   }
 }

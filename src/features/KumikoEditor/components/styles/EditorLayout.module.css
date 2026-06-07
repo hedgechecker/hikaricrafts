@@ -1,0 +1,44 @@
+.wrapper,
+.center {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.wrapper {
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.center {
+  box-sizing: border-box;
+  padding: var(--space-md);
+  flex-direction: row;
+  gap: var(--space-md);
+  
+  height: 100%;
+}
+
+.sidebar{
+  width: 20%;
+  height: 100%;
+  gap: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+@media screen and (max-width: 900px) {
+  .center {
+    flex-direction: column-reverse;
+    align-items: center;
+    height: fit-content;
+  }
+  .sidebar{
+    width: 100%;
+  }
+}

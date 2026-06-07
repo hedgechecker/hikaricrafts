@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./styles/ImageGallery.module.css";
-import arrow from '/src/assets/imageArrow.svg';
 
 
 interface ProductGalleryProps {
@@ -158,10 +157,10 @@ export function ImageGallery({ images = [] }: ProductGalleryProps) {
         </div>
 
         <div className={`${styles.top} ${styles.arrow}`} ref={topArrowRef}>
-          <img src={arrow} className={styles.arrowImg} style={{transform: 'rotate(270deg)'}}/>
+          <img src="\icons\arrow-simple.svg" className={styles.arrowImg} style={{transform: 'rotate(270deg)'}}/>
         </div>
         <div className={`${styles.bottom} ${styles.arrow}`} ref={bottomArrowRef}>
-          <img src={arrow} className={styles.arrowImg} style={{transform: 'rotate(90deg)'}}/>
+          <img src="\icons\arrow-simple.svg" className={styles.arrowImg} style={{transform: 'rotate(90deg)'}}/>
         </div>
       </div>
 
@@ -174,7 +173,7 @@ export function ImageGallery({ images = [] }: ProductGalleryProps) {
           ref={leftArrowRef}
           onClick={goLeft}
         >
-          <img src={arrow} className={styles.arrowImg} style={{transform: 'rotate(180deg)'}}/>
+          <img src="\icons\arrow-simple.svg" className={styles.arrowImg} style={{transform: 'rotate(180deg)'}}/>
         </div>
 
         <div
@@ -182,7 +181,7 @@ export function ImageGallery({ images = [] }: ProductGalleryProps) {
           ref={rightArrowRef}
           onClick={goRight}
         >
-          <img src={arrow} className={styles.arrowImg}/>
+          <img src="\icons\arrow-simple.svg" className={styles.arrowImg}/>
         </div>
       </div>
     </div>

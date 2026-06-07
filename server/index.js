@@ -465,4 +465,119 @@ app.delete('/wireArtProjects/:id', authRequired, async (req, res) => {
   res.json({ message: 'Project deleted' });
 });
 
+app.post("/kumikoProjects", authRequired, async (req, res) => {
+  const { name, data, isPublic } = req.body;
+
+  const project = await prisma.kumikoProject.create({
+    data: {
+      name,
+      data,
+      isPublic: Boolean(isPublic),
+      userId: req.user.id,
+    },
+  });
+
+  res.json(project);
+});
+
+app.get("/kumikoProjects", optionalAuth, async (req, res) => {
+  //const whereConditions = [{ isPublic: true }];
+  const whereConditions = [];
+
+  if (req.user && req.user.id) {
+    whereConditions.push({ userId: req.user.id });
+  }
+
+  const projects = await prisma.kumikoProject.findMany({
+    where: {
+      OR: whereConditions,
+    },
+    select: {
+      id: true,
+      name: true,
+    },
+    orderBy: {
+      updatedAt: "desc",
+    },
+  });
+
+  res.json(projects);
+});
+
+app.get("/kumikoProjects/:id", optionalAuth, async (req, res) => {
+  const projectId = Number(req.params.id);
+
+  if (isNaN(projectId)) {
+    return res.status(400).json({ message: "Invalid project id" });
+  }
+
+  const project = await prisma.kumikoProject.findUnique({
+    where: { id: projectId },
+  });
+
+  if (!project) {
+    return res.status(404).json({ message: "Project not found" });
+  }
+
+  // Access control
+  if (!project.isPublic && (!req.user || project.userId !== req.user.id)) {
+    return res
+      .status(403)
+      .json({ message: "Access denied" + project.isPublic });
+  }
+
+  res.json(project);
+});
+
+app.put("/kumikoProjects/:id", authRequired, async (req, res) => {
+  const projectId = Number(req.params.id);
+  const { name, data, isPublic, version } = req.body;
+
+  const project = await prisma.kumikoProject.findUnique({
+    where: { id: projectId },
+  });
+
+  if (!project) {
+    return res.status(404).json({ message: "Project not found" });
+  }
+
+  if (project.userId !== req.user.id && req.user.role !== "ADMIN") {
+    return res.status(403).json({ message: "Not allowed" });
+  }
+
+  const updated = await prisma.kumikoProject.update({
+    where: { id: projectId },
+    data: {
+      name,
+      data,
+      isPublic,
+      version,
+    },
+  });
+
+  res.json(updated);
+});
+
+app.delete("/kumikoProjects/:id", authRequired, async (req, res) => {
+  const projectId = Number(req.params.id);
+
+  const project = await prisma.kumikoProject.findUnique({
+    where: { id: projectId },
+  });
+
+  if (!project) {
+    return res.status(404).json({ message: "Project not found" });
+  }
+
+  if (project.userId !== req.user.id && req.user.role !== "ADMIN") {
+    return res.status(403).json({ message: "Not allowed" });
+  }
+
+  await prisma.kumikoProject.delete({
+    where: { id: projectId },
+  });
+
+  res.json({ message: "Project deleted" });
+});
+
 app.listen(4000, () => console.log('Server running on 4000'));
