@@ -21,6 +21,5 @@ export default defineConfig({
     chunkSizeWarningLimit: 600,
     outDir: 'dist',
     assetsDir: 'assets',
-    cssCodeSplit: true,
   },
 });
