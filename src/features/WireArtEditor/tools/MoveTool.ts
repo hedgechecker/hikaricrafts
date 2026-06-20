@@ -111,6 +111,14 @@ export class MoveTool implements Tool {
       }
     }
 
+    //If a single Point is moved, snap to the grid lines, dont snap with multiple points
+    if (this.selectedPoints.length == 1) {
+      this.context.gridRenderer.handleHover(event);
+      const point = this.context.gridRenderer.getHoveredPoint();
+      if (point) {
+        this.currentPosition.copy(point);
+      }
+    }
     const delta = this.currentPosition.sub(this.startPosition);
     for (const id of this.selectedPoints) {
       const origin = this.context.model.points.get(id);
@@ -128,7 +136,8 @@ export class MoveTool implements Tool {
     this.context.lineRenderer.updateGeometry();
   }
 
-  onPointerUp() {
+  onPointerUp(event: PointerEvent) {
+    console.log(event);
     if (
       this.selectedPoints.length < 1 ||
       this.currentPosition.equals(this.startPosition)
@@ -172,10 +181,6 @@ export class MoveTool implements Tool {
       }
     } // Else Move the Point
     else {
-      const point = this.context.gridRenderer.getHoveredPoint();
-      if (point) {
-        this.currentPosition.copy(point);
-      }
       let commands = [];
       for (const id of this.selectedPoints) {
         const pos = this.context.pointRenderer.getWorldPosition(id);

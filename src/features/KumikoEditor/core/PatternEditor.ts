@@ -61,9 +61,9 @@ export class PatternEditor {
     controls.minAzimuthAngle = -Math.PI * (1 / 4);
     controls.maxAzimuthAngle = Math.PI * (1 / 4);
 
-    window.addEventListener("mousedown", this.onMouseDown);
-    window.addEventListener("mousemove", this.onMouseMove);
-    window.addEventListener("mouseup", this.onMouseUp);
+    window.addEventListener("pointerdown", this.onPointerDown);
+    window.addEventListener("pointermove", this.onPointerMove);
+    window.addEventListener("pointerup", this.onPointerUp);
 
     this.start();
   }
@@ -104,10 +104,11 @@ export class PatternEditor {
     this.sceneManager.update();
   }
 
-  private onMouseMove = (event: MouseEvent) => {
-    if (!this.pattern) return;
+  private calcInterserct(event: PointerEvent): number | null {
+    if (!this.pattern) return null;
     const elements = this.pattern.children;
-    const selectedWood = this.store.getState().selectedWood;
+    var closestDist = Number.MAX_SAFE_INTEGER;
+    var closest = -1;
 
     const rect = this.sceneManager.dom.getBoundingClientRect();
     const raycaster = new THREE.Raycaster();
@@ -116,9 +117,6 @@ export class PatternEditor {
     mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
     mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     raycaster.setFromCamera(mouse, this.sceneManager.camera);
-
-    var closestDist = Number.MAX_SAFE_INTEGER;
-    var closest = -1;
 
     for (var i = 0; i < elements.length; i++) {
       const element = elements.at(i) as THREE.Object3D;
@@ -133,12 +131,21 @@ export class PatternEditor {
       }
     }
 
-    if (closest >= 0) {
+    return closest;
+  }
+
+  private onPointerMove = (event: PointerEvent) => {
+    if (!this.pattern) return;
+    const elements = this.pattern.children;
+    const selectedWood = this.store.getState().selectedWood;
+    const closest = this.calcInterserct(event);
+
+    if(closest && closest >= 0){
       if (closest === this.lastIndex) {
-        return;
+        return null;
       }
       const element = elements.at(closest) as THREE.Object3D;
-      if (!(element as THREE.Mesh).isMesh) return;
+      if (!(element as THREE.Mesh).isMesh) return null;
       const mesh = element as THREE.Mesh;
       if (this.lastIndex != null)
         (elements.at(this.lastIndex) as THREE.Mesh).material = getFastMaterial(
@@ -147,9 +154,9 @@ export class PatternEditor {
       mesh.material = getFastMaterial(selectedWood, true);
       this.sceneManager.render();
 
-      this.lastIndex = closest;
-      return;
+      return closest;
     }
+
     if (this.lastIndex != null) {
       (elements.at(this.lastIndex) as THREE.Mesh).material = getFastMaterial(
         this.materialMap[this.lastIndex]?.woodType,
@@ -158,12 +165,12 @@ export class PatternEditor {
       this.lastIndex = null;
     }
   };
-  private onMouseDown = (event: MouseEvent) => {
+  private onPointerDown = (event: PointerEvent) => {
     this.lasPos.x = event.clientX;
     this.lasPos.y = event.clientY;
   };
 
-  private onMouseUp = (event: MouseEvent) => {
+  private onPointerUp = (event: PointerEvent) => {
     if (
       !this.pattern ||
       Math.abs(event.clientX - this.lasPos.x) > 2 ||
@@ -171,12 +178,18 @@ export class PatternEditor {
     ) {
       return;
     }
+
+    this.lastIndex = this.calcInterserct(event);
     const elements = this.pattern.children;
     const selectedWood = this.store.getState().selectedWood;
+
     if (this.lastIndex != null) {
-      if(!this.materialMap[this.lastIndex]){
-        this.materialMap[this.lastIndex] = {woodType: selectedWood, thickness: 3};
-      }else {
+      if (!this.materialMap[this.lastIndex]) {
+        this.materialMap[this.lastIndex] = {
+          woodType: selectedWood,
+          thickness: 3,
+        };
+      } else {
         this.materialMap[this.lastIndex].woodType = selectedWood;
       }
       (elements.at(this.lastIndex) as THREE.Mesh).material = getFastMaterial(
@@ -185,13 +198,14 @@ export class PatternEditor {
 
       this.store.setMaterialMap(this.materialMap);
       this.lastIndex = null;
+      this.sceneManager.render();
     }
   };
 
   dispose() {
-    window.removeEventListener("mousedown", this.onMouseDown);
-    window.removeEventListener("mousemove", this.onMouseMove);
-    window.removeEventListener("mouseup", this.onMouseUp);
+    window.removeEventListener("pointerdown", this.onPointerDown);
+    window.removeEventListener("pointermove", this.onPointerMove);
+    window.removeEventListener("pointerup", this.onPointerUp);
     this.sceneManager.dispose();
   }
 }

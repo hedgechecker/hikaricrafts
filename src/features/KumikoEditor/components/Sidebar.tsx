@@ -68,22 +68,29 @@ export default function SideBar({ engine }: Props) {
   async function loadProjects() {
     const token = localStorage.getItem("token");
 
-    const res = await fetch(`${BASE_URL}/kumikoProjects`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
-
-    if (!res.ok) {
-      logWarn("Something went wrong, when trying to load the user Projects", {
-        function: "Sidebar/loadProjects",
-        res: res,
-        token: token,
+    try {
+      const res = await fetch(`${BASE_URL}/kumikoProjects`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      return;
+
+      if (!res.ok) {
+        logWarn("Something went wrong, when trying to load the user Projects", {
+          function: "Sidebar/loadProjects",
+          res: res,
+          token: token,
+        });
+        return;
+      }
+
+      const data = await res.json();
+      setProjects(data);
+    } catch (error) {
+      logWarn("Network error while loading user Projects", {
+        function: "Sidebar/loadProjects",
+        error,
+        token,
+      });
     }
-    
-    
-    const data = await res.json();
-    setProjects(data);
   }
 
   // Prevent losing unsaved work before switching projects

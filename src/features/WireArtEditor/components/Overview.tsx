@@ -13,7 +13,7 @@ export default function Overview() {
         "/projects/pineapple/raw.png",
         "/projects/pineapple/overlay.png",
         "/projects/pineapple/lines.png",
-        "/projects/pineapple/final.jpeg",
+        "/projects/pineapple/final.png",
       ],
       link: "/wirearteditor/1",
     },

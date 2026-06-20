@@ -9,13 +9,11 @@ import SingleProduct from "./pages/Product/SingleProduct.tsx";
 import Contact from "./pages/Contact/Contact.tsx";
 import WireArtEditor from "./pages/WireArtEditor/WireArtEditor.tsx";
 import Overview from "./features/WireArtEditor/components/Overview.tsx";
-import { setupGlobalErrorHandling } from "./utils/error/errorHandler.ts";
 import { useDialog } from "./features/global/useDialog.tsx";
 
 export default function Routing() {
   const { dialogComponent } = useDialog();
 
-  setupGlobalErrorHandling();
   return (
     <>
       <div id="tooltip-root"></div>

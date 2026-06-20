@@ -81,6 +81,7 @@ export class ThreeEditor {
   private syncSceneFromModel() {
     this.patternRenderer.sync([...this.model.patterns.values()]);
     this.saveLocal();
+    this.sceneManager.update();
     this.sceneManager.render();
   }
 
@@ -106,6 +107,8 @@ export class ThreeEditor {
       this.storage.deleteLocal();
       this.project = project;
       this.store.setProject(project);
+      this.gridRenderer.addFromData(this.project.settings);
+      this.sceneManager.setCameraMode("2D");
       return;
     }
     this.setSettings(data.settings);

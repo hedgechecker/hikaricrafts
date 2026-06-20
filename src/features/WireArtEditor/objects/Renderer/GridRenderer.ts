@@ -218,7 +218,6 @@ export class GridRenderer extends BaseRenderer<GridRenderData, number> {
 
   handleHover(event: MouseEvent): boolean {
     const worldPos = this.sceneManager.getWorldPosition(event);
-
     const snapped = this.snapToGrid(worldPos);
     this.hoveredPoint = snapped;
 

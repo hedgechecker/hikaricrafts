@@ -6,7 +6,7 @@ export class PointRenderer extends BaseRenderer<RenderData, PointData> {
   private readonly baseThickness = 1.0;
   private readonly hoverThickness = 2.0;
   private readonly baseRadius = 0.09;
-  private readonly hitRadius = 0.2;
+  private readonly hitRadius = 0.3;
 
   private color = "#999999";
 

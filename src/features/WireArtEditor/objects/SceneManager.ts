@@ -1,10 +1,9 @@
 import * as THREE from "three";
-import { CameraController } from "./CameraController";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 export class SceneManager {
   scene: THREE.Scene;
-  controller!: CameraController | OrbitControls;
+  controller!: OrbitControls;
   renderer: THREE.WebGLRenderer;
   dom: HTMLCanvasElement;
   container: HTMLDivElement;
@@ -20,11 +19,13 @@ export class SceneManager {
   private mouse = new THREE.Vector2(0, 0);
 
   private count = 0;
+  private start = Date.now();
 
   constructor(container: HTMLDivElement) {
     this.container = container;
     const width = container.clientWidth;
     const height = container.clientHeight;
+    this.start = Date.now();
 
     this.scene = new THREE.Scene();
     this.addLighting();
@@ -42,7 +43,7 @@ export class SceneManager {
     );
     this.orthoCamera.position.set(0, 0, 10);
     this.orthoCamera.zoom = 0.1;
-    this.perspectiveCamera = new THREE.PerspectiveCamera(60, aspect, 0.1, 1000);
+    this.perspectiveCamera = new THREE.PerspectiveCamera(60, aspect, 0.1, 5000);
     this.perspectiveCamera.position.set(0, 0, 10);
     this.perspectiveCamera.lookAt(0, 0, 0);
 
@@ -56,6 +57,8 @@ export class SceneManager {
     this.dom = this.renderer.domElement;
     container.appendChild(this.dom);
     this.camera = this.orthoCamera;
+
+    this.onResize();
     this.setCameraMode("2D");
 
     window.addEventListener("resize", this.onResize);
@@ -63,7 +66,7 @@ export class SceneManager {
       e.preventDefault(),
     );
 
-     this.intervalId = setInterval(() => {
+    this.intervalId = setInterval(() => {
       //logInfo("renders/sec:", this.count);
       this.count = 0;
       this.render();
@@ -80,6 +83,9 @@ export class SceneManager {
   }
 
   render() {
+    if (Date.now() - this.start < 700) {
+      return;
+    }
     this.count++;
     this.renderer.render(this.scene, this.camera);
   }
@@ -88,10 +94,6 @@ export class SceneManager {
     const width = this.container.clientWidth;
     const height = this.container.clientHeight;
     const aspect = width / height;
-    // const referenceWidth = 300; // "desktop baseline"
-    // const scale = width / referenceWidth;
-    //const frustumSize = scale * width;
-
     const frustumSize = 7;
 
     if (this.camera instanceof THREE.OrthographicCamera) {
@@ -106,12 +108,12 @@ export class SceneManager {
     }
 
     this.renderer.setSize(width, height);
+    this.update();
   };
 
   update() {
     if (this.controller instanceof OrbitControls) {
       this.controller.update();
-      this.render();
     }
     this.camera.updateProjectionMatrix();
   }
@@ -136,29 +138,88 @@ export class SceneManager {
       this.camera = this.perspectiveCamera;
       this.renderer.render(this.scene, this.camera);
     }
-    //this.camera.position.copy(prevCamera.position);
 
     if (this.controller) {
       this.controller.dispose();
     }
 
+    const controls = new OrbitControls(this.camera, this.dom);
+
     if (mode === "2D") {
-      this.controller = new CameraController(this.orthoCamera, this.dom, this);
+      this.camera.position.set(0, 0, 100);
+      this.camera.zoom = 0.01;
+      this.camera.lookAt(0, 0, 0);
+      controls.enableRotate = false;
+      controls.mouseButtons = {
+        LEFT: THREE.MOUSE.PAN, // Left click Pans
+        MIDDLE: THREE.MOUSE.DOLLY, // Zoom
+        RIGHT: THREE.MOUSE.PAN, // Right click Pans
+      };
+      controls.touches = {
+        ONE: THREE.TOUCH.PAN, // Single touch drag pans
+        TWO: THREE.TOUCH.DOLLY_PAN, // Pinch to zoom and pan
+      };
     } else {
-      const controls = new OrbitControls(this.perspectiveCamera, this.dom);
+      this.camera.position.set(0, 0, 100);
+      this.camera.zoom = 0.5;
+      controls.enableRotate = true;
       controls.enableDamping = true;
-      controls.target.set(0, 0, 0);
-      this.controller = controls;
-      this.update();
+      controls.panSpeed = 2;
     }
+    controls.enableZoom = true;
+    controls.zoomSpeed = 5;
+    controls.target.set(0, 0, 0);
+    controls.update();
+
+    this.controller = controls;
+
+    const minPan = new THREE.Vector3(-200 / 2, -200 / 2, -10);
+    const maxPan = new THREE.Vector3(200 / 2, 200 / 2, 10);
+
+    const dist = Math.max(200, 200);
+    const minDistance = dist * 0.05;
+    const maxDistance = dist;
+    const minZoom = dist / 200000; // smaller number = zoomed out
+    const maxZoom = 0.5; // larger number = zoomed in
+    this.controller.addEventListener("change", () => {
+      const _v = new THREE.Vector3();
+      _v.copy(this.controller.target);
+
+      // --- PAN CLAMP ---
+      this.controller.target.clamp(minPan, maxPan);
+      this.camera.position.add(this.controller.target.clone().sub(_v)); // keep relative offset
+      // --- ZOOM CLAMP ---
+      if (this.camera instanceof THREE.OrthographicCamera) {
+        this.camera.zoom = THREE.MathUtils.clamp(
+          this.camera.zoom,
+          minZoom,
+          maxZoom,
+        );
+        this.camera.updateProjectionMatrix();
+      } else if (this.camera instanceof THREE.PerspectiveCamera) {
+        const offset = new THREE.Vector3().subVectors(
+          this.camera.position,
+          controls.target,
+        );
+
+        const distance = offset.length();
+        if (distance < minDistance) {
+          offset.setLength(minDistance);
+          this.camera.position.copy(controls.target).add(offset);
+        } else if (distance > maxDistance) {
+          offset.setLength(maxDistance);
+          this.camera.position.copy(controls.target).add(offset);
+        }
+      }
+      this.render();
+      this.camera.updateProjectionMatrix();
+    });
 
     this.onResize();
   }
 
   setPanEnabled(enabled: boolean) {
-    if (this.controller instanceof CameraController) {
-      this.controller.setPanEnabled(enabled);
-    }
+    this.controller.enablePan = enabled;
   }
 
   dispose() {

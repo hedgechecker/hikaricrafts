@@ -32,8 +32,13 @@ export default function PatternCanvas({ engine1 }: Props) {
 
     const engine = new PatternEditor(mount, engine1.getStore());
 
+    // Wrap the resize call in requestAnimationFrame to prevent error notifications
     const resizeObserver = new ResizeObserver(() => {
-      engine.resize(mount);
+      requestAnimationFrame(() => {
+        if (mountRef.current) {
+          engine.resize(mount);
+        }
+      });
     });
 
     resizeObserver.observe(mount);
@@ -43,15 +48,14 @@ export default function PatternCanvas({ engine1 }: Props) {
       setCurrentWood(engine1.getStore().getState().selectedWood);
     });
 
-    mount.addEventListener(
-      "touchstart",
-      (e) => {
-        e.preventDefault();
-      },
-      { passive: false },
-    );
+    const handleTouchStart = (e: TouchEvent) => {
+      e.preventDefault();
+    };
+    mount.addEventListener("touchstart", handleTouchStart, { passive: false });
 
     return () => {
+      resizeObserver.disconnect();
+      mount.removeEventListener("touchstart", handleTouchStart);
       engine.dispose();
       unsubscribe();
     };

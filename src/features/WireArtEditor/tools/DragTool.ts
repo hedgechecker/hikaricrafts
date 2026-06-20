@@ -76,7 +76,7 @@ export class DragTool implements Tool {
     this.context.sceneManager.setPanEnabled(true);
 
     if (this.activeTool === "point") {
-      this.moveTool.onPointerUp();
+      this.moveTool.onPointerUp(event);
     }
 
     if (this.activeTool === "image") {

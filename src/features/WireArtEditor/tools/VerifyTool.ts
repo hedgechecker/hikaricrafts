@@ -238,7 +238,7 @@ export class VerifyTool implements Tool {
 
   getPolygonMeshes(faces: Vertex[][], height = 1.8, color?: number) {
     let meshes = [];
-    const texture = new THREE.TextureLoader().load("/textures/fichte.jpg");
+    const texture = new THREE.TextureLoader().load("/textures/fichte.avif");
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
     texture.repeat.set(0.1, 0.1);

@@ -79,10 +79,23 @@ export const logDebug = (message: string, context?: AppLogContext) =>
 
 export function setupGlobalErrorHandling() {
   window.addEventListener("error", (event) => {
-    logError(event.error, { function: "window.error" });
+    
+    console.log(event.message)
+    const errorToLog = JSON.stringify( {
+      message: event.message,
+      filename: event.filename,
+      lineno: event.lineno,
+      colno: event.colno,
+    });
+
+    logError(errorToLog, { function: "window.error" });
   });
 
   window.addEventListener("unhandledrejection", (event) => {
-    logError(event.reason, { function: "unhandledrejection" });
+    // Fall back to a generic Error if the promise rejection reason is missing
+    const reasonToLog =
+      event.reason || new Error("Unhandled promise rejection without a reason");
+
+    logError(reasonToLog, { function: "unhandledrejection" });
   });
 }

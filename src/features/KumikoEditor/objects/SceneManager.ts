@@ -168,6 +168,15 @@ export class SceneManager {
       this.camera.zoom = 0.01;
       this.camera.lookAt(0, 0, 0);
       controls.enableRotate = false;
+      controls.mouseButtons = {
+        LEFT: THREE.MOUSE.PAN, // Left click Pans
+        MIDDLE: THREE.MOUSE.DOLLY, // Zoom
+        RIGHT: THREE.MOUSE.PAN, // Right click Pans
+      };
+      controls.touches = {
+        ONE: THREE.TOUCH.PAN, // Single touch drag pans
+        TWO: THREE.TOUCH.DOLLY_PAN, // Pinch to zoom and pan
+      };
     } else {
       this.camera.position.set(0, 0, 100);
       this.camera.zoom = 0.5;
