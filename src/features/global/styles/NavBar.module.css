@@ -1,6 +1,5 @@
 .bar {
   width: calc(100% - 2*var(--space-md));
-
   display: flex;
   justify-content: space-between;
   align-items: center;

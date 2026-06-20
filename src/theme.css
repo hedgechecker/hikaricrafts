@@ -59,3 +59,8 @@
 
   
 }
+
+*:focus-visible {
+  outline: var(--space-border) solid var(--color-accent);
+  box-shadow: 0 0 6px 2px rgba(255, 255, 255, 1);
+}

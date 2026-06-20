@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "./styles/NavBar.module.css";
 import { Link } from "react-router-dom";
 interface NavBarProps {
@@ -9,6 +9,23 @@ export default function NavBar({ selected }: NavBarProps) {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
+
+  useEffect(() => {
+    const divList = ["koffer", "wallArt", "etuis"];
+    divList.forEach((name) => {
+      const div = document.getElementById(name);
+      const dropdown = document.getElementById(name+"Dropdown");
+
+      if (!div || !dropdown) return;
+      dropdown.addEventListener("focusin", () => {
+        div.style.display = "flex";
+      });
+
+      dropdown.addEventListener("focusout", () => {
+        div.style.display = "none";
+      });
+    });
+  }, []);
 
   const handleDropdown = (name: string) => {
     setOpenDropdown(openDropdown === name ? null : name);
@@ -35,7 +52,11 @@ export default function NavBar({ selected }: NavBarProps) {
         <Link to="/" onClick={closeMobile} className={`${styles.logo}`}>
           HikariCrafts
         </Link>
-        <img src="./icons/shopping-box.svg" className={styles.cart} alt="Einkaufskorb" />
+        {/* <img
+          src="./icons/shopping-box.svg"
+          className={styles.cart}
+          alt="Einkaufskorb"
+        /> */}
 
         {/* HAMBURGER BUTTON */}
         <button
@@ -57,9 +78,10 @@ export default function NavBar({ selected }: NavBarProps) {
             className={`${styles.elem} ${selected === "etuis" ? styles.selected : ""} ${styles.dropdown}`}
             onClick={() => handleDropdown("etuis")}
             tabIndex={0}
+            id="etuisDropdown"
           >
             Etuis
-            <div className={styles.dropdownContent}>
+            <div className={styles.dropdownContent} id="etuis">
               <Link to="/oboereedsetui" onClick={closeMobile}>
                 Rohretui für Oboe
               </Link>
@@ -77,9 +99,10 @@ export default function NavBar({ selected }: NavBarProps) {
             className={`${styles.elem} ${selected === "cases" ? styles.selected : ""} ${styles.dropdown}`}
             onClick={() => handleDropdown("koffer")}
             tabIndex={0}
+            id="kofferDropdown"
           >
             Koffer
-            <div className={styles.dropdownContent}>
+            <div className={styles.dropdownContent} id="koffer">
               <Link to="/piccoloCase" onClick={closeMobile}>
                 Piccolo Koffer
               </Link>
@@ -94,9 +117,10 @@ export default function NavBar({ selected }: NavBarProps) {
             className={`${styles.elem} ${selected === "wallArt" ? styles.selected : ""} ${styles.dropdown}`}
             onClick={() => handleDropdown("wallArt")}
             tabIndex={0}
+            id="wallArtDropdown"
           >
             Wandkunst
-            <div className={styles.dropdownContent} id="wallart">
+            <div className={styles.dropdownContent} id="wallArt">
               <Link to="/wireArt" onClick={closeMobile}>
                 Geometrische Kunst
               </Link>
@@ -115,14 +139,15 @@ export default function NavBar({ selected }: NavBarProps) {
           </a>
 
           {isLoggedIn ? (
-            <div onClick={handleLogout} className={styles.elem}>
+            <div onClick={handleLogout} onKeyDown={handleLogout} className={styles.elem} tabIndex={0}>
               Logout
             </div>
           ) : (
             <Link
               to="/login"
               onClick={closeMobile}
-              className={`${styles.elem} ${selected === "login" ? styles.selected : ""}`}
+              className={`${styles.elem} ${selected === "login" ? styles.selected : ""}`
+            }
             >
               Login
             </Link>
