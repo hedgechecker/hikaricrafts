@@ -15,14 +15,14 @@ export default function EditorLayout() {
 
   return (
     <TutorialProvider>
-      <div className={styles.wrapper} id="editor">
+      <main className={styles.wrapper} id="editor" role="main">
         {engine && <Toolbar engine={engine} />}
         {/* Update class to trigger resizing event*/}
         <div className={`${engine ? styles.center : ""}`}>
           {engine && <SideBar engine={engine} />}
           <ThreeCanvas setEngine={setEngine} />
         </div>
-      </div>
+      </main>
       <TutorialOverlay />
     </TutorialProvider>
   );

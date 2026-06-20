@@ -1,0 +1,9 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /reviews/
+Disallow: /feedback/
+Disallow: /products/
+Allow: /
+
+Sitemap: https://www.hikaricrafts.de/sitemap.xml

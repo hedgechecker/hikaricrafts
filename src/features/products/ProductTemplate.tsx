@@ -30,7 +30,8 @@ export default function ProductTemplate(props: ProductTemplateProps) {
       style={{ backgroundColor: 'var(--color-background)', color: '#2E2E2E', minHeight: '100vh' }}
     >
       <NavBar selected={navbar_select}></NavBar>
-      <div
+      <main
+      role='main'
         style={{
           display: 'flex',
           flexDirection: 'column',
@@ -62,7 +63,7 @@ export default function ProductTemplate(props: ProductTemplateProps) {
           ></ProductDetails>
           <CustomerReviews productId={props.id}></CustomerReviews>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

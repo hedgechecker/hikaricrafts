@@ -21,7 +21,7 @@ export default function Overview() {
     <div className={styles.page}>
       <NavBar selected={"wallArt"} />
 
-      <div className={styles.container}>
+      <main className={styles.container} role="main">
         <h2 className={styles.title}>Geometrische Wandkunst Projekte</h2>
 
         <div className={styles.buttoncontainer}>
@@ -82,7 +82,7 @@ export default function Overview() {
             </div>
           ))}
         </div>
-      </div>
+      </main>
     </div>
   );
 }

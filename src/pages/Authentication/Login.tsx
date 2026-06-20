@@ -40,7 +40,7 @@ export function Login() {
   };
 
   return (
-    <div className={style.container}>
+    <main className={style.container} role="main">
       <h2 className={style.title}>Anmelden</h2>
 
       <input
@@ -81,7 +81,7 @@ export function Login() {
       >
         Abbrechen
       </button>
-    </div>
+    </main>
   );
 }
 

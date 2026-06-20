@@ -36,7 +36,7 @@ export default function Contact() {
   return (
     <div className={styles.page}>
       <NavBar selected={"contact"} />
-      <div className={styles.container}>
+      <main className={styles.container} role='main'>
         <div className={styles.labeling}>
           <h2 className={styles.title}>Kontakt</h2>
           <div className={styles.inputField}>
@@ -146,7 +146,7 @@ export default function Contact() {
             <h2> Nachricht wurde abgeschickt</h2>
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }

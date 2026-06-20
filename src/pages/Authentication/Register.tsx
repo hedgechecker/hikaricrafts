@@ -133,7 +133,7 @@ export function Register() {
   };
 
   return (
-    <div className={style.container}>
+    <main className={style.container} role="main">
       <h2 className={style.title}>Registrieren</h2>
 
       <input
@@ -172,7 +172,7 @@ export function Register() {
       <button className={style.backButton} onClick={() => navigate("/")}>
         Abbrechen
       </button>
-    </div>
+    </main>
   );
 }
 

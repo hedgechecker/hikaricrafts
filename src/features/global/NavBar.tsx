@@ -31,16 +31,17 @@ export default function NavBar({ selected }: NavBarProps) {
       {/* BACKDROP */}
       {mobileOpen && <div className={styles.backdrop} onClick={closeMobile} />}
 
-      <nav className={styles.bar}>
+      <nav className={styles.bar} role="navigation">
         <Link to="/" onClick={closeMobile} className={`${styles.logo}`}>
           HikariCrafts
         </Link>
-        <img src="./icons/shopping-box.svg" className={styles.cart} />
+        <img src="./icons/shopping-box.svg" className={styles.cart} alt="Einkaufskorb" />
 
         {/* HAMBURGER BUTTON */}
         <button
           className={`${styles.hamburger} ${mobileOpen ? styles.open : ""}`}
           onClick={() => setMobileOpen(!mobileOpen)}
+          name="Menü zur weiteren Navigation"
         >
           <span />
           <span />
