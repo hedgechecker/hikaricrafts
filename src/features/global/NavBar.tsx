@@ -63,6 +63,8 @@ export default function NavBar({ selected }: NavBarProps) {
           className={`${styles.hamburger} ${mobileOpen ? styles.open : ""}`}
           onClick={() => setMobileOpen(!mobileOpen)}
           name="Menü zur weiteren Navigation"
+          id="hamburgerButton"
+          title="Menü zur weiteren Navigation"
         >
           <span />
           <span />
@@ -139,15 +141,19 @@ export default function NavBar({ selected }: NavBarProps) {
           </a>
 
           {isLoggedIn ? (
-            <div onClick={handleLogout} onKeyDown={handleLogout} className={styles.elem} tabIndex={0}>
+            <div
+              onClick={handleLogout}
+              onKeyDown={handleLogout}
+              className={styles.elem}
+              tabIndex={0}
+            >
               Logout
             </div>
           ) : (
             <Link
               to="/login"
               onClick={closeMobile}
-              className={`${styles.elem} ${selected === "login" ? styles.selected : ""}`
-            }
+              className={`${styles.elem} ${selected === "login" ? styles.selected : ""}`}
             >
               Login
             </Link>
