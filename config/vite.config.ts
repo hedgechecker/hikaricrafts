@@ -20,6 +20,7 @@ export default defineConfig({
   build: {
     chunkSizeWarningLimit: 600,
     outDir: 'dist',
+    cssCodeSplit: true,
     assetsDir: 'assets',
   },
 });
