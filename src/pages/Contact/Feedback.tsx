@@ -1,12 +1,12 @@
-import { useState } from 'react';
-import NavBar from '../../features/global/NavBar';
-import styles from './Feedback.module.css';
-import { logError } from '../../utils/error/errorHandler';
+import { useState } from "react";
+import NavBar from "../../features/global/NavBar";
+import styles from "./Feedback.module.css";
+import { logError } from "../../utils/error/errorHandler";
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 export default function Feedback() {
-  const [text, setText] = useState('');
-  const [rating, setRating] = useState('Kleiner Fehler');
+  const [text, setText] = useState("");
+  const [rating, setRating] = useState("Kleiner Fehler");
   const [success, setSuccess] = useState(false);
 
   const submitFeedback = async () => {
@@ -16,9 +16,9 @@ export default function Feedback() {
 
     try {
       const response = await fetch(`${BASE_URL}/feedback`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           message: text,
@@ -26,10 +26,10 @@ export default function Feedback() {
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to submit');
+      if (!response.ok) throw new Error("Failed to submit");
 
-      setText('');
-      setRating('');
+      setText("");
+      setRating("");
       setSuccess(true);
 
       setTimeout(() => setSuccess(false), 3000); // hide after 3s
@@ -45,8 +45,12 @@ export default function Feedback() {
   return (
     <div className={styles.page}>
       <NavBar selected={""} />
+      <meta
+        name="description"
+        content="A simple Feedback input, to help improve the usability of this Woodworking Website"
+      ></meta>
 
-      <main className={styles.container} role='main'>
+      <main className={styles.container} role="main">
         {!success && (
           <>
             <h2 className={styles.title}>Feedback</h2>
