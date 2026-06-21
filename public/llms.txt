@@ -1,0 +1,25 @@
+# HikariCrafts
+
+> The personal website and shop of Lukas Nowak, featuring buyable woodworking products, custom editors for Kumiko panels and wallart in the wireart style.
+
+Important notes:
+- All digital products are open-source or offered under a personal-use license unless explicitly stated.
+- The interactive editors hosted on this site run entirely client-side in the browser; when logged in user data and configuration files are uploaded to an external server.
+- API keys used in the live editors are stored strictly in your browser's local storage.
+
+## Products
+
+- [Etui for Oboe-Reeds](https://hikaricrafts.de/oboereedsetui): A premium etui made completely out of wood. Perfectly suitable as a present for friends and family. Can be custom engraved.
+- [Etui for Clarinet-Reeds](https://hikaricrafts.de/klarinettreedsetui): A premium etui made completely out of wood. Perfectly suitable as a present for friends and family. Can be custom engraved.
+- [Etui for Saxophone-Reeds](https://hikaricrafts.de/saxophonreedsetui): A premium etui made completely out of wood. Perfectly suitable as a present for friends and family. Can be custom engraved.
+- [Case for Piccolo Flutes](https://hikaricrafts.de/piccoloCase): A premium case made completely out of wood. Perfectly suitable as a present for friends and family. Can be custom engraved.
+- [Case for Flutes](https://hikaricrafts.de/fluteCase): A premium case made completely out of wood. Perfectly suitable as a present for friends and family. Can be custom engraved.
+
+## Editors & Tools
+
+- [kumiko Editor](https://hikaricrafts.de/kumiko): A visual, three-dimensional editor for creating a fully customized kumiko panel.
+- [wireart/wallart Editor](https://hikaricrafts.de/wirearteditor): A visual, two-dimensional editor for creating a fully customized wireart model, wich can also be visualized in 3D.
+
+## Optional
+
+- [Contact](https://hikaricrafts.de/kontakt): Easily Contact me directly for product wishes.

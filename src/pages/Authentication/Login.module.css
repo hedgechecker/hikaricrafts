@@ -64,6 +64,8 @@
     color: var(--color-text-primary);
     cursor: pointer;
     text-decoration: underline;
+    border: none;
+    background-color: var(--color-background);
 }
 .link:hover{
     color: var(--color-accent);

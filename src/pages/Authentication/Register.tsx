@@ -111,9 +111,9 @@ export function Register() {
         type: "confirm",
         message: "Diese Email ist bereits registriert",
         cancelText: "Zurück",
-        confirmText: "Zur Anmeldung"
+        confirmText: "Zur Anmeldung",
       });
-      if(result){
+      if (result) {
         navigate("/login");
       }
       return;
@@ -134,6 +134,10 @@ export function Register() {
 
   return (
     <main className={style.container} role="main">
+      <meta
+        name="description"
+        content="A Login Form for the HikariCrafts Website"
+      ></meta>
       <h2 className={style.title}>Registrieren</h2>
 
       <input
@@ -160,9 +164,13 @@ export function Register() {
 
       <p>
         Bereits einen Account?{" "}
-        <a className={style.link} onClick={() => navigate("/login")}>
+        <button
+          className={style.link}
+          title="Navigiere zum Login"
+          onClick={() => navigate("/login")}
+        >
           Anmelden
-        </a>
+        </button>
       </p>
 
       <button className={style.button} onClick={register}>

@@ -41,6 +41,10 @@ export function Login() {
 
   return (
     <main className={style.container} role="main">
+      <meta
+        name="description"
+        content="A Login Form for the HikariCrafts Website"
+      ></meta>
       <h2 className={style.title}>Anmelden</h2>
 
       <input
@@ -48,7 +52,6 @@ export function Login() {
         placeholder="Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        tabIndex={1}
       />
 
       <input
@@ -57,7 +60,6 @@ export function Login() {
         type="password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        tabIndex={1}
         onKeyDown={(e) => {
           if (e.key == "Enter") login();
         }}
@@ -65,11 +67,15 @@ export function Login() {
 
       <p>
         Noch keinen Account?{" "}
-        <a className={style.link} onClick={() => navigate("/register")}>
+        <button
+          className={style.link}
+          title="Navigiere zur Registrierung"
+          onClick={() => navigate("/register")}
+        >
           Registrieren
-        </a>
+        </button>
       </p>
-      <button className={style.button} onClick={login} tabIndex={1}>
+      <button className={style.button} onClick={login}>
         Anmelden
       </button>
       <button
@@ -77,7 +83,6 @@ export function Login() {
         onClick={() => {
           navigate("/");
         }}
-        tabIndex={1}
       >
         Abbrechen
       </button>
