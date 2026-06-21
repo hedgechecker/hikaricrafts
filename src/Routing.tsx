@@ -1,14 +1,13 @@
-import { Routes, Route } from "react-router-dom";
-import Login from "./pages/Authentication/Login.tsx";
 import "./theme.css";
-import { Register } from "./pages/Authentication/Register.tsx";
-import Feedback from "./pages/Contact/Feedback.tsx";
-import AllProductsPage from "./features/products/AllProducts.tsx";
-import SingleProduct from "./pages/Product/SingleProduct.tsx";
-import Contact from "./pages/Contact/Contact.tsx";
+import { Routes, Route } from "react-router-dom";
 import { useDialog } from "./features/global/useDialog.tsx";
 import { lazy, Suspense } from "react";
 
+const Feedback = lazy(() => import("./pages/Contact/Feedback.tsx"));
+const SingleProduct = lazy(() => import("./pages/Product/SingleProduct.tsx"));
+const Login = lazy(() => import("./pages/Authentication/Login.tsx"));
+const Register = lazy(() => import("./pages/Authentication/Register.tsx"));
+const Contact = lazy(() => import("./pages/Contact/Contact.tsx"));
 const EditorPage = lazy(() => import("./pages/KumikoEditor/KumikoEditor.tsx"));
 const Overview = lazy(
   () => import("./features/WireArtEditor/components/Overview.tsx"),
@@ -30,7 +29,6 @@ export default function Routing() {
       >
         <Routes>
           <Route path="/" element={<Feedback />} />
-          <Route path="/all" element={<AllProductsPage />} />
           <Route
             path="/oboereedsetui"
             element={<SingleProduct key={1} id={1} />}
