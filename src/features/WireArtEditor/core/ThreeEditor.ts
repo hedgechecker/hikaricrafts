@@ -134,7 +134,7 @@ export class ThreeEditor {
       this.model.images.set(image.id, { ...image });
     }
     if (this.project.viewPoint) {
-      this.sceneManager.camera.position.copy(this.project.viewPoint.pos);
+      //this.sceneManager.camera.position.copy(this.project.viewPoint.pos);
       this.sceneManager.camera.zoom = this.project.viewPoint.zoom;
       this.gridRenderer.update(this.sceneManager.camera.zoom);
       this.sceneManager.update();
