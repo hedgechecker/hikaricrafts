@@ -150,7 +150,10 @@ export default function SingleProduct({ id }: Props) {
       warranty={product.warranty ?? ''}
       series={product.series ?? ''}
     >
-      <meta>Ein Überblick über {product.name}. Mit allen möglichen Variationen, Technischen Daten und Eigenschaften.</meta>
+      <meta
+        name="description"
+        content={`Ein Überblick über ${product.name}. Mit allen möglichen Variationen, Technischen Daten und Eigenschaften.`}
+      />
       {product.productOptions.map((po) => {
         const allValidValues = po.option.values.filter((v) =>
           validValuesPerOption[po.option.name].has(v.id),
