@@ -140,8 +140,8 @@ export function ImageGallery({ images = [] }: ProductGalleryProps) {
   return (
     <div className={styles.layout}>
       {/* LEFT THUMBNAILS */}
-      <div className={styles.leftWrapper}>
-        <div className={styles.left} ref={leftDivRef}>
+      <div className={styles.leftWrapper} tabIndex={-1}>
+        <div className={styles.left} ref={leftDivRef} tabIndex={-1}>
           {images.map((img, i) => (
             <img
               key={i}
@@ -152,15 +152,28 @@ export function ImageGallery({ images = [] }: ProductGalleryProps) {
                   : styles.image
               }
               onClick={() => setCurrentIndex(i)}
+              onFocus={() => setCurrentIndex(i)}
+              tabIndex={0}
             />
           ))}
         </div>
 
         <div className={`${styles.top} ${styles.arrow}`} ref={topArrowRef}>
-          <img src="\icons\arrow-simple.svg" className={styles.arrowImg} style={{transform: 'rotate(270deg)'}}/>
+          <img
+            src="\icons\arrow-simple.svg"
+            className={styles.arrowImg}
+            style={{ transform: "rotate(90deg)" }}
+          />
         </div>
-        <div className={`${styles.bottom} ${styles.arrow}`} ref={bottomArrowRef}>
-          <img src="\icons\arrow-simple.svg" className={styles.arrowImg} style={{transform: 'rotate(90deg)'}}/>
+        <div
+          className={`${styles.bottom} ${styles.arrow}`}
+          ref={bottomArrowRef}
+        >
+          <img
+            src="\icons\arrow-simple.svg"
+            className={styles.arrowImg}
+            style={{ transform: "rotate(270deg)" }}
+          />
         </div>
       </div>
 
@@ -172,16 +185,24 @@ export function ImageGallery({ images = [] }: ProductGalleryProps) {
           className={`${styles.left} ${styles.arrow}`}
           ref={leftArrowRef}
           onClick={goLeft}
+          tabIndex={0}
+          onKeyDown={goLeft}
         >
-          <img src="\icons\arrow-simple.svg" className={styles.arrowImg} style={{transform: 'rotate(180deg)'}}/>
+          <img src="\icons\arrow-simple.svg" className={styles.arrowImg} />
         </div>
 
         <div
           className={`${styles.right} ${styles.arrow}`}
           ref={rightArrowRef}
           onClick={goRight}
+          tabIndex={0}
+          onKeyDown={goRight}
         >
-          <img src="\icons\arrow-simple.svg" className={styles.arrowImg}/>
+          <img
+            src="\icons\arrow-simple.svg"
+            className={styles.arrowImg}
+            style={{ transform: "rotate(180deg)" }}
+          />
         </div>
       </div>
     </div>
