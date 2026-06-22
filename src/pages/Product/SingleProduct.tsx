@@ -135,7 +135,7 @@ export default function SingleProduct({ id }: Props) {
   return (
     <ProductTemplate
       id={product.id}
-      images={selectedVariation.images?.map((i) => i.path) ?? []}
+      images={selectedVariation.images?.map((i) => ({ path: i.path, alt: i.alt })) ?? []}
       title={product.name}
       price={selectedVariation.priceCents / 100}
       available={selectedVariation.stock}
@@ -150,6 +150,7 @@ export default function SingleProduct({ id }: Props) {
       warranty={product.warranty ?? ''}
       series={product.series ?? ''}
     >
+      <meta>Ein Überblick über {product.name}. Mit allen möglichen Variationen, Technischen Daten und Eigenschaften.</meta>
       {product.productOptions.map((po) => {
         const allValidValues = po.option.values.filter((v) =>
           validValuesPerOption[po.option.name].has(v.id),

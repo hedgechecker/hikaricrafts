@@ -7,7 +7,7 @@ import { type ReactNode } from 'react';
 
 interface ProductTemplateProps {
   id: number;
-  images: string[];
+  images: {path:string, alt:string}[];
 
   title: string;
   price: number;

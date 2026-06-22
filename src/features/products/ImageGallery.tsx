@@ -3,7 +3,7 @@ import styles from "./styles/ImageGallery.module.css";
 
 
 interface ProductGalleryProps {
-  images: string[];
+  images: { path: string; alt: string }[];
 }
 
 export function ImageGallery({ images = [] }: ProductGalleryProps) {
@@ -145,7 +145,8 @@ export function ImageGallery({ images = [] }: ProductGalleryProps) {
           {images.map((img, i) => (
             <img
               key={i}
-              src={img}
+              src={img.path}
+              alt={img.alt}
               className={
                 i === currentIndex
                   ? `${styles.image} ${styles.selectedThumb}`
@@ -179,29 +180,36 @@ export function ImageGallery({ images = [] }: ProductGalleryProps) {
 
       {/* MAIN IMAGE */}
       <div className={styles.center} ref={mainDivRef}>
-        <img src={selectedImage} className={styles.mainImage} />
+        <img
+          src={selectedImage.path}
+          alt={selectedImage.alt}
+          className={styles.mainImage}
+        />
 
         <div
           className={`${styles.left} ${styles.arrow}`}
           ref={leftArrowRef}
           onClick={goLeft}
-          tabIndex={0}
           onKeyDown={goLeft}
         >
-          <img src="\icons\arrow-simple.svg" className={styles.arrowImg} />
+          <img
+            src="\icons\arrow-simple.svg"
+            className={styles.arrowImg}
+            alt="Pfeil nach links"
+          />
         </div>
 
         <div
           className={`${styles.right} ${styles.arrow}`}
           ref={rightArrowRef}
           onClick={goRight}
-          tabIndex={0}
           onKeyDown={goRight}
         >
           <img
             src="\icons\arrow-simple.svg"
             className={styles.arrowImg}
             style={{ transform: "rotate(180deg)" }}
+            alt="Pfeil nach rechts"
           />
         </div>
       </div>
