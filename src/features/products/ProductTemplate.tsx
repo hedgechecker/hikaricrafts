@@ -1,4 +1,3 @@
-import NavBar from '../global/NavBar';
 import { ImageGallery } from './ImageGallery';
 import { ProductDescription } from './ProductDescription';
 import { ProductDetails } from './ProductDetails';
@@ -24,12 +23,10 @@ interface ProductTemplateProps {
 }
 
 export default function ProductTemplate(props: ProductTemplateProps) {
-  var navbar_select: 'etuis' | 'cases' = props.id == 1 || props.id == 3 || props.id == 4 ? 'etuis' : 'cases';
   return (
     <div
       style={{ backgroundColor: 'var(--color-background)', color: '#2E2E2E', minHeight: '100vh' }}
     >
-      <NavBar selected={navbar_select}></NavBar>
       <main
       role='main'
         style={{

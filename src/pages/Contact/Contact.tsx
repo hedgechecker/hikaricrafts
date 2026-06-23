@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import NavBar from '../../features/global/NavBar';
 import styles from './Contact.module.css';
 const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -35,7 +34,6 @@ export default function Contact() {
 
   return (
     <div className={styles.page}>
-      <NavBar selected={"contact"} />
       <main className={styles.container} role='main'>
         <div className={styles.labeling}>
           <h2 className={styles.title}>Kontakt</h2>

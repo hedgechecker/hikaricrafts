@@ -1,5 +1,4 @@
 import { useState } from "react";
-import NavBar from "../../features/global/NavBar";
 import styles from "./Feedback.module.css";
 import { logError } from "../../utils/error/errorHandler";
 const BASE_URL = import.meta.env.VITE_API_URL;
@@ -44,7 +43,6 @@ export default function Feedback() {
 
   return (
     <div className={styles.page}>
-      <NavBar selected={""} />
       <meta
         name="description"
         content="A simple Feedback input, to help improve the usability of this Woodworking Website"

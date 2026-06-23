@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router-dom";
-import NavBar from "../../global/NavBar";
 import styles from "./styles/Overview.module.css";
 
 export default function Overview() {
@@ -32,8 +31,6 @@ export default function Overview() {
 
   return (
     <div className={styles.page}>
-      <NavBar selected={"wallArt"} />
-
       <main className={styles.container} role="main">
         <h2 className={styles.title}>Geometrische Wandkunst Projekte</h2>
 

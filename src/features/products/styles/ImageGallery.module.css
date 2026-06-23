@@ -6,7 +6,6 @@
 
 .center{
     height: 400px;
-    height: fit-content;
     position: relative;
     display: flex;
     align-items: center;
