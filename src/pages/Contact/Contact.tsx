@@ -34,13 +34,17 @@ export default function Contact() {
 
   return (
     <div className={styles.page}>
-      <main className={styles.container} role='main'>
+      <meta
+        name="description"
+        content="Kontakt Formular, um direkt neue Ideen anzumerken, oder fragen zu bestehenden Produkten auf dieser Website zu stellen. "
+      ></meta>
+      <main className={styles.container} role="main">
         <div className={styles.labeling}>
           <h2 className={styles.title}>Kontakt</h2>
-          <div className={styles.inputField}>
+          {/* <div className={styles.inputField}>
             <label className={styles.label}>Email</label>
             <label className={styles.label}>lukas_n3@gmx.de</label>
-          </div>
+          </div> */}
           {/* <div className={styles.inputField}>
             <label className={styles.label}>Telefon</label>
             <label className={styles.label}>0 159 12341234</label>

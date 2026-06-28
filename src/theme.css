@@ -1,18 +1,18 @@
 :root {
-  /* 🎨 Colors - Wood Inspired */
-  --color-primary: #8B5E3C;       
-  --color-primary-dark: #5A3A22;  
-  --color-primary-light: #DAB58F; 
-  --color-accent: #000000;        
-  --color-background: #FAF7F2;    
-  --color-surface: #FFFDF9;       
-  --color-text-primary: #693d16;  
-  --color-text-secondary: #6B4E34;
-  --color-border: #a57931;        
-  --color-warning: #680000;       
-  --color-success: #064e15;       
+  /* Colors - Wood Inspired */
+  --color-primary: #583c26;
+  --color-primary-dark: #3d2817;
+  --color-primary-light: #b29578;
+  --color-accent: #000000;
+  --color-background: #faf7f2;
+  --color-surface: #fffdf9;
+  --color-text-primary: #693d16;
+  --color-text-secondary: #c1a389;
+  --color-border: #a57931;
+  --color-warning: #680000;
+  --color-success: #064e15;
 
-  /* ✍️ Typography */
+  /* Typography */
   --font-family-base: "Lora", serif;
   --font-family-heading: "Montserrat", sans-serif;
 
@@ -27,7 +27,7 @@
   --line-height-base: 1.6;
   --letter-spacing: 0.02em;
 
-  /* 📏 Spacing System */
+  /* Spacing System */
   --space-border: 2px;
   --space-xxs: 4px;
   --space-xs: 8px;
@@ -37,7 +37,7 @@
   --space-xl: 32px;
   --space-2xl: 48px;
 
-  /* 🧱 Borders & Shadows */
+  /* Borders & Shadows */
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 16px;
@@ -46,18 +46,16 @@
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.15);
   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.2);
 
-  /* 💧 Motion */
+  /* Motion */
   --transition-fast: 150ms ease-in-out;
   --transition-base: 250ms ease;
   --transition-slow: 400ms ease-in-out;
 
-  /* 🧭 Breakpoints */
+  /* Breakpoints */
   --breakpoint-sm: 480px;
   --breakpoint-md: 768px;
   --breakpoint-lg: 1024px;
   --breakpoint-xl: 1280px;
-
-  
 }
 
 *:focus-visible {

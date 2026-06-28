@@ -1,7 +1,7 @@
 import { ImageGallery } from './ImageGallery';
 import { ProductDescription } from './ProductDescription';
 import { ProductDetails } from './ProductDetails';
-import { CustomerReviews } from './Reviews';
+import Reviews from './Review';
 import { type ReactNode } from 'react';
 
 interface ProductTemplateProps {
@@ -58,7 +58,7 @@ export default function ProductTemplate(props: ProductTemplateProps) {
             warranty={props.warranty}
             series={props.series}
           ></ProductDetails>
-          <CustomerReviews productId={props.id}></CustomerReviews>
+          <Reviews productId={props.id} />
         </div>
       </main>
     </div>

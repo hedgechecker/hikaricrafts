@@ -5,6 +5,7 @@ const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
+
 const app = express();
 const prisma = new PrismaClient();
 
@@ -141,18 +142,31 @@ app.get('/reviews', async (req, res) => {
     return res.status(400).json({ error: 'Invalid productId' });
   }
 
-  const reviews = await prisma.review.findMany({
-    where: productIdNumber ? { productId: productIdNumber } : undefined,
-    orderBy: { id: 'desc' },
-  });
+  try {
+    const reviews = await prisma.review.findMany({
+      where: productIdNumber ? { productId: productIdNumber } : undefined,
+      orderBy: { id: "desc" },
+      include: {
+        user: {
+          select: {
+            name: true,
+            verified: true,
+          },
+        },
+      },
+    });
 
-  res.json(reviews);
+    res.json(reviews);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // Create a review
 app.post('/reviews', authRequired, async (req, res) => {
   try {
-    const { rating, comment, productId } = req.body;
+    const { rating, comment,title, productId } = req.body;
 
     const productIdNumber = Number(productId);
     if (isNaN(productIdNumber)) {
@@ -162,6 +176,7 @@ app.post('/reviews', authRequired, async (req, res) => {
     const review = await prisma.review.create({
       data: {
         rating,
+        title,
         comment,
         userId: req.user.id,
         productId: productIdNumber,
@@ -183,7 +198,7 @@ app.post('/reviews', authRequired, async (req, res) => {
 
 app.put('/reviews/:id', authRequired, async (req, res) => {
   const reviewId = parseInt(req.params.id);
-  const { rating, comment } = req.body;
+  const { title, rating, comment } = req.body;
 
   // Load the review
   const review = await prisma.review.findUnique({
@@ -203,6 +218,7 @@ app.put('/reviews/:id', authRequired, async (req, res) => {
   const updated = await prisma.review.update({
     where: { id: reviewId },
     data: {
+      title,
       rating,
       comment,
     },

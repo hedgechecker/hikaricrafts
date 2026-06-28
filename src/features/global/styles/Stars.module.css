@@ -1,0 +1,41 @@
+.starsContainer {
+  display: inline-block;
+  position: relative;
+  font-size: var(--font-size-2xl);
+  line-height: 1;
+  user-select: none;
+}
+.starsLayer {
+  display: flex;
+  white-space: nowrap;
+}
+.starsBackground {
+  color: var(--color-text-secondary);
+}
+.starsForeground {
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: var(--color-primary);
+  pointer-events: none;
+  transition: clip-path 0.2s ease-out;
+}
+.starIcon {
+  display: inline-block;
+  cursor: default;
+  transition: transform 0.15s ease-in-out;
+}
+
+.starsContainer.editable {
+  cursor: pointer;
+}
+.starsContainer.editable .starsLayer {
+  pointer-events: auto;
+}
+.starsContainer.editable .starIcon:hover {
+  transform: scale(1.2);
+  text-shadow: 0 0 8px rgba(255, 202, 40, 0.6);
+}
+.starsContainer.editable .starIcon:active {
+  transform: scale(0.9);
+}

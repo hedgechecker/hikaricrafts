@@ -16,6 +16,7 @@ generator client {
 model Review {
   id      Int    @id @default(autoincrement())
   rating  Int
+  title   String @default("")
   comment String
 
   createdAt DateTime @default(now())
@@ -36,6 +37,7 @@ model User {
   password  String
   name      String
   role      Role     @default(USER)
+  verified  Boolean  @default(false)
   reviews   Review[]
   wireArtProjects WireArtProject[]
   kumikoProjects kumikoProject[]
