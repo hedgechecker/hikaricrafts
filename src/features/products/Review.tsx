@@ -39,7 +39,6 @@ export default function Reviews({ productId }: ReviewProps) {
     for (var i = 0; i < reviews.length; i++) {
       if (reviews[i].userId === currentUserId) {
         setUserReview(reviews[i]);
-        console.log(reviews[i]);
       }
     }
   }, [reviews, currentUserId]);
@@ -48,7 +47,7 @@ export default function Reviews({ productId }: ReviewProps) {
     setEditing(-1);
     const rev: ReviewWithUser = {
       user: {
-        name: "Your Review",
+        name: "Ihr Kommentar",
         verified: false,
       },
       productId: productId,
@@ -88,14 +87,14 @@ export default function Reviews({ productId }: ReviewProps) {
       .then((res) => res.json())
       .then(setReviews);
     setEditing(null);
-
+    await showDialog({
+      type: "alert",
+      message: "Bewertung erfolgreich gespeichert",
+    });
   };
 
   const editReview = async () => {
     if (!UserReview) return;
-
-    console.log(UserReview);
-    console.log(UserReview.title);
     if (!editing) return;
     if (editing == -1) {
       createReview();
@@ -121,6 +120,10 @@ export default function Reviews({ productId }: ReviewProps) {
       .then((res) => res.json())
       .then(setReviews);
     setEditing(null);
+    await showDialog({
+      type: "alert",
+      message: "Bewertung erfolgreich gespeichert",
+    });
   };
 
   const deleteReview = async () => {

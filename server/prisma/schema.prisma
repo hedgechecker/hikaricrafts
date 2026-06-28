@@ -60,6 +60,26 @@ model Product {
   reviews         Review[]
 }
 
+model ProductVariation {
+  id         Int    @id @default(autoincrement())
+  productId  Int
+  sku        String @unique
+  priceCents Int
+  stock      Int
+
+  height      Int?
+  width       Int?
+  depth       Int?
+  weightGrams Int?
+  technicalSpecs  Json?
+  description String?
+
+  images       Image[]
+  optionValues ProductVariationOptionValue[]
+  orderItems   OrderItem[]
+  product      Product                       @relation(fields: [productId], references: [id])
+}
+
 model Option {
   id     Int      @id @default(autoincrement())
   name   String   // e.g. "Wood", "Finish", "Engraving"
@@ -85,24 +105,7 @@ model ProductOption {
   option  Option               @relation(fields: [optionId], references: [id])
 }
 
-model ProductVariation {
-  id         Int    @id @default(autoincrement())
-  productId  Int
-  sku        String @unique
-  priceCents Int
-  stock      Int
 
-  height      Int?
-  width       Int?
-  depth       Int?
-  weightGrams Int?
-
-  product      Product                       @relation(fields: [productId], references: [id])
-  images       Image[]
-  optionValues ProductVariationOptionValue[]
-  orderItems   OrderItem[]
-  
-}
 
 model ProductVariationOptionValue {
   id            Int @id @default(autoincrement())
@@ -118,7 +121,6 @@ model OrderItem {
   variationId   Int
   quantity      Int
   engravingText String? // customer input
-  // + price snapshot etc.
 
   variation ProductVariation @relation(fields: [variationId], references: [id])
 }

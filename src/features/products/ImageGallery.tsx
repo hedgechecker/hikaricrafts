@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./styles/ImageGallery.module.css";
 
-
 interface ProductGalleryProps {
   images: { path: string; alt: string }[];
 }
 
 export function ImageGallery({ images = [] }: ProductGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isFullView, setIsFullView] = useState(false);
 
   const leftDivRef = useRef<HTMLDivElement>(null);
   const mainDivRef = useRef<HTMLDivElement>(null);
@@ -50,19 +50,28 @@ export function ImageGallery({ images = [] }: ProductGalleryProps) {
     const leftArrow = leftArrowRef.current;
     const rightArrow = rightArrowRef.current;
 
-    if (!leftDiv || !mainDiv || !topArrow || !bottomArrow || !leftArrow || !rightArrow)
+    if (
+      !leftDiv ||
+      !mainDiv ||
+      !topArrow ||
+      !bottomArrow ||
+      !leftArrow ||
+      !rightArrow
+    )
       return;
-    
+
     if (images.length <= 1) {
       rightArrow.style.cursor = "default";
       leftArrow.style.cursor = "default";
-    }else{
+      leftArrow.style.display = "none";
+      rightArrow.style.display = "none";
+    } else {
       rightArrow.style.cursor = "pointer";
-      leftArrow.style.cursor = "pointer";  
+      leftArrow.style.cursor = "pointer";
     }
 
     function updateThumbnailArrows() {
-      if(!leftDiv || !topArrow ||!bottomArrow )return;
+      if (!leftDiv || !topArrow || !bottomArrow) return;
       const scrollable = leftDiv.scrollHeight > leftDiv.clientHeight;
 
       if (!scrollable) {
@@ -77,56 +86,13 @@ export function ImageGallery({ images = [] }: ProductGalleryProps) {
       topArrow.style.opacity = scrollTop > 0 ? "1" : "0";
       bottomArrow.style.opacity = scrollTop < maxScroll ? "1" : "0";
     }
-
-    function updateMainArrows() {
-      if(!leftArrow ||!rightArrow )return;
-      const show = images.length > 1 ? "1" : "0";
-      leftArrow.style.opacity = show;
-      rightArrow.style.opacity = show;
-      
-    }
-
-    leftDiv.addEventListener("mouseenter", updateThumbnailArrows);
-    leftDiv.addEventListener("mouseleave", () => {
-      topArrow.style.opacity = "0";
-      bottomArrow.style.opacity = "0";
-    });
     leftDiv.addEventListener("scroll", updateThumbnailArrows);
 
-    mainDiv.addEventListener("mouseenter", updateMainArrows);
-    mainDiv.addEventListener("mouseleave", () => {
-      leftArrow.style.opacity = "0";
-      rightArrow.style.opacity = "0";
-    });
-
     return () => {
-      leftDiv.removeEventListener("mouseenter", updateThumbnailArrows);
-      leftDiv.removeEventListener("mouseleave", () => {
-        topArrow.style.opacity = "0";
-        bottomArrow.style.opacity = "0";
-      });
       leftDiv.removeEventListener("scroll", updateThumbnailArrows);
-
-      mainDiv.removeEventListener("mouseenter", updateMainArrows);
-      mainDiv.removeEventListener("mouseleave", () => {
-        leftArrow.style.opacity = "0";
-        rightArrow.style.opacity = "0";
-      });
     };
   }, [images]);
 
-  // ------------------------------
-  // Arrow click handlers
-  // ------------------------------
-  function goLeft() {
-    setCurrentIndex((i) => (i > 0 ? i - 1 : images.length - 1));
-  }
-
-  function goRight() {
-    setCurrentIndex((i) => (i < images.length - 1 ? i + 1 : 0));
-  }
-
-  // Scroll selected thumbnail into view
   useEffect(() => {
     const leftDiv = leftDivRef.current;
     if (!leftDiv) return;
@@ -178,19 +144,40 @@ export function ImageGallery({ images = [] }: ProductGalleryProps) {
         </div>
       </div>
 
+      {/* Conditional rendering for the Full-View Modal */}
+      {isFullView && (
+        <div
+          className={styles.modalOverlay}
+          onClick={() => setIsFullView(false)}
+        >
+          <span className={styles.closeButton}>&times;</span>
+          <img
+            src={selectedImage.path}
+            alt={selectedImage.alt}
+            className={styles.fullImage}
+          />
+        </div>
+      )}
       {/* MAIN IMAGE */}
       <div className={styles.center} ref={mainDivRef}>
         <img
           src={selectedImage.path}
           alt={selectedImage.alt}
           className={styles.mainImage}
+          onClick={() => setIsFullView(true)}
         />
+
+        <div className={styles.imageCount}>{currentIndex+1}/{images.length}</div>
 
         <div
           className={`${styles.left} ${styles.arrow}`}
           ref={leftArrowRef}
-          onClick={goLeft}
-          onKeyDown={goLeft}
+          onPointerDown={() =>
+            setCurrentIndex((i) => (i > 0 ? i - 1 : images.length - 1))
+          }
+          onKeyDown={() =>
+            setCurrentIndex((i) => (i > 0 ? i - 1 : images.length - 1))
+          }
         >
           <img
             src="\icons\arrow-simple.svg"
@@ -202,8 +189,12 @@ export function ImageGallery({ images = [] }: ProductGalleryProps) {
         <div
           className={`${styles.right} ${styles.arrow}`}
           ref={rightArrowRef}
-          onClick={goRight}
-          onKeyDown={goRight}
+          onPointerDown={() =>
+            setCurrentIndex((i) => (i < images.length - 1 ? i + 1 : 0))
+          }
+          onKeyDown={() =>
+            setCurrentIndex((i) => (i < images.length - 1 ? i + 1 : 0))
+          }
         >
           <img
             src="\icons\arrow-simple.svg"

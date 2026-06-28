@@ -1,0 +1,35 @@
+.table {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0px 20%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  font-size: var(--font-size-md);
+}
+
+caption{
+  font-size: var(--font-size-xl);
+    font-weight: 700;
+}
+.row {
+  border-bottom: 1px solid var(--color-text-secondary);
+}
+
+.cell {
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.row .cell:last-child {
+  border-right: none;
+}
+
+.row:nth-child(even) {
+  background: var(--color-background);
+}
+
+@media (max-width: 1000px) {
+  .table {
+    margin: 0;
+  }
+}

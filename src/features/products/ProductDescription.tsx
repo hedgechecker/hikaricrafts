@@ -1,67 +1,122 @@
-import { type ReactNode } from "react";
+import { useState } from "react";
 import styles from "./styles/ProductDescription.module.css";
-
+import type { FullProduct } from "../../../server/types";
+import { Stars } from "../global/Stars";
 
 interface ProductDescriptionProps {
-  title: string;
-  price: number;
-  available: number;
-  description?: string;
-  children?: ReactNode;
+  product: FullProduct;
+  setSelectedVariation: (id: number) => void;
 }
 
-export function ProductDescription({ title, description, children }: ProductDescriptionProps) {
-  return (
-    <div className={styles.layout}>
-      <div className={styles.title}>{title}</div>
-      {children}
+export function ProductDescription({
+  product,
+  setSelectedVariation,
+}: ProductDescriptionProps) {
+  const [quantity, setQuantity] = useState(1);
+  const [selectedVar, setSelectedVar] = useState(0);
 
-      {/* <div>
-      <div className={styles.cost}>
-        Vorläufiger Preis: €{price.toFixed(2)}/Stk.
+  return (
+    <div className={styles.productCard}>
+      <h1 className={styles.title}>{product.name}</h1>
+
+      <div className={styles.ratingRow}>
+        <Stars
+          rating={
+            product.reviews.length > 0
+              ? product.reviews.reduce(
+                  (sum, review) => sum + review.rating,
+                  0,
+                ) / product.reviews.length
+              : 0
+          }
+        />
+        <span className={styles.ratingText}>
+          {product.reviews.length > 0
+            ? product.reviews.reduce((sum, review) => sum + review.rating, 0) /
+              product.reviews.length
+            : 0}{" "}
+          ({product.reviews.length} Bewertung
+          {product.reviews.length != 1 ? "en" : ""})
+        </span>
       </div>
 
-      {available > 0 && (
-        <div className={styles.available}>
-          ✓ Zur Zeit verfügbar<br></br>
-          ✓ kostenloser Versand deutschlandweit
+      <span className={styles.currentPrice}>
+        €{(product.variations[0].priceCents / 100).toFixed(2)}
+      </span>
+
+      <p className={styles.description}>{product.description}</p>
+
+      {true && (
+        <div className={styles.colorSection}>
+          <span className={styles.label}>Variationen:</span>
+          <span className={styles.colorName}>{product.variations[selectedVar].sku}</span>
+
+          <div className={styles.colorOptions}>
+            {product.variations.map(( _var, id) => (
+              <button
+                key={id}
+                className={`${styles.colorSwatch} ${
+                  selectedVar === id ? styles.activeSwatch : ""
+                }`}
+                style={{ backgroundColor: "#"+((1<<24)*(id/10)|0).toString(16) }}
+                onClick={() => {
+                  setSelectedVar(id);
+                  setSelectedVariation(id);
+                }}
+                aria-label={id.toString()}
+              />
+            ))}
+          </div>
         </div>
       )}
-      {available <= 0 && (
-        <div className={styles.unavailable}>
-          ⨯ Dieser Artikel ist zur Zeit leider nicht verfügbar, könnte aber womöglich auf Anfrage wieder erstellt werden
+
+      <div className={styles.actionsRow}>
+        <div className={styles.quantitySelector}>
+          <button
+            type="button"
+            onPointerDown={() => setQuantity((prev) => Math.max(1, prev - 1))}
+          >
+            -
+          </button>
+
+          <span>{quantity}</span>
+
+          <button
+            type="button"
+            onPointerDown={() => setQuantity((prev) => prev + 1)}
+          >
+            +
+          </button>
         </div>
-      )}
-      </div>*/}
 
-      {description && <div className={styles.description}>{description}</div>}
+        <button className={styles.addToCartBtn}>In den Einkaufswagen</button>
+      </div>
 
-      {/* <div className={styles.layout}>
-        <table className={styles.table}>
-          <tbody>
-            <tr className={styles.row}>
-              <th className={styles.cell}>Versand:</th>
-              <td className={styles.cell}>
-                <strong>kostenfrei</strong> mit DHL
-              </td>
-            </tr>
-            {available && (
-              <tr className={styles.row}>
-                <th className={styles.cell}>Lieferung:</th>
-                <td className={styles.cell}>
-                  innerhalb von <strong>7-9</strong> Werktagen
-                </td>
-              </tr>
-            )}
-            <tr className={styles.row}>
-              <th className={styles.cell}>Zahlungen:</th>
-              <td className={styles.cell}>PayPal</td>
-            </tr>
-          </tbody>
-        </table>
-        <button className={styles.cart}>In den Warenkorb</button>
-      </div> */}
+      <div className={styles.features}>
+        <div className={styles.featureItem}>
+          <span className={styles.featureIcon}>🚚</span>
+          <div>
+            <strong>Kostenloser Versand</strong>
+            <p>für alle Bestellungen innerhalb Deutschlands</p>
+          </div>
+        </div>
+
+        <div className={styles.featureItem}>
+          <span className={styles.featureIcon}>↺</span>
+          <div>
+            <strong>30-Tage Rückgabe</strong>
+            <p>Stressfreie Retouren</p>
+          </div>
+        </div>
+
+        <div className={styles.featureItem}>
+          <span className={styles.featureIcon}>🛡</span>
+          <div>
+            <strong>5 Jahre Garantie</strong>
+            <p>Qualität garanitiert</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
-

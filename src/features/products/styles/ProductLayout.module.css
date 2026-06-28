@@ -1,0 +1,31 @@
+.bottom {
+  display: grid;
+  align-items: flex-start;
+  grid-template-columns: 1fr;
+  gap: var(--space-lg);
+}
+
+.top {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.page {
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  min-height: 100vh;
+}
+main {
+  display: flex;
+  flex-direction: column;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+@media (max-width: 1000px) {
+  .bottom {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}

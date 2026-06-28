@@ -143,7 +143,7 @@ export default function NavBar({ selected }: NavBarProps) {
           {isLoggedIn ? (
             <div
               onClick={handleLogout}
-              onKeyDown={handleLogout}
+              // onKeyDown={handleLogout}
               className={styles.elem}
               tabIndex={0}
             >
