@@ -33,7 +33,7 @@ export const Dialog: React.FC<DialogProps> = ({
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose(type === "prompt" ? "" : false);
-      if (e.key === "Enter" || e.key === " ") {
+      if (e.key === "Enter") {
         e.preventDefault();
         onClose(type === "prompt" ? inputValue : true);
       }
