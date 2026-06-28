@@ -1,0 +1,151 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.container {
+  width: 100%;
+  max-width: 800px; /* Begrenzt die Breite für eine saubere Beleg-Optik */
+  box-sizing: border-box;
+  background: var(--color-background);
+  margin: var(--space-md);
+  padding: var(--space-md);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.title {
+  text-align: center;
+  font-size: var(--font-size-2xl);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-sm);
+}
+
+.grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  width: 100%;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-sm);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.itemRow {
+  display: flex;
+  gap: var(--space-md);
+  align-items: center;
+  width: 100%;
+}
+
+.imagecontainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image {
+  width: 80px; /* Feste, kompakte Größe für Warenkorb-Thumbnails */
+  height: auto;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+
+.detailsContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.itemTitle {
+  font-size: var(--font-size-lg);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.description {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.priceQuantityRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--font-size-md);
+}
+
+.price {
+  font-weight: bold;
+  color: var(--color-text-primary);
+}
+
+.divider {
+  width: 100%;
+  border: none;
+  border-top: 2px solid var(--color-text-primary);
+  margin: var(--space-xs) 0;
+}
+
+.summaryContainer {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.totalRow {
+  display: flex;
+  gap: var(--space-md);
+  font-size: var(--font-size-xl);
+  color: var(--color-text-primary);
+}
+
+.buttoncontainer {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-xs);
+  margin-top: var(--space-sm);
+}
+
+.button {
+  padding: var(--space-sm);
+  background: var(--color-text-primary);
+  color: var(--color-background);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: var(--font-size-lg);
+  transition: background 0.2s ease;
+  align-items: center;
+  display: flex;
+}
+
+.button:hover {
+  background: var(--color-accent);
+}
+
+.secondaryButton {
+  padding: var(--space-sm);
+  background: transparent;
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-text-primary);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: var(--font-size-lg);
+  transition: all 0.2s ease;
+}
+
+.secondaryButton:hover {
+  background: rgba(0, 0, 0, 0.05);
+}

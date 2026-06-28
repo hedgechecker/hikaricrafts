@@ -5,6 +5,7 @@ import { lazy, Suspense } from "react";
 import NavBar from "./features/global/NavBar.tsx";
 import Feedback from "./pages/Contact/Feedback.tsx";
 import Reviews from "./features/products/Review.tsx";
+import Basket from "./pages/Basket/Basket.tsx";
 
 const SingleProduct = lazy(() => import("./pages/Product/SingleProduct.tsx"));
 const Login = lazy(() => import("./pages/Authentication/Login.tsx"));
@@ -97,6 +98,15 @@ export default function Routing() {
           <Route path="/kumiko" element={<EditorPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route
+            path="/basket"
+            element={
+              <>
+                <NavBar selected="basket"></NavBar>
+                <Basket />
+              </>
+            }
+          />
           <Route
             path="/wireart"
             element={

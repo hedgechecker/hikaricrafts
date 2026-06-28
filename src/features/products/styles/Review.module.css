@@ -16,6 +16,10 @@
   color: var(--color-background);
 }
 
+select, option{
+  color: var(--color-text-primary);
+}
+
 .reviewsSummary {
   display: grid;
   align-items: center;

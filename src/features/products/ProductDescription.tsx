@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import styles from "./styles/ProductDescription.module.css";
-import type { FullProduct } from "../../../server/types";
+import type { FullOrderItem, FullProduct } from "../../../server/types";
 import { Stars } from "../global/Stars";
 
 interface ProductDescriptionProps {
@@ -14,7 +14,40 @@ export function ProductDescription({
 }: ProductDescriptionProps) {
   const [quantity, setQuantity] = useState(1);
   const [selectedVar, setSelectedVar] = useState(0);
+  const [buttonLabel, setButtonLabel] = useState("In den Einkaufswagen");
+  const resetLabelTimeoutRef = useRef<number | undefined>(undefined);
 
+  function addtoBasket() {
+    const item: FullOrderItem = {
+      image: product.variations[selectedVar].images[0],
+      variation: product.variations[selectedVar],
+      id: 0,
+      quantity: quantity,
+      variationId: product.variations[selectedVar].id,
+    };
+
+    const data = localStorage.getItem("Basket");
+    const items: FullOrderItem[] = (() => {
+      if (!data) return [];
+      try {
+        const parsed = JSON.parse(data);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    })();
+
+    setButtonLabel("✓");
+    if (resetLabelTimeoutRef.current) {
+      window.clearTimeout(resetLabelTimeoutRef.current);
+    }
+    resetLabelTimeoutRef.current = window.setTimeout(() => {
+      setButtonLabel("In den Einkaufswagen");
+      resetLabelTimeoutRef.current = undefined;
+    }, 1000);
+
+    localStorage.setItem("Basket", JSON.stringify([...items, item]));
+  }
   return (
     <div className={styles.productCard}>
       <h1 className={styles.title}>{product.name}</h1>
@@ -49,16 +82,21 @@ export function ProductDescription({
       {true && (
         <div className={styles.colorSection}>
           <span className={styles.label}>Variationen:</span>
-          <span className={styles.colorName}>{product.variations[selectedVar].sku}</span>
+          <span className={styles.colorName}>
+            {product.variations[selectedVar].sku}
+          </span>
 
           <div className={styles.colorOptions}>
-            {product.variations.map(( _var, id) => (
+            {product.variations.map((_var, id) => (
               <button
                 key={id}
                 className={`${styles.colorSwatch} ${
                   selectedVar === id ? styles.activeSwatch : ""
                 }`}
-                style={{ backgroundColor: "#"+((1<<24)*(id/10)|0).toString(16) }}
+                style={{
+                  backgroundColor:
+                    "#" + (((1 << 24) * (id / 10)) | 0).toString(16),
+                }}
                 onClick={() => {
                   setSelectedVar(id);
                   setSelectedVariation(id);
@@ -74,22 +112,21 @@ export function ProductDescription({
         <div className={styles.quantitySelector}>
           <button
             type="button"
-            onPointerDown={() => setQuantity((prev) => Math.max(1, prev - 1))}
+            onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
           >
             -
           </button>
 
           <span>{quantity}</span>
 
-          <button
-            type="button"
-            onPointerDown={() => setQuantity((prev) => prev + 1)}
-          >
+          <button type="button" onClick={() => setQuantity((prev) => prev + 1)}>
             +
           </button>
         </div>
 
-        <button className={styles.addToCartBtn}>In den Einkaufswagen</button>
+        <button className={styles.addToCartBtn} onClick={() => addtoBasket()}>
+          {buttonLabel}
+        </button>
       </div>
 
       <div className={styles.features}>

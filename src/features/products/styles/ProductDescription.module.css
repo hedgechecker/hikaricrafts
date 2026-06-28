@@ -1,3 +1,8 @@
+button{
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+}
+
 .title {
   margin: 0 0 var(--space-sm);
   font-size: var(--font-size-3xl);

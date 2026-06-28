@@ -120,7 +120,6 @@ model OrderItem {
   id            Int     @id @default(autoincrement())
   variationId   Int
   quantity      Int
-  engravingText String? // customer input
 
   variation ProductVariation @relation(fields: [variationId], references: [id])
 }

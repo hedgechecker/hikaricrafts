@@ -35,7 +35,7 @@ export default function ProductLayout({
     <div className={styles.page}>
       <meta
         name="description"
-        content={`Ein Überblick über ${product.name}. Mit allen möglichen Variationen, Technischen Daten und Eigenschaften.`}
+        content={`Ein Überblick über ${product.name}. Mit allen möglichen Variationen, Technischen Daten und Eigenschaften. ${product.description}`}
       />
       <main role="main">
         <div className={styles.top}>

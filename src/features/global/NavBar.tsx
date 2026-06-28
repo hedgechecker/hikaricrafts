@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import styles from "./styles/NavBar.module.css";
 import { Link } from "react-router-dom";
 interface NavBarProps {
-  selected: "etuis" | "cases" | "wallArt" | "contact" | "login" | "";
+  selected: "etuis" | "cases" | "wallArt" | "contact" | "login" | "basket" | "";
 }
 
 export default function NavBar({ selected }: NavBarProps) {
@@ -14,7 +14,7 @@ export default function NavBar({ selected }: NavBarProps) {
     const divList = ["koffer", "wallArt", "etuis"];
     divList.forEach((name) => {
       const div = document.getElementById(name);
-      const dropdown = document.getElementById(name+"Dropdown");
+      const dropdown = document.getElementById(name + "Dropdown");
 
       if (!div || !dropdown) return;
       dropdown.addEventListener("focusin", () => {
@@ -52,11 +52,13 @@ export default function NavBar({ selected }: NavBarProps) {
         <Link to="/" onClick={closeMobile} className={`${styles.logo}`}>
           HikariCrafts
         </Link>
-        {/* <img
-          src="./icons/shopping-box.svg"
-          className={styles.cart}
-          alt="Einkaufskorb"
-        /> */}
+        <Link to="/basket" onClick={closeMobile}>
+          <img
+            src="./icons/shopping-box.svg"
+            className={styles.cart}
+            alt="Einkaufskorb"
+          />
+        </Link>
 
         {/* HAMBURGER BUTTON */}
         <button

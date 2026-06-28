@@ -8,7 +8,13 @@ import {
   type ProductVariation,
   type ProductVariationOptionValue,
   type Review,
+  type OrderItem,
 } from "@prisma/client";
+
+export interface FullOrderItem extends OrderItem {
+  variation: ProductVariation;
+  image: Image;
+}
 
 export type ReviewWithUser = Prisma.ReviewGetPayload<{
   include: {
@@ -37,5 +43,5 @@ export interface FullProduct extends Product {
     };
   })[];
   variations: FullVariation[];
-  reviews : Review[];
+  reviews: Review[];
 }

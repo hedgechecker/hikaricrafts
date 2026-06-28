@@ -20,6 +20,7 @@
   box-shadow: 0 4px 20px rgba(0,0,0,0.3);
   font-size: var(--font-size-lg);
   width: max-content;
+  max-width: 50%;
 }
 
 .buttonContainer{
@@ -51,10 +52,12 @@
 }
 
 .input{
-  width: 100%;
+  width: 80%;
+  box-sizing: border-box;
   padding: var(--space-sm);
   font-size: 14px;
   margin-top: var(--space-sm);
+  border: 1px solid var(--color-border);
 }
 
 .dontImage{
